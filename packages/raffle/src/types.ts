@@ -82,6 +82,10 @@ export interface Raffle {
   sharePurpose: string | null;
   sharePrivacyUrl: string | null;
   sharingVersion: string | null;
+  noticeUrl: string | null;
+  retentionDays: number | null;
+  eraseAfter: string | null;
+  erasedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -138,7 +142,7 @@ export interface Entry {
   createdAt: string;
 }
 
-export type NewEntry = Pick<Entry, 'name' | 'email' | 'claimCode'> & { tokenHash: string };
+export type NewEntry = Pick<Entry, 'name' | 'email' | 'claimCode'> & { tokenHash: string; mailNonce?: string; noticeDecision?: boolean };
 
 /**
  * One draw, kept forever. `seq` 1 is the draw; a later one is a redraw, which needs a reason. The

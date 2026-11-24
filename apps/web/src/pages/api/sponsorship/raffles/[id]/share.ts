@@ -25,7 +25,13 @@ export const handleShareRead = (request: Request, id: string, deps: SponsorRoute
       const gate = sharingGate(env, r);
       if (!gate.open) return fail(409, 'Sharing is switched off. Write to us.');
       const read = await raffles.readShare(share.id, { kind: 'sponsor', id: user.id }, deps.now?.() ?? new Date());
-      return json(200, { ok: true, purpose: share.purpose, fields: share.fields, expiresAt: share.expiresAt, rows: read.rows.map((x) => ({ name: x.name, email: x.email })) });
+      return json(200, {
+        ok: true,
+        purpose: share.purpose,
+        fields: share.fields,
+        expiresAt: share.expiresAt,
+        rows: read.rows.map((x) => ({ reference: x.id, name: x.name, email: x.email })),
+      });
     },
     'load the shared contacts',
   );

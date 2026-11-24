@@ -32,6 +32,7 @@ export const handleManage = (request: Request, deps: RaffleRouteDeps = {}) =>
       if (body.action === 'confirm') entry = await raffles.verifyEntry(entry.id);
       else if (body.action === 'share') {
         if (!r.sharingVersion || !gate.open) return fail(409, 'This raffle does not share contacts with its sponsor.');
+        if (body.noticeVersion !== r.sharingVersion) return fail(409, 'Review the current sharing notice first.');
         await raffles.giveConsent(entry.id, { verified: true, at: now });
       } else if (body.action === 'withdraw') await raffles.withdrawConsent(entry.id, now);
       else if (body.action !== 'view') return fail(400, 'Unknown action.', { field: 'action' });
@@ -52,6 +53,7 @@ export const handleManage = (request: Request, deps: RaffleRouteDeps = {}) =>
           sharing:
             r.sharingVersion && (gate.open || consent || body.action === 'withdraw')
               ? {
+                  version: r.sharingVersion,
                   sponsorName,
                   purpose: r.sharePurpose,
                   sponsorPrivacyUrl: r.sharePrivacyUrl,

@@ -18,7 +18,31 @@ export interface OfferInput {
 
 export type NewLedgerEntry = Pick<LedgerEntry, 'kind' | 'amountMinor' | 'note' | 'reference'>;
 
+export interface UnmatchedPayment {
+  sessionId: string;
+  linkId: string | null;
+  quoteRef: string | null;
+  raffleRef: string | null;
+  amountMinor: number;
+  currency: string;
+}
+export interface RaffleMail {
+  key: string;
+  entryId: string;
+  kind: 'entry' | 'winner' | 'recovery';
+  nonce: string | null;
+}
 export interface RaffleStore {
+  claimMail(lease: string, entryId?: string): Promise<RaffleMail[]>;
+  finishMail(key: string, lease: string, sent: boolean): Promise<void>;
+  recover(raffleId: string, email: string, nonce: string, hash: string): Promise<void>;
+  entryById(id: string): Promise<Entry | null>;
+  claimDecision(id: string, seq: number): Promise<'claimed' | 'expired' | null>;
+  decideClaim(id: string, seq: number, decision: 'claimed' | 'expired', actor: Actor): Promise<void>;
+  fulfil(id: string, seq: number, note: string, actor: Actor): Promise<Raffle>;
+  unmatched(payment: UnmatchedPayment): Promise<void>;
+  unmatchedPayments(): Promise<UnmatchedPayment[]>;
+  outstanding(): Promise<Raffle[]>;
   create(r: NewRaffle, actor: Actor): Promise<Raffle>;
   get(id: string): Promise<Raffle | null>;
   /** Newest first. */
@@ -46,7 +70,14 @@ export interface RaffleStore {
   /** ready → open: freezes the entrant rules version, its URL and the closing time. */
   openEntries(
     id: string,
-    input: { rulesVersion: string; rulesUrl: string; closesAt: string; actor: Actor; sharing?: { purpose: string; privacyUrl: string; version: string } | null },
+    input: {
+      rulesVersion: string;
+      rulesUrl: string;
+      closesAt: string;
+      actor: Actor;
+      retentionDays?: number | null;
+      sharing?: { purpose: string; privacyUrl: string; version: string; noticeUrl: string } | null;
+    },
   ): Promise<Raffle>;
   /**
    * Adds an entry while entries are open and before they close (checked in the same statement).
@@ -81,7 +112,7 @@ export interface RaffleStore {
   consentedEntries(raffleId: string): Promise<Entry[]>;
   consentCounts(raffleId: string): Promise<{ given: number; valid: number; withdrawn: number }>;
   /** Records a release, narrowed to `entryIds` that have valid consent now. */
-  createShare(raffleId: string, input: { recipientContactId: string; fields: ShareField[]; entryIds: string[]; expiresAt: string; actor: Actor }): Promise<Share>;
+  createShare(raffleId: string, input: { exact?: boolean; recipientContactId: string; fields: ShareField[]; entryIds: string[]; expiresAt: string; actor: Actor }): Promise<Share>;
   getShare(id: string): Promise<Share | null>;
   /** Newest first. */
   shares(raffleId: string): Promise<Share[]>;
@@ -89,6 +120,9 @@ export interface RaffleStore {
   /** The rows a read of the share returns now: its entries, narrowed again to consent valid now. Logged. */
   readShare(id: string, actor: Actor, at: Date): Promise<{ share: Share; rows: Pick<Entry, 'id' | 'name' | 'email'>[] }>;
   /** Removes the names and emails of a raffle's entries (retention); draws and counts stay. Returns how many. */
+  dueForErasure(at: Date): Promise<string[]>;
+  deletionTasks(raffleId: string, contactId?: string): Promise<{ shareId: string; entryId: string; consentId: string; acknowledged: boolean }[]>;
+  acknowledgeDeletion(raffleId: string, contactId: string, shareId: string, consentId: string): Promise<boolean>;
   eraseEntries(raffleId: string, actor: Actor): Promise<number>;
 }
 
@@ -118,19 +152,25 @@ export const conflict = () => new RaffleRuleError('The raffle changed in the mea
 export function readyBlocker(r: Raffle): string | null {
   if (r.funding !== 'paid' && r.funding !== 'in_kind') return 'It is not paid yet (or the in-kind prize has not arrived).';
   if (!r.acceptedVersion || r.acceptedVersion !== r.termsVersion) return 'The sponsor has not accepted the raffle terms of this offer.';
+  if (r.flags.length) return 'Resolve the outstanding review before continuing.';
   return null;
 }
 
 export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore {
   const now = () => (opts.now ?? (() => new Date()))().toISOString();
   const raffles = new Map<string, Raffle>();
+  const unmatched = new Map<string, UnmatchedPayment>();
   const ledger: LedgerEntry[] = [];
   const log: RaffleEvent[] = [];
   const seen = new Set<string>();
   const entries: (Entry & { tokenHash: string })[] = [];
   const draws: Draw[] = [];
   const consents: Consent[] = [];
+  const deliveries: { raffleId: string; contactId: string; shareId: string; entryId: string; consentId: string; acknowledged: boolean }[] = [];
   const shares: Share[] = [];
+  const mail = new Map<string, RaffleMail & { lease?: string; leasedAt?: number }>();
+  const grants = new Map<string, string>();
+  const claims = new Map<string, 'claimed' | 'expired'>();
   let n = 0;
   const active = (entryId: string) => consents.find((c) => c.entryId === entryId && !c.withdrawnAt);
   const plainEntry = ({ tokenHash: _, ...e }: Entry & { tokenHash: string }): Entry => ({ ...e });
@@ -142,6 +182,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     return r;
   };
   const save = (r: Raffle) => {
+    if (!r.eraseAfter && r.retentionDays && (r.stage === 'cancelled' || r.stage === 'fulfilled'))
+      r.eraseAfter = new Date(Date.parse(now()) + r.retentionDays * 86400000).toISOString();
     const saved = { ...r, flags: [...r.flags], updatedAt: now() };
     raffles.set(r.id, saved);
     return { ...saved, flags: [...saved.flags] };
@@ -149,6 +191,50 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
   const copy = (r: Raffle | undefined) => (r ? { ...r, flags: [...r.flags] } : null);
 
   return {
+    claimMail: async (lease, entryId) => {
+      const rows = [...mail.values()].filter((m) => (!entryId || m.entryId === entryId) && (!m.lease || Date.now() - (m.leasedAt ?? 0) > 60000)).slice(0, 20);
+      return rows.map((m) => {
+        m.lease = lease;
+        m.leasedAt = Date.now();
+        return { ...m };
+      });
+    },
+    finishMail: async (key, lease, sent) => {
+      const m = mail.get(key);
+      if (m?.lease === lease) {
+        if (sent) mail.delete(key);
+        else m.lease = undefined;
+      }
+    },
+    entryById: async (id) => {
+      const e = entries.find((x) => x.id === id);
+      return e ? plainEntry(e) : null;
+    },
+    recover: async (rid, email, nonce, hash) => {
+      const e = entries.find((x) => x.raffleId === rid && x.email === email);
+      if (!e) return;
+      grants.set(hash, e.id);
+      mail.set(hash, { key: hash, entryId: e.id, kind: 'recovery', nonce });
+    },
+    claimDecision: async (id, seq) => claims.get(`${id}:${seq}`) ?? null,
+    decideClaim: async (id, seq, decision, actor) => {
+      const key = `${id}:${seq}`;
+      if (must(id).stage !== 'drawn' || draws.filter((d) => d.raffleId === id).at(-1)?.seq !== seq || (claims.has(key) && claims.get(key) !== decision)) throw conflict();
+      if (!claims.has(key)) record(id, decision, actor, { seq });
+      claims.set(key, decision);
+    },
+    fulfil: async (id, seq, _note, actor) => {
+      const r = must(id);
+      if (r.stage !== 'drawn' || claims.get(`${id}:${seq}`) !== 'claimed' || draws.filter((d) => d.raffleId === id).at(-1)?.seq !== seq) throw conflict();
+      record(id, 'fulfilled', actor, { seq });
+      return save({ ...r, stage: 'fulfilled', reason: null });
+    },
+    unmatched: async (p) => {
+      if (!unmatched.has(p.sessionId)) unmatched.set(p.sessionId, { ...p });
+    },
+    unmatchedPayments: async () => [...unmatched.values()],
+    outstanding: async () =>
+      [...raffles.values()].filter((r) => ['paid', 'in_kind'].includes(r.funding) && ['offered', 'ready', 'open', 'closed', 'drawn'].includes(r.stage)).map((r) => copy(r)!),
     async create(input, actor) {
       const at = now();
       const r: Raffle = {
@@ -173,6 +259,10 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         sharePurpose: null,
         sharePrivacyUrl: null,
         sharingVersion: null,
+        noticeUrl: null,
+        retentionDays: null,
+        eraseAfter: null,
+        erasedAt: null,
         createdAt: at,
         updatedAt: at,
       };
@@ -245,6 +335,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     },
     async addLedger(id, e, actor) {
       must(id);
+      if ((e.kind === 'refund' || e.kind === 'payment') && e.reference && ledger.some((x) => x.kind === e.kind && x.reference === e.reference)) throw conflict();
       const entry: LedgerEntry = { ...e, id: String(ledger.length + 1), raffleId: id, actor, at: now() };
       ledger.push(entry);
       record(id, 'ledger_added', actor, { kind: e.kind, amountMinor: e.amountMinor });
@@ -254,7 +345,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     events: async (id) => log.filter((e) => e.raffleId === id).map((e) => ({ ...e })),
     stripeEventSeen: async (e) => seen.has(e),
     markStripeEvent: async (e) => void seen.add(e),
-    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing }) {
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing, retentionDays }) {
       const r = must(id);
       if (r.stage !== 'ready') throw conflict();
       checkStage('ready', 'open', actor.kind);
@@ -269,6 +360,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         sharePurpose: sharing?.purpose ?? null,
         sharePrivacyUrl: sharing?.privacyUrl ?? null,
         sharingVersion: sharing?.version ?? null,
+        noticeUrl: sharing?.noticeUrl ?? null,
+        retentionDays: retentionDays ?? null,
       });
     },
     async addEntry(raffleId, e, at) {
@@ -277,12 +370,29 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
       if (existing) return { entry: plainEntry(existing), created: false };
       if (r.stage !== 'open' || !r.closesAt || at.toISOString() >= r.closesAt) throw new RaffleRuleError('Entries are closed.', 'conflict');
       if (entries.some((x) => x.raffleId === raffleId && x.claimCode === e.claimCode)) throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
-      const entry = { ...e, email: e.email.toLowerCase(), id: `en_${++n}`, raffleId, emailVerifiedAt: null, createdAt: at.toISOString() };
+      const { mailNonce, noticeDecision, ...input } = e;
+      const entry = { ...input, email: e.email.toLowerCase(), id: `en_${++n}`, raffleId, emailVerifiedAt: null, createdAt: at.toISOString() };
       entries.push(entry);
+      if (noticeDecision && r.sharingVersion && r.sharePurpose)
+        consents.push({
+          id: `c_${++n}`,
+          entryId: entry.id,
+          raffleId,
+          recipientSponsorId: r.sponsorId,
+          purpose: r.sharePurpose,
+          version: r.sharingVersion,
+          givenAt: at.toISOString(),
+          verifiedAt: null,
+          withdrawnAt: null,
+        });
+      if (mailNonce) {
+        const key = `entry:${entry.id}`;
+        mail.set(key, { key, entryId: entry.id, kind: 'entry', nonce: mailNonce });
+      }
       return { entry: plainEntry(entry), created: true };
     },
     entryByToken: async (hash) => {
-      const e = entries.find((x) => x.tokenHash === hash);
+      const e = entries.find((x) => x.tokenHash === hash || grants.get(hash) === x.id);
       return e ? plainEntry(e) : null;
     },
     async verifyEntry(entryId) {
@@ -327,6 +437,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         at: now(),
       };
       draws.push(d);
+      const key = `winner:${rid}:${d.seq}`;
+      mail.set(key, { key, entryId: d.entryId, kind: 'winner', nonce: null });
       save({ ...r, stage: 'drawn' });
       record(rid, 'drawn', actor, { seq: 1, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
       return { draw: { ...d }, entry: eligible[index]!, repeated: false };
@@ -356,6 +468,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         at: now(),
       };
       draws.push(d);
+      const key = `winner:${rid}:${d.seq}`;
+      mail.set(key, { key, entryId: d.entryId, kind: 'winner', nonce: null });
       record(rid, 'redrawn', actor, { seq: d.seq, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
       return { draw: { ...d }, entry: eligible[index]! };
     },
@@ -406,11 +520,12 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
       const mine = consents.filter((c) => c.raffleId === rid);
       return { given: mine.filter((c) => !c.withdrawnAt).length, valid: mine.filter((c) => consentValid(c, r)).length, withdrawn: mine.filter((c) => c.withdrawnAt).length };
     },
-    async createShare(rid, { recipientContactId, fields, entryIds, expiresAt, actor }) {
+    async createShare(rid, { exact, recipientContactId, fields, entryIds, expiresAt, actor }) {
       const r = must(rid);
       if (!r.sharingVersion || !r.sharePurpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
       const allowed = new Set(entries.filter((e) => e.raffleId === rid && consentValid(active(e.id), r)).map((e) => e.id));
       const ids = [...new Set(entryIds)].filter((id) => allowed.has(id));
+      if (exact && ids.length !== new Set(entryIds).size) throw conflict();
       if (!ids.length) throw new RaffleRuleError('None of the chosen entries has a valid consent now.');
       const s: Share = {
         id: `sh_${++n}`,
@@ -452,15 +567,37 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         .filter((e) => s.entryIds.includes(e.id) && consentValid(active(e.id), r))
         .sort(drawOrder)
         .map((e) => ({ id: e.id, name: s.fields.includes('name') ? e.name : '', email: s.fields.includes('email') ? e.email : '' }));
-      record(s.raffleId, 'share_read', actor, { shareId: id, rows: rows.length });
+      for (const row of rows) {
+        const consentId = active(row.id)!.id;
+        if (!deliveries.some((d) => d.shareId === id && d.consentId === consentId))
+          deliveries.push({ raffleId: s.raffleId, contactId: s.recipientContactId, shareId: id, entryId: row.id, consentId, acknowledged: false });
+      }
+      record(s.raffleId, 'share_read', actor, { shareId: id, rows: rows.length, entryIds: rows.map((x) => x.id) });
       return { share: { ...s, fields: [...s.fields], entryIds: [...s.entryIds] }, rows };
     },
+    dueForErasure: async (at) => [...raffles.values()].filter((r) => !r.erasedAt && r.eraseAfter && r.eraseAfter <= at.toISOString()).map((r) => r.id),
+    deletionTasks: async (rid, contact) =>
+      deliveries
+        .filter((d) => d.raffleId === rid && (!contact || d.contactId === contact) && consents.some((c) => c.id === d.consentId && c.withdrawnAt))
+        .map(({ shareId, entryId, consentId, acknowledged }) => ({ shareId, entryId, consentId, acknowledged })),
+    acknowledgeDeletion: async (rid, contact, share, consent) => {
+      const d = deliveries.find((x) => x.raffleId === rid && x.contactId === contact && x.shareId === share && x.consentId === consent);
+      if (!d || !consents.some((c) => c.id === consent && c.withdrawnAt)) return false;
+      d.acknowledged = true;
+      return true;
+    },
     async eraseEntries(rid, actor) {
-      must(rid);
+      const raffle = must(rid);
+      if (raffle.erasedAt) return 0;
+      save({ ...raffle, erasedAt: now() });
       let count = 0;
       for (const e of entries)
         if (e.raffleId === rid && e.email !== `erased-${e.id}@invalid.invalid`) {
-          Object.assign(e, { name: 'Erased', email: `erased-${e.id}@invalid.invalid` });
+          for (const [key, value] of grants) if (value === e.id) grants.delete(key);
+          for (const m of mail.values()) if (m.entryId === e.id) mail.delete(m.key);
+          const c = active(e.id);
+          if (c) c.withdrawnAt = now();
+          Object.assign(e, { tokenHash: '', emailVerifiedAt: null, name: 'Erased', email: `erased-${e.id}@invalid.invalid` });
           count++;
         }
       record(rid, 'entries_erased', actor, { count });

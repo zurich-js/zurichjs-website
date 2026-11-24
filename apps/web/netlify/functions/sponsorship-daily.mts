@@ -5,6 +5,9 @@
  * Logic and tests: src/server/sponsor-daily.ts.
  * Env: DATABASE_URL, RESEND_API_KEY, SLACK_AGENT_BOT_TOKEN, SLACK_SPONSORSHIP_CHANNEL_ID.
  */
+import { holdIneligibleRaffles, raffleStore } from '../../src/server/raffle.ts';
+import { sanityMeetups } from '../../src/server/sponsor-coverage.ts';
+import { deliverRaffleMail } from '../../src/server/raffle-mail.ts';
 import { siteOrigin } from '../../src/server/auth.ts';
 import { sponsorStore } from '../../src/server/sponsor.ts';
 import { dailyCheck } from '../../src/server/sponsor-daily.ts';
@@ -15,6 +18,10 @@ export default async () => {
   try {
     const store = sponsorStore(env);
     const result = await dailyCheck(lifecycleDeps(env, store, siteOrigin(env), {}));
+    const raffles = raffleStore(env);
+    for (const id of await raffles.dueForErasure(new Date())) await raffles.eraseEntries(id, { kind: 'script', id: 'retention' });
+    await deliverRaffleMail(env, raffleStore(env), store, siteOrigin(env));
+    await holdIneligibleRaffles(raffleStore(env), store, sanityMeetups(env), new Date());
     console.log(`[sponsorship-daily] ${JSON.stringify(result)}`);
   } catch (err) {
     console.error('[sponsorship-daily] failed', err);

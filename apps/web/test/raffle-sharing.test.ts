@@ -20,12 +20,19 @@ import type { MembershipSlack } from '../src/server/membership-slack.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
 
 const ADMIN = 'admin-password-for-tests';
-const rules = { RAFFLE_RULES_VERSION: 'rules-2026-12', RAFFLE_RULES_URL: 'https://zurichjs.com/raffle-rules' };
+const rules = {
+  BETTER_AUTH_SECRET: 'synthetic-test-secret-for-raffle-mail-32',
+  RAFFLE_TERMS_VERSION: 't-share',
+  RAFFLE_TERMS_URL: 'https://example.test/terms',
+  RAFFLE_RULES_VERSION: 'rules-2026-12',
+  RAFFLE_RULES_URL: 'https://zurichjs.com/raffle-rules',
+};
 const base: Record<string, string> = { BETTER_AUTH_URL: 'https://zurichjs.com', ADMIN_PASSWORD: ADMIN, RESEND_API_KEY: 're_test', SLACK_SPONSORSHIP_CHANNEL_ID: 'C1', ...rules };
 const env: Record<string, string> = {
   ...base,
   RAFFLE_SHARING_POLICY_VERSION: 'share-2026-12',
   RAFFLE_SHARING_NOTICE_URL: 'https://zurichjs.com/raffle-notice',
+  RAFFLE_RETENTION_ANCHOR: 'fulfilled_or_cancelled',
   RAFFLE_RETENTION_DAYS: '90',
   RAFFLE_SHARING_TERMS_VERSION: 't-share',
 };
@@ -57,7 +64,17 @@ describe('sharing raffle contacts', () => {
       body: JSON.stringify(body),
     });
   const pub = (e = env) => ({ env: e, raffles, sponsors, fetch: f, now: () => clock, log: () => undefined });
-  const adminDeps = (e = env) => ({ env: e, store: sponsors, raffles, fees: memoryFeeStore(), fetch: f, slack: slackFake, now: clock.getTime(), log: () => undefined });
+  const adminDeps = (e = env) => ({
+    env: e,
+    store: sponsors,
+    raffles,
+    fees: memoryFeeStore(),
+    meetups: async () => [{ id: 'event-dec', title: 'Test', date: '2026-12-09' }],
+    fetch: f,
+    slack: slackFake,
+    now: clock.getTime(),
+    log: () => undefined,
+  });
   const act = (body: unknown, e = env) => handleAdminRaffle(post(body, true), raffleId, adminDeps(e));
   const sharing = async (body?: unknown, e = env) => {
     const r = await handleRaffleSharing(
@@ -67,9 +84,11 @@ describe('sharing raffle contacts', () => {
     );
     return { status: r.status, body: (await r.json()) as Record<string, any> };
   };
-  const enter = (name: string, share: boolean) => handleEnter(post({ raffleId, name, email: `${name}@example.com`, rules: true, share }), pub());
+  const enter = (name: string, share: boolean) =>
+    handleEnter(post({ raffleId, name, email: `${name}@example.com`, rules: true, share, noticeVersion: env.RAFFLE_SHARING_POLICY_VERSION }), pub());
   const tokenFor = (name: string) => /#t=([A-Za-z0-9_-]+)/.exec(emails.find((m) => m.to[0] === `${name}@example.com`)!.text)![1]!;
-  const manage = async (name: string, action: string, e = env) => (await (await handleManage(post({ token: tokenFor(name), action }), pub(e))).json()) as Record<string, any>;
+  const manage = async (name: string, action: string, e = env) =>
+    (await (await handleManage(post({ token: tokenFor(name), action, noticeVersion: env.RAFFLE_SHARING_POLICY_VERSION }), pub(e))).json()) as Record<string, any>;
   const read = async (shareId: string, user = ana, e = env) => {
     const r = await handleShareRead(new Request(`https://zurichjs.com/x?s=${shareId}`), raffleId, {
       env: e,
@@ -138,7 +157,12 @@ describe('sharing raffle contacts', () => {
     expect((await act({ ...open, sharing: { purpose: 'short', privacyUrl: 'https://acme.example/privacy' } })).status).toBe(400);
     expect((await act(open)).status).toBe(200);
     const info = (await (await handleRaffleInfo(new Request(`https://zurichjs.com/api/raffle/info?r=${raffleId}`), pub())).json()) as Record<string, any>;
-    expect(info.raffle.sharing).toEqual({ purpose: PURPOSE, sponsorPrivacyUrl: 'https://acme.example/privacy', noticeUrl: 'https://zurichjs.com/raffle-notice' });
+    expect(info.raffle.sharing).toEqual({
+      version: env.RAFFLE_SHARING_POLICY_VERSION,
+      purpose: PURPOSE,
+      sponsorPrivacyUrl: 'https://acme.example/privacy',
+      noticeUrl: 'https://zurichjs.com/raffle-notice',
+    });
 
     // kim ticks the box, lee does not, max opts in later from their own link.
     await enter('kim', true);
@@ -159,7 +183,18 @@ describe('sharing raffle contacts', () => {
     expect((await sharing(release)).status).toBe(400);
     expect((await sharing({ ...release, confirm: true, recipientContactId: 'someone' })).status).toBe(400);
     expect((await sharing({ ...release, confirm: true, days: 60 })).status).toBe(400);
-    const released = (await sharing({ ...release, confirm: true })).body;
+    expect((await sharing({ ...release, confirm: true })).status).toBe(409);
+    const rows = preview.preview as { id: string; name: string; email: string }[];
+    const record = JSON.stringify([
+      raffleId,
+      env.RAFFLE_SHARING_POLICY_VERSION,
+      PURPOSE,
+      [anaContact, 'Ana', ana.email],
+      release.fields,
+      release.days,
+      rows.map((e) => [e.id, e.name, e.email]),
+    ]);
+    const released = (await sharing({ ...release, entryIds: rows.map((e) => e.id), preview: record, confirm: true })).body;
     expect(released.shares).toMatchObject([{ recipient: 'Ana', count: 2, fields: ['name', 'email'] }]);
     const shareId = released.shares[0].id as string;
     expect(slack.at(-1)).toContain('released for ZurichJS Meetup December: 2, for 7 days');
@@ -170,14 +205,19 @@ describe('sharing raffle contacts', () => {
     ).json()) as Record<string, any>;
     expect(list.raffles[0].shares).toEqual([{ id: shareId, expiresAt: expect.any(String), count: 2 }]);
     expect((await read(shareId)).body.rows).toEqual([
-      { name: 'kim', email: 'kim@example.com' },
-      { name: 'max', email: 'max@example.com' },
+      { reference: rows[0]!.id, name: 'kim', email: 'kim@example.com' },
+      { reference: rows[1]!.id, name: 'max', email: 'max@example.com' },
     ]);
+    expect((await read(shareId, ana, { ...env, RAFFLE_SHARING_NOTICE_URL: 'https://example.test/new' })).status).toBe(409);
     expect((await read(shareId, bob)).status).toBe(404);
 
     // max withdraws from the link, without an account: the next read no longer has max.
     expect((await manage('max', 'withdraw')).entry.sharing).toMatchObject({ given: false });
     expect((await read(shareId)).body.rows.map((x: Record<string, string>) => x.name)).toEqual(['kim']);
+    const [task] = await raffles.deletionTasks(raffleId, anaContact);
+    expect(task).toMatchObject({ shareId, entryId: rows[1]!.id, acknowledged: false });
+    expect(await raffles.acknowledgeDeletion(raffleId, 'another', shareId, task!.consentId)).toBe(false);
+    expect(await raffles.acknowledgeDeletion(raffleId, anaContact, shareId, task!.consentId)).toBe(true);
     // Withdrawing still works when sharing is switched off; reading does not.
     expect((await read(shareId, ana, base)).status).toBe(409);
     expect((await manage('kim', 'withdraw', base)).entry.sharing).toMatchObject({ given: false });
@@ -190,8 +230,9 @@ describe('sharing raffle contacts', () => {
     expect((await sharing({ action: 'erase', confirm: true })).status).toBe(409);
     await act({ action: 'cancel', reason: 'Meetup cancelled' });
     expect((await sharing({ action: 'erase', confirm: true })).status).toBe(409);
-    clock = new Date(Date.parse('2026-12-09T19:30:00Z') + 91 * 86_400_000);
-    expect((await sharing({ action: 'erase', confirm: true })).status).toBe(200);
+    clock = new Date(clock.getTime() + 91 * 86_400_000);
+    expect(await raffles.dueForErasure(clock)).toContain(raffleId);
+    expect((await sharing({ action: 'erase', confirm: true }, base)).status).toBe(200);
     expect((await raffles.entries(raffleId)).map((e) => e.name)).toEqual(['Erased', 'Erased', 'Erased']);
 
     // Slack never names or emails an entrant.

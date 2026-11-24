@@ -21,6 +21,8 @@ interface Data {
   preview: { id: string; name: string; email: string }[];
   recipients: { id: string; name: string; email: string }[];
   shares: { id: string; recipient: string; fields: string[]; count: number; createdAt: string; expiresAt: string; revokedAt: string | null }[];
+  erasedAt: string | null;
+  deletionTasks: { acknowledged: boolean }[];
   erasableFrom: string | null;
 }
 
@@ -30,7 +32,7 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
   const [recipient, setRecipient] = useState('');
   const [fields, setFields] = useState<string[]>(['name', 'email']);
   const [days, setDays] = useState('7');
-  const [sure, setSure] = useState(false);
+  const [confirmation, setConfirmation] = useState('');
   const [erase, setErase] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -54,16 +56,15 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
     if (status !== 200) return setError(body.error ?? 'That did not work.');
     setData(body);
     setPicked([]);
-    setSure(false);
+    setConfirmation('');
     setErase(false);
     setDone(message);
   };
 
-  if (!summary.offered) return <p class="m-0 text-compact text-ink-2">Entrants were not asked to share their contact for this raffle, so nothing can be shared.</p>;
   if (!data)
     return (
       <div class="flex flex-col gap-2">
-        <p class="m-0 text-compact">Sharing with the sponsor: {summary.purpose}.</p>
+        <p class="m-0 text-compact">{summary.offered ? 'Sharing with the sponsor: ' + summary.purpose : 'Entrant records and retention'}</p>
         <div>
           <Button variant="secondary" onClick={() => void load()}>
             Sharing
@@ -75,6 +76,16 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
 
   const chosen = data.preview.filter((p) => picked.includes(p.id));
   const who = data.recipients.find((c) => c.id === recipient);
+  const preview = JSON.stringify([
+    raffleId,
+    data.gate.open ? data.gate.version : null,
+    data.purpose,
+    who && [who.id, who.name, who.email],
+    fields,
+    Number(days),
+    chosen.map((e) => [e.id, ...fields.map((f) => (f === 'name' ? e.name : e.email))]),
+  ]);
+  const sure = confirmation === preview;
   const erasable = data.erasableFrom && data.erasableFrom <= new Date().toISOString();
   return (
     <div class="flex flex-col gap-4">
@@ -84,13 +95,25 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
       </p>
       {!data.gate.open && <p class="m-0 text-compact text-ink-2">{data.gate.reason}</p>}
       {data.gate.open && data.preview.length > 0 && (
-        <fieldset class="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+        <fieldset disabled={busy} class="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
           <legend class="mb-2 p-0 text-compact font-bold">Release to the sponsor</legend>
           <div class="flex flex-wrap gap-3">
-            <Button variant="plain" onClick={() => setPicked(data.preview.map((p) => p.id))}>
+            <Button
+              variant="plain"
+              onClick={() => {
+                setConfirmation('');
+                setPicked(data.preview.map((p) => p.id));
+              }}
+            >
               Select all
             </Button>
-            <Button variant="plain" onClick={() => setPicked([])}>
+            <Button
+              variant="plain"
+              onClick={() => {
+                setConfirmation('');
+                setPicked([]);
+              }}
+            >
               Select none
             </Button>
           </div>
@@ -99,10 +122,20 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
               key={p.id}
               label={`${p.name}, ${p.email}`}
               checked={picked.includes(p.id)}
-              onChange={() => setPicked(picked.includes(p.id) ? picked.filter((x) => x !== p.id) : [...picked, p.id])}
+              onChange={() => {
+                setConfirmation('');
+                setPicked(picked.includes(p.id) ? picked.filter((x) => x !== p.id) : [...picked, p.id]);
+              }}
             />
           ))}
-          <SelectField label="To" value={recipient} onChange={(e) => setRecipient(inputValue(e))}>
+          <SelectField
+            label="To"
+            value={recipient}
+            onChange={(e) => {
+              setConfirmation('');
+              setRecipient(inputValue(e));
+            }}
+          >
             <option value="">Choose a sponsor contact</option>
             {data.recipients.map((c) => (
               <option key={c.id} value={c.id}>
@@ -116,15 +149,34 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
                 key={k}
                 label={k === 'name' ? 'Name' : 'Email'}
                 checked={fields.includes(k)}
-                onChange={() => setFields(fields.includes(k) ? fields.filter((x) => x !== k) : [...fields, k])}
+                onChange={() => {
+                  setConfirmation('');
+                  setFields(fields.includes(k) ? fields.filter((x) => x !== k) : [...fields, k]);
+                }}
               />
             ))}
           </div>
-          <TextField label="Days they can see it" inputMode="numeric" value={days} hint="From 1 to 30." onInput={(e) => setDays(inputValue(e))} />
+          <TextField
+            label="Days they can see it"
+            inputMode="numeric"
+            value={days}
+            hint="From 1 to 30."
+            onInput={(e) => {
+              setConfirmation('');
+              setDays(inputValue(e));
+            }}
+          />
+          {chosen.length > 0 && (
+            <ul>
+              {chosen.map((row) => (
+                <li key={row.id}>{fields.map((f) => (f === 'name' ? row.name : row.email)).join(', ')}</li>
+              ))}
+            </ul>
+          )}
           <Checkbox
             label={`I release ${chosen.length} ${chosen.length === 1 ? 'contact' : 'contacts'} (${fields.join(' and ') || 'nothing'}) to ${who?.name ?? 'the chosen contact'} for ${days} days, only to ${data.purpose}.`}
             checked={sure}
-            onChange={(e) => setSure((e.target as HTMLInputElement).checked)}
+            onChange={(e) => setConfirmation(e.currentTarget.checked ? preview : '')}
           />
           <div>
             <Button
@@ -132,7 +184,7 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
               disabled={busy || !sure || !chosen.length || !who}
               onClick={() =>
                 void send(
-                  { action: 'release', entryIds: picked, recipientContactId: recipient, fields, days: Number(days), confirm: true },
+                  { action: 'release', entryIds: picked, recipientContactId: recipient, fields, days: Number(days), preview: confirmation, confirm: true },
                   'Released. They see it on their sponsorship page.',
                 )
               }
@@ -159,7 +211,13 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
           ))}
         </ul>
       )}
-      {data.erasableFrom && (
+      {!!data.deletionTasks?.length && (
+        <p>
+          Recipient deletion requests acknowledged: {data.deletionTasks.filter((d) => d.acknowledged).length} of {data.deletionTasks.length}.
+        </p>
+      )}
+      {data.erasedAt && <p>Entrant details erased {shortDateTime(data.erasedAt)}.</p>}
+      {data.erasableFrom && !data.erasedAt && (
         <div class="flex flex-col gap-2">
           <p class="m-0 text-compact text-ink-2">
             {erasable ? 'The retention period has passed.' : `The retention period runs until ${longDate(data.erasableFrom.slice(0, 10))}.`} Erasing removes every entrant’s name

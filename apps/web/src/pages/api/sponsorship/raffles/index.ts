@@ -47,11 +47,12 @@ export const handleRaffles = (request: Request, deps: SponsorRouteDeps = {}) =>
               .map((x) => ({ id: x.id, expiresAt: x.expiresAt, count: x.entryIds.length })),
           ),
         );
+        const tasks = await Promise.all(list.map((r) => raffles.deletionTasks(r.id, contact.id)));
         const e = eligibility(s, zurichDay(now));
         const gate = termsGate(env);
         return json(200, {
           ok: true,
-          raffles: list.map((r, i) => ({ ...raffleView(r, quotes[i] ?? null, counts[i] ?? null, codes[i] ?? null), shares: shares[i] ?? [] })),
+          raffles: list.map((r, i) => ({ ...raffleView(r, quotes[i] ?? null, counts[i] ?? null, codes[i] ?? null), shares: shares[i] ?? [], deletionTasks: tasks[i] })),
           eligible: e.ok,
           reason: e.ok ? null : e.reason,
           terms: gate.open ? { open: true, version: gate.version, url: gate.url } : { open: false },

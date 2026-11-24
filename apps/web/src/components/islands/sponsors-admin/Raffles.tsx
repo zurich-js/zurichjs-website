@@ -4,7 +4,7 @@
  * refunds, and the flags that need a decision. Every amount comes from the server. The rules are in
  * /api/membership/admin/raffles/[id].
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -41,17 +41,25 @@ type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 're
 export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => void }) {
   const [data, setData] = useState<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate } | null>(null);
   const [error, setError] = useState('');
-  const load = async () => {
+  const signedOut = useRef(onSignedOut);
+  signedOut.current = onSignedOut;
+  const revision = useRef({ value: 0 });
+  const load = useCallback(async () => {
+    const at = ++revision.current.value;
     const { status, body } = await api<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate }>(`/api/membership/admin/raffles?sponsorId=${encodeURIComponent(id)}`);
-    if (status === 401) return onSignedOut();
+    if (at !== revision.current.value) return;
+    if (status === 401) return signedOut.current();
     if (status !== 200) return setError(body.error ?? 'Could not load the raffles.');
     setError('');
     setData(body);
-  };
+  }, [id]);
   useEffect(() => {
+    const request = revision.current;
     void load();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per sponsor
-  }, []);
+    return () => {
+      request.value++;
+    };
+  }, [load]);
 
   return (
     <Block
@@ -119,12 +127,8 @@ function RaffleCard({
     ...(s === 'ready' && rules.open ? [['open', 'Open entries'] as [Form, string]] : []),
     ...(s === 'open' ? [['close', 'Close entries'] as ['close', string]] : []),
     ...(s === 'closed' ? [['draw', 'Draw the winner'] as [Form, string]] : []),
-    ...(s === 'drawn'
-      ? ([
-          ['redraw', 'Draw again'],
-          ['fulfil', 'Prize delivered'],
-        ] as [Form, string][])
-      : []),
+    ...(s === 'drawn' && r.claimDecision === 'expired' ? [['redraw', 'Draw again'] as [Form, string]] : []),
+    ...(s === 'drawn' && r.claimDecision === 'claimed' ? [['fulfil', 'Prize delivered'] as [Form, string]] : []),
     ...((s === 'proposed' || s === 'on_hold') && terms.open ? [['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer'] as [Form, string]] : []),
     ...(s === 'proposed' ? [['decline', 'Decline'] as [Form, string]] : []),
     ...(r.fulfilment === 'in_kind' && r.funding === 'unpaid' && s === 'offered' ? [['in_kind', 'Prize arrived'] as [Form, string]] : []),
@@ -178,6 +182,16 @@ function RaffleCard({
         </p>
       )}
       <p class="m-0 text-compact text-ink-2">{SETTLEMENT[r.settlement.state](r.settlement)}</p>
+      {r.payments?.map((p) => (
+        <p key={p.session}>
+          {p.session}. {p.review ?? 'Payment matched.'} {p.fee ? `Stripe fee ${p.fee}. Net ${p.net}.` : 'Stripe fee pending.'}
+        </p>
+      ))}
+      {r.payments?.some((p) => !p.fee) && (
+        <Button variant="secondary" disabled={!!busy} onClick={() => void act('reconcile', {}, 'Checked actual fees.')}>
+          Check actual fees
+        </Button>
+      )}
       {r.ledger.length > 0 && (
         <ul class="m-0 flex list-none flex-col gap-1 p-0 text-compact text-ink-2">
           {r.ledger.map((e) => (
@@ -187,6 +201,16 @@ function RaffleCard({
             </li>
           ))}
         </ul>
+      )}
+      {s === 'drawn' && !r.claimDecision && (
+        <div class="flex flex-wrap gap-3">
+          <Button variant="secondary" disabled={busy} onClick={() => void act('claim', { seq: r.draws.at(-1)?.seq }, 'Claim recorded.')}>
+            Record winner claim
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => void act('expire', { seq: r.draws.at(-1)?.seq }, 'Claim expiry recorded.')}>
+            Record expiry under the published rules
+          </Button>
+        </div>
       )}
       {s === 'ready' && !rules.open && <p class="m-0 text-compact text-ink-2">{rules.reason}</p>}
       {r.entries !== null && (
@@ -263,9 +287,9 @@ function RaffleCard({
                 },
                 'Entries are open. Share the entry page.',
               );
-            if (form === 'draw') void act('draw', {}, 'Drawn. We emailed the winner; the entry page shows the claim code.');
-            if (form === 'redraw') void act('redraw', { reason: f.reason }, 'Drawn again. We emailed the new winner.');
-            if (form === 'fulfil') void act('fulfil', { note: f.note }, 'Recorded as delivered.');
+            if (form === 'draw') void act('draw', {}, 'Drawn. The entry page shows the winning claim code.');
+            if (form === 'redraw') void act('redraw', { afterSeq: r.draws.at(-1)?.seq, reason: f.reason }, 'Drawn again. The new winner’s notification is queued.');
+            if (form === 'fulfil') void act('fulfil', { seq: r.draws.at(-1)?.seq, note: f.note }, 'Recorded as delivered.');
           }}
         >
           {form === 'offer' &&

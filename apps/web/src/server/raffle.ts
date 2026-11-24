@@ -9,7 +9,7 @@
  *
  * Slack gets counts and company names only. Nothing here holds entrant data.
  */
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import {
   RaffleRuleError,
   eligibility,
@@ -23,7 +23,9 @@ import {
   type RaffleStore,
 } from '@zurichjs/raffle';
 import type { FeeStore } from '@zurichjs/sponsorship';
-import { chfMinor, type Quote, type Sponsor } from '@zurichjs/sponsorship';
+import { chfMinor, type Quote, type QuotePayment, type SponsorStore, type Sponsor } from '@zurichjs/sponsorship';
+import { deactivateLink } from './sponsor-stripe.ts';
+import { sanityMeetups, type LiveLookup } from './sponsor-coverage.ts';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { membershipDb } from './membership-db.ts';
@@ -40,10 +42,23 @@ export const raffleStore = (env: Env): RaffleStore => postgresRaffleStore(member
 
 export type TermsGate = { open: true; version: string; url: string } | { open: false; reason: string };
 
+export function approvedHttps(value: string | undefined): value is string {
+  if (!value || !URL.canParse(value)) return false;
+  const u = new URL(value);
+  return u.protocol === 'https:' && !!u.hostname && !u.username && !u.password;
+}
+
+export async function requireHost(id: string, env: Env, deps: { meetups?: () => Promise<{ id: string }[]>; fetch?: typeof fetch }, now: Date) {
+  const ok = deps.meetups
+    ? (await deps.meetups()).some((m) => m.id === id)
+    : (await sanityMeetups(env, deps.fetch)([id])).some((m) => m.id === id && m.status !== 'cancelled' && m.status !== 'postponed' && m.datetime && new Date(m.datetime) > now);
+  if (!ok) throw new RaffleRuleError('The host meetup is no longer available.');
+}
+
 export function termsGate(env: Env): TermsGate {
   const version = env.RAFFLE_TERMS_VERSION?.trim();
   const url = env.RAFFLE_TERMS_URL?.trim();
-  if (!version || !url?.startsWith('https://'))
+  if (!version || !approvedHttps(url))
     return { open: false, reason: 'The raffle terms are not approved yet (RAFFLE_TERMS_VERSION and RAFFLE_TERMS_URL). Proposals can wait as drafts.' };
   return { open: true, version, url };
 }
@@ -56,7 +71,7 @@ export function termsGate(env: Env): TermsGate {
 export function rulesGate(env: Env): TermsGate {
   const version = env.RAFFLE_RULES_VERSION?.trim();
   const url = env.RAFFLE_RULES_URL?.trim();
-  if (!version || !url?.startsWith('https://')) return { open: false, reason: 'The raffle rules for entrants are not approved yet (RAFFLE_RULES_VERSION and RAFFLE_RULES_URL).' };
+  if (!version || !approvedHttps(url)) return { open: false, reason: 'The raffle rules for entrants are not approved yet (RAFFLE_RULES_VERSION and RAFFLE_RULES_URL).' };
   return { open: true, version, url };
 }
 
@@ -71,27 +86,29 @@ export function rulesGate(env: Env): TermsGate {
  */
 export type SharingGate = { open: true; version: string; noticeUrl: string; retentionDays: number } | { open: false; reason: string };
 
-export function sharingGate(env: Env, r?: Pick<Raffle, 'acceptedVersion'>): SharingGate {
+export function retentionSchedule(env: Env): number | null {
+  const days = Number(env.RAFFLE_RETENTION_DAYS);
+  return env.RAFFLE_RETENTION_ANCHOR === 'fulfilled_or_cancelled' && Number.isInteger(days) && days > 0 && days <= 3650 ? days : null;
+}
+export function sharingGate(env: Env, r?: Pick<Raffle, 'acceptedVersion' | 'sharingVersion' | 'noticeUrl' | 'openedAt'>): SharingGate {
   const version = env.RAFFLE_SHARING_POLICY_VERSION?.trim();
   const noticeUrl = env.RAFFLE_SHARING_NOTICE_URL?.trim();
-  const days = Number(env.RAFFLE_RETENTION_DAYS);
+  const days = retentionSchedule(env) ?? 0;
   const terms = env.RAFFLE_SHARING_TERMS_VERSION?.trim();
-  if (!version || !noticeUrl?.startsWith('https://') || !Number.isInteger(days) || days < 1 || days > 3650 || !terms)
+  if (!version || !approvedHttps(noticeUrl) || !Number.isInteger(days) || days < 1 || days > 3650 || !terms)
     return {
       open: false,
       reason:
         'Sharing with sponsors is off: the raffle notice, recipient policy, retention period and sharing terms are not all approved (RAFFLE_SHARING_POLICY_VERSION, RAFFLE_SHARING_NOTICE_URL, RAFFLE_RETENTION_DAYS, RAFFLE_SHARING_TERMS_VERSION).',
     };
+  if (r && (!termsGate(env).open || env.RAFFLE_TERMS_VERSION?.trim() !== r.acceptedVersion)) return { open: false, reason: 'The approved raffle agreement changed.' };
   if (r && r.acceptedVersion !== terms) return { open: false, reason: `The sponsor accepted raffle terms ${r.acceptedVersion ?? 'none'}, not ${terms}, which covers sharing.` };
+  if (r?.openedAt && (r.sharingVersion !== version || r.noticeUrl !== noticeUrl)) return { open: false, reason: 'The approved sharing notice changed. Sharing is paused.' };
   return { open: true, version, noticeUrl, retentionDays: days };
 }
 
 /** An entrant's own link: a random token we email, kept only as its SHA-256. */
 export const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
-export function newEntryToken() {
-  const token = randomBytes(32).toString('base64url');
-  return { token, hash: tokenHash(token) };
-}
 /** In the fragment, so the token never reaches a server log or a Referer header. */
 export const manageUrl = (origin: string, token: string) => `${new URL('/raffle/manage', origin).toString()}#t=${token}`;
 export const entryUrl = (origin: string, id: string) => `${new URL('/raffle', origin).toString()}?r=${encodeURIComponent(id)}`;
@@ -120,7 +137,10 @@ export function publicRaffleView(r: Raffle, sponsorName: string, winningCodes: s
     rulesUrl: r.rulesUrl,
     winningCodes: state === 'drawn' ? winningCodes : [],
     /** The optional box: who gets the contact, for what, and both privacy notices. Null when this raffle does not share. */
-    sharing: r.sharingVersion && r.sharePurpose && r.sharePrivacyUrl && noticeUrl ? { purpose: r.sharePurpose, sponsorPrivacyUrl: r.sharePrivacyUrl, noticeUrl } : null,
+    sharing:
+      r.sharingVersion && r.sharePurpose && r.sharePrivacyUrl && noticeUrl
+        ? { version: r.sharingVersion, purpose: r.sharePurpose, sponsorPrivacyUrl: r.sharePrivacyUrl, noticeUrl }
+        : null,
   };
 }
 
@@ -175,7 +195,7 @@ export const raffleView = (r: Raffle, quote: Quote | null, counts: { total: numb
   accepted: !!r.acceptedVersion && r.acceptedVersion === r.termsVersion,
   quote: quote ? quoteView(quote) : null,
   payUrl: r.stage === 'offered' && r.funding === 'unpaid' ? r.paymentLinkUrl : null,
-  reason: r.reason,
+  reason: ['declined', 'cancelled', 'on_hold'].includes(r.stage) ? r.reason : null,
   entries: counts?.total ?? null,
   closesAt: r.closesAt,
   winningCode,
@@ -192,8 +212,11 @@ export const adminRaffleView = (
   counts: { total: number; verified: number } = { total: 0, verified: 0 },
   draws: (Draw & { winner: Pick<Entry, 'name' | 'email' | 'claimCode'> })[] = [],
   origin = '',
+  payments: QuotePayment[] = [],
+  claimDecision: 'claimed' | 'expired' | null = null,
 ) => ({
   ...raffleView(r, quote, counts, draws.at(-1)?.winner.claimCode ?? null),
+  claimDecision,
   verifiedEntries: counts.verified,
   rulesVersion: r.rulesVersion,
   entryUrl: origin && r.openedAt ? entryUrl(origin, r.id) : null,
@@ -208,6 +231,17 @@ export const adminRaffleView = (
     reason: d.reason,
     at: d.at,
   })),
+  payments: payments
+    .filter((p) => p.subject === 'raffle' && p.subjectId === r.id)
+    .map((p) => ({
+      session: p.sessionId,
+      quoteId: p.quoteId,
+      amount: p.amountMinor,
+      currency: p.currency,
+      fee: p.feeMinor === null ? null : chfMinor(p.feeMinor),
+      net: p.netMinor === null ? null : chfMinor(p.netMinor),
+      review: p.reason,
+    })),
   sponsorId: r.sponsorId,
   flags: r.flags,
   amount: r.amountMinor === null ? null : chfMinor(r.amountMinor),
@@ -237,7 +271,17 @@ export async function loadAdminView(r: Raffle, raffles: RaffleStore, fees: FeeSt
   const withWinners = draws.filter((d) => byId.has(d.entryId)).map((d) => ({ ...d, winner: byId.get(d.entryId)! }));
   const gate = sharingGate(env, r);
   return {
-    ...adminRaffleView(r, quote, ledger, events, counts, withWinners, origin),
+    ...adminRaffleView(
+      r,
+      quote,
+      ledger,
+      events,
+      counts,
+      withWinners,
+      origin,
+      await fees.payments(r.sponsorId),
+      draws.length ? await raffles.claimDecision(r.id, draws.at(-1)!.seq) : null,
+    ),
     sharing: { gateOpen: gate.open, reason: gate.open ? null : gate.reason, offered: !!r.sharingVersion, purpose: r.sharePurpose, sponsorPrivacyUrl: r.sharePrivacyUrl },
   };
 }
@@ -300,5 +344,23 @@ export async function createRafflePaymentLink(r: Raffle, quote: Quote, origin: s
 
 export async function closeRafflePaymentLink(r: Raffle, deps: StripeDeps): Promise<void> {
   if (!r.paymentLinkId) return;
-  await stripeApi(deps.env, deps.fetch ?? fetch, 'POST', `payment_links/${encodeURIComponent(r.paymentLinkId)}`, stripeForm({ active: false })).catch(() => undefined);
+  await deactivateLink(r.paymentLinkId, deps);
+}
+
+export async function holdIneligibleRaffles(raffles: RaffleStore, sponsors: SponsorStore, lookup: LiveLookup, now: Date) {
+  const outstanding = await raffles.outstanding();
+  const hosts = await lookup([...new Set(outstanding.map((r) => r.eventId))]);
+  const byId = new Map(hosts.map((h) => [h.id, h]));
+  const actor = { kind: 'script', id: 'raffle-eligibility' } as const;
+  for (const raffle of outstanding) {
+    const sponsor = await sponsors.get(raffle.sponsorId);
+    const host = byId.get(raffle.eventId);
+    const ended = !sponsor || !eligibility(sponsor, zurichDay(now)).ok;
+    const moved = !host || host.status === 'cancelled' || host.status === 'postponed';
+    if (!ended && !moved) continue;
+    if (ended) await raffles.flag(raffle.id, 'late_payment', actor);
+    if (moved) await raffles.flag(raffle.id, 'meetup_changed', actor);
+    if (raffle.funding === 'paid') await raffles.flag(raffle.id, 'refund_review', actor);
+    await raffles.moveStage(raffle.id, { from: raffle.stage, to: 'on_hold', actor, reason: ended ? 'The sponsorship is no longer eligible.' : 'The host meetup changed.' });
+  }
 }

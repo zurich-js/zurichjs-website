@@ -4,7 +4,7 @@
  * meetup, the board makes an offer, the sponsor accepts the raffle terms of that offer and pays
  * through its link. Amounts come from the server; nothing is computed here.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, SelectField, TextField } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
@@ -15,7 +15,10 @@ import { longDate } from '../../../server/dates.ts';
 import type { RaffleView } from '../../../server/raffle.ts';
 import { TextButton } from '../forms/shared.tsx';
 
-type SponsorRaffle = RaffleView & { shares: { id: string; expiresAt: string; count: number }[] };
+type SponsorRaffle = RaffleView & {
+  deletionTasks: { shareId: string; entryId: string; consentId: string; acknowledged: boolean }[];
+  shares: { id: string; expiresAt: string; count: number }[];
+};
 
 interface Data {
   raffles: SponsorRaffle[];
@@ -54,17 +57,24 @@ export function Raffles({ contactEmail, onSignedOut }: { contactEmail: string; o
   const [proposing, setProposing] = useState(false);
   const [flash, setFlash] = useState('');
 
-  const load = async () => {
+  const signedOut = useRef(onSignedOut);
+  signedOut.current = onSignedOut;
+  const revision = useRef({ value: 0 });
+  const load = useCallback(async () => {
+    const at = ++revision.current.value;
     setError('');
-    const r = await call<Data>('/api/sponsorship/raffles', undefined, onSignedOut);
-    if (!r) return;
+    const r = await call<Data>('/api/sponsorship/raffles', undefined, () => signedOut.current());
+    if (at !== revision.current.value || !r) return;
     if (!r.ok) return setError(r.error);
     setData(r.data);
-  };
-  useEffect(() => {
-    void load();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
+  useEffect(() => {
+    const request = revision.current;
+    void load();
+    return () => {
+      request.value++;
+    };
+  }, [load]);
 
   return (
     <section aria-labelledby="h-raffles" aria-busy={!data && !error} class={cardClass('outline', 'lg')}>
@@ -98,7 +108,7 @@ export function Raffles({ contactEmail, onSignedOut }: { contactEmail: string; o
             <ul class="m-0 flex list-none flex-col gap-4 p-0">
               {data.raffles.map((r) => (
                 <RaffleItem
-                  key={r.id}
+                  key={`${r.id}:${r.quote?.id}:${r.termsVersion}`}
                   r={r}
                   terms={data.terms}
                   onSignedOut={onSignedOut}
@@ -162,7 +172,7 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
 
   const q = r.quote;
   return (
-    <li class={cardClass('filled', 'md')}>
+    <li id={`raffle-${r.id}`} class={cardClass('filled', 'md')}>
       <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-4">
         <div class="flex min-w-0 flex-col">
           <span class="text-lead font-bold break-words">
@@ -229,7 +239,7 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
               <Button
                 variant="primary"
                 disabled={!agree || !!busy}
-                onClick={() => void send({ action: 'accept', termsVersion: r.termsVersion, confirm: true }, 'accept', 'Terms accepted.')}
+                onClick={() => void send({ action: 'accept', quoteId: r.quote?.id ?? null, termsVersion: r.termsVersion, confirm: true }, 'accept', 'Terms accepted.')}
               >
                 {busy === 'accept' ? 'Accepting…' : 'Accept the offer'}
               </Button>
@@ -246,6 +256,20 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
           </a>
         </div>
       )}
+      {r.deletionTasks
+        ?.filter((task) => !task.acknowledged)
+        .map((task) => (
+          <div key={task.shareId + task.consentId}>
+            <p>Permission was withdrawn for reference {task.entryId}. Delete or suppress your copy under the recipient policy.</p>
+            <Button
+              variant="secondary"
+              disabled={!!busy}
+              onClick={() => void send({ action: 'acknowledge_deletion', shareId: task.shareId, consentId: task.consentId }, 'acknowledge', 'Your acknowledgement was recorded.')}
+            >
+              Confirm deletion or suppression
+            </Button>
+          </div>
+        ))}
       {r.shares.map((s) => (
         <SharedContacts key={s.id} raffleId={r.id} share={s} onSignedOut={onSignedOut} />
       ))}
@@ -267,9 +291,14 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
   const err = (k: string) => (error?.field === k ? error.message : undefined);
 
   useEffect(() => {
-    void call<{ meetups: Meetup[] }>('/api/sponsorship/meetups', undefined, onSignedOut).then((r) => setMeetups(r?.ok ? r.data.meetups : []));
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once
-  }, []);
+    let active = true;
+    void call<{ meetups: Meetup[] }>('/api/sponsorship/meetups', undefined, onSignedOut).then((r) => {
+      if (active) setMeetups(r?.ok ? r.data.meetups : []);
+    });
+    return () => {
+      active = false;
+    };
+  }, [onSignedOut]);
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -356,13 +385,13 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
  * entrants whose permission still counts, so someone who withdrew is gone from the list.
  */
 function SharedContacts({ raffleId, share, onSignedOut }: { raffleId: string; share: { id: string; expiresAt: string; count: number }; onSignedOut: () => void }) {
-  const [data, setData] = useState<{ purpose: string; rows: { name: string; email: string }[]; expiresAt: string } | null>(null);
+  const [data, setData] = useState<{ purpose: string; rows: { reference: string; name: string; email: string }[]; expiresAt: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const load = async () => {
     setBusy(true);
     setError('');
-    const r = await call<{ purpose: string; rows: { name: string; email: string }[]; expiresAt: string }>(
+    const r = await call<{ purpose: string; rows: { reference: string; name: string; email: string }[]; expiresAt: string }>(
       `/api/sponsorship/raffles/${encodeURIComponent(raffleId)}/share?s=${encodeURIComponent(share.id)}`,
       undefined,
       onSignedOut,
@@ -391,7 +420,7 @@ function SharedContacts({ raffleId, share, onSignedOut }: { raffleId: string; sh
             <ul class="m-0 flex list-none flex-col gap-1 p-0 text-compact">
               {data.rows.map((x) => (
                 <li key={x.email || x.name} class="break-words">
-                  {[x.name, x.email].filter(Boolean).join(', ')}
+                  {[x.name, x.email].filter(Boolean).join(', ')} (reference {x.reference})
                 </li>
               ))}
             </ul>

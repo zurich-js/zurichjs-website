@@ -9,6 +9,7 @@ import { memoryRaffleStore, type RaffleStore } from '@zurichjs/raffle';
 import { memoryFeeStore, memoryStore, type FeeStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAdminRaffle } from '../src/pages/api/membership/admin/raffles/[id]/index.ts';
+import { deliverRaffleMail } from '../src/server/raffle-mail.ts';
 import { handleEnter } from '../src/pages/api/raffle/entries.ts';
 import { handleRaffleInfo } from '../src/pages/api/raffle/info.ts';
 import { handleManage } from '../src/pages/api/raffle/manage.ts';
@@ -18,7 +19,14 @@ import { resetRateLimits } from '../src/server/rateLimit.ts';
 
 const ADMIN = 'admin-password-for-tests';
 const base: Record<string, string> = { BETTER_AUTH_URL: 'https://zurichjs.com', ADMIN_PASSWORD: ADMIN, RESEND_API_KEY: 're_test', SLACK_SPONSORSHIP_CHANNEL_ID: 'C1' };
-const env: Record<string, string> = { ...base, RAFFLE_RULES_VERSION: 'rules-2026-12', RAFFLE_RULES_URL: 'https://zurichjs.com/raffle-rules' };
+const env: Record<string, string> = {
+  ...base,
+  BETTER_AUTH_SECRET: 'a-synthetic-only-test-secret-of-32-characters',
+  RAFFLE_TERMS_VERSION: 't-1',
+  RAFFLE_TERMS_URL: 'https://example.test/terms',
+  RAFFLE_RULES_VERSION: 'rules-2026-12',
+  RAFFLE_RULES_URL: 'https://zurichjs.com/raffle-rules',
+};
 const board = { kind: 'board', id: 'admin' } as const;
 const ana = { id: 'user-ana', email: 'ana@acme.ch' };
 let clock = new Date('2026-12-01T10:00:00Z');
@@ -46,7 +54,17 @@ describe('raffle entries and the draw', () => {
       body: JSON.stringify(body),
     });
   const act = async (body: unknown, e = env) =>
-    handleAdminRaffle(post(body, true), raffleId, { env: e, store: sponsors, raffles, fees, fetch: f, slack: slackFake, now: clock.getTime(), log: () => undefined });
+    handleAdminRaffle(post(body, true), raffleId, {
+      env: e,
+      store: sponsors,
+      raffles,
+      fees,
+      meetups: async () => [{ id: 'event-dec', title: 'Fixture', date: '2026-12-09' }],
+      fetch: f,
+      slack: slackFake,
+      now: clock.getTime(),
+      log: () => undefined,
+    });
   const info = async () => (await handleRaffleInfo(new Request(`https://zurichjs.com/api/raffle/info?r=${raffleId}`), pub())).json() as Promise<Record<string, any>>;
   const enter = (body: Record<string, unknown>, origin?: string) =>
     handleEnter(post({ raffleId, name: 'Kim', email: 'kim@example.com', rules: true, ...body }, false, origin), pub());
@@ -98,6 +116,25 @@ describe('raffle entries and the draw', () => {
     await raffles.setFunding(r.id, { from: 'unpaid', to: 'paid', actor: board });
     await raffles.moveStage(r.id, { from: 'offered', to: 'ready', actor: board });
     raffleId = r.id;
+  });
+
+  it('retries entry mail and recovers a private link without revealing which addresses entered', async () => {
+    await act({ action: 'open', closesAt: '2026-12-09T19:30:00Z' });
+    const body = { raffleId, name: 'Kim', email: 'kim@example.com', rules: true };
+    const failed = await handleEnter(post(body), { ...pub(), fetch: async () => new Response('', { status: 503 }) });
+    expect(failed.status).toBe(200);
+    expect(await raffles.entryCounts(raffleId)).toMatchObject({ total: 1 });
+    await deliverRaffleMail(env, raffles, sponsors, 'https://zurichjs.com', { fetch: f });
+    expect(emails).toHaveLength(1);
+    const original = tokenOf(emails[0]!);
+    const known = await enter({ action: 'recover' });
+    const unknown = await enter({ action: 'recover', email: 'other@example.com' });
+    expect([known.status, await known.json()]).toEqual([unknown.status, await unknown.json()]);
+    await deliverRaffleMail(env, raffles, sponsors, 'https://zurichjs.com', { fetch: f });
+    expect(emails).toHaveLength(2);
+    const replacement = tokenOf(emails[1]!);
+    expect(replacement).not.toBe(original);
+    expect((await handleManage(post({ action: 'view', token: replacement }), pub())).status).toBe(200);
   });
 
   it('opens under approved rules, takes entries until closing, confirms by click, draws once, and keeps entrants private', async () => {
@@ -176,15 +213,22 @@ describe('raffle entries and the draw', () => {
 
     // Redraw: a reason, a new winner, the history kept; then fulfilment.
     expect((await act({ action: 'redraw' })).status).toBe(400);
-    const redrawn = (await (await act({ action: 'redraw', reason: 'No reply within 7 days, as the rules say' })).json()) as Record<string, any>;
+    expect((await act({ action: 'expire', seq: 1 })).status).toBe(200);
+    const redrawn = (await (await act({ action: 'redraw', afterSeq: 1, reason: 'No reply within 7 days, as the rules say' })).json()) as Record<string, any>;
     expect(redrawn.raffle.draws.map((d: Record<string, unknown>) => [d.seq, d.eligibleCount])).toEqual([
       [1, 3],
       [2, 2],
     ]);
+    const afterRedraw = emails.length;
+    const replay = await act({ action: 'redraw', afterSeq: 1, reason: 'No reply within 7 days, as the rules say' });
+    expect(replay.status).toBe(200);
+    expect(await raffles.draws(raffleId)).toHaveLength(2);
+    expect(emails).toHaveLength(afterRedraw);
     expect(redrawn.raffle.draws[1].email).not.toBe(winner.email);
     expect((await info()).raffle.winningCodes).toEqual([redrawn.raffle.draws[1].claimCode]);
     expect((await act({ action: 'fulfil' })).status).toBe(400);
-    expect(((await (await act({ action: 'fulfil', note: 'Handed over at the meetup' })).json()) as Record<string, any>).raffle.stage).toBe('fulfilled');
+    expect((await act({ action: 'claim', seq: 2 })).status).toBe(200);
+    expect(((await (await act({ action: 'fulfil', seq: 2, note: 'Handed over at the meetup' })).json()) as Record<string, any>).raffle.stage).toBe('fulfilled');
 
     // Slack never names or emails an entrant.
     expect(slack.join('\n')).not.toMatch(/@example\.com|Kim|lee|max/);

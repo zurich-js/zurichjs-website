@@ -25,6 +25,8 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recovery, setRecovery] = useState<'idle' | 'busy' | 'accepted' | 'error'>('idle');
   const [sent, setSent] = useState(false);
   const sentRef = useFocusWhen<HTMLDivElement>(sent);
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,12 +64,32 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
     const res = await fetch('/api/raffle/entries', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ raffleId: id, name: f.name, email: f.email, rules: f.rules, share: f.share, company }),
+      body: JSON.stringify({
+        raffleId: id,
+        name: f.name,
+        email: f.email,
+        rules: f.rules,
+        share: f.share,
+        noticeVersion: load.kind === 'ready' ? load.raffle.sharing?.version : null,
+        company,
+      }),
     }).catch(() => null);
     setBusy(false);
     const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; field?: string }) : null;
     if (!res?.ok || !data?.ok) return setError({ field: data?.field, message: data?.error ?? 'We couldn’t reach the site. Check your connection and try again.' });
     setSent(true);
+  };
+
+  const requestLink = async (event: Event) => {
+    event.preventDefault();
+    if (recovery === 'busy') return;
+    setRecovery('busy');
+    const reply = await fetch('/api/raffle/entries', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'recover', raffleId: id, email: recoveryEmail }),
+    }).catch(() => null);
+    setRecovery(reply?.ok ? 'accepted' : 'error');
   };
 
   if (load.kind === 'loading')
@@ -111,7 +133,7 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
             ))}
           </div>
         )}
-        {r.state === 'drawn' && <p class={body}>We emailed the winner. Your claim code is in your entry email.</p>}
+        {r.state === 'drawn' && <p class={body}>Find your claim code in your entry email.</p>}
         {r.state === 'closed' && <p class={body}>Entries are closed. The winning claim code shows here after the draw.</p>}
         {r.state === 'cancelled' && <p class={body}>This raffle was cancelled.</p>}
         {r.rulesUrl && (
@@ -123,7 +145,7 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
       {r.state === 'open' &&
         (sent ? (
           <Notice tone="success" live as="h2" focusRef={sentRef} title="Check your email">
-            <p class="m-0 text-body">If this is your first entry, we sent your claim code and a link to {f.email.trim().toLowerCase()}. Your entry counts from now.</p>
+            <p class="m-0 text-body">Your entry counts. Check {f.email.trim().toLowerCase()} for your claim code and private link. You can request another link below.</p>
           </Notice>
         ) : (
           <form ref={formRef} onSubmit={submit} noValidate class={cardClass('outline', 'lg')}>
@@ -190,6 +212,30 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
             </div>
           </form>
         ))}
+      <details>
+        <summary>Request another entry link</summary>
+        <form class="flex max-w-form flex-col gap-3" onSubmit={requestLink}>
+          <TextField
+            label="Email used to enter"
+            type="email"
+            required
+            value={recoveryEmail}
+            onInput={(e) => {
+              setRecoveryEmail(e.currentTarget.value);
+              setRecovery('idle');
+            }}
+          />
+          <Button variant="secondary" type="submit" disabled={recovery === 'busy'}>
+            Request link
+          </Button>
+          {recovery === 'accepted' && (
+            <Notice live tone="success" title="Request received">
+              If this email has an entry, a private link will follow.
+            </Notice>
+          )}
+          {recovery === 'error' && <Notice live tone="danger" title="Couldn’t request a link. Try again." />}
+        </form>
+      </details>
     </div>
   );
 }

@@ -29,11 +29,22 @@ import { RaffleRuleError, uniformIndex, type Flag, type Raffle } from '@zurichjs
 import { francsToMinor, isFeeChoice, quoteFigures } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../../server/http.ts';
-import { assertEligible, closeRafflePaymentLink, loadAdminView, raffleStore, rulesGate, sharingGate, termsGate } from '../../../../../../server/raffle.ts';
-import { renderEmail } from '@zurichjs/emails';
-import { sendMemberEmail } from '@zurichjs/integrations';
-import { longDate } from '../../../../../../server/dates.ts';
+import {
+  requireHost,
+  assertEligible,
+  closeRafflePaymentLink,
+  loadAdminView,
+  raffleStore,
+  rulesGate,
+  retentionSchedule,
+  approvedHttps,
+  sharingGate,
+  termsGate,
+} from '../../../../../../server/raffle.ts';
+import { deliverRaffleMail } from '../../../../../../server/raffle-mail.ts';
 import { note, slackText } from '../../../../../../server/sponsor.ts';
+import { reconcileFee } from '../../../../../../server/sponsor-offers.ts';
+import { raffleTransaction } from '../../../../../../server/raffle-transaction.ts';
 import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { currentGate, feeStore } from '../../../../../../server/sponsor-fees.ts';
 
@@ -55,21 +66,6 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
       const body = (await readJsonObject(request)) ?? {};
       const now = deps.now === undefined ? new Date() : new Date(deps.now);
       const answer = async (x: Raffle) => json(200, { ok: true, raffle: await loadAdminView(x, raffles, fees, origin, env) });
-      /** The winner hears from us privately; a lost email never undoes a draw. */
-      const tellWinner = async (seq: number, w: { name: string; email: string; claimCode: string }) => {
-        const s = await store.get(r.sponsorId);
-        const message = renderEmail('raffle-winner', {
-          name: w.name,
-          prize: r.prize,
-          meetup: `${r.eventTitle}, ${longDate(r.eventDate)}`,
-          sponsorName: s?.companyName ?? 'a sponsor',
-          claimCode: w.claimCode,
-          rulesUrl: r.rulesUrl ?? origin,
-        });
-        await sendMemberEmail(env, { to: w.email, ...message }, { idempotencyKey: `raffle-winner:${r.id}:${seq}`, fetch: deps.fetch, log: deps.log }).catch((e: Error) =>
-          (deps.log ?? console.log)(`[raffle] winner email for ${r.id} draw ${seq} failed: ${e.message}`),
-        );
-      };
       const stop = async (to: 'on_hold' | 'cancelled', reason: string) => {
         if (!reason) return fail(400, 'Give a reason; the sponsor sees it.', { field: 'reason' });
         let out = await raffles.moveStage(r.id, { from: r.stage, to, actor: BOARD, reason });
@@ -84,12 +80,19 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
       };
 
       switch (body.action) {
+        case 'reconcile': {
+          for (const p of await fees.payments(r.sponsorId))
+            if (p.subject === 'raffle' && p.subjectId === r.id && p.feeMinor === null) await reconcileFee(p, fees, lifecycle.stripe);
+          return answer(r);
+        }
         case 'offer': {
           const gate = termsGate(env);
           if (!gate.open) throw new RaffleRuleError(gate.reason, 'gate');
           const s = await store.get(r.sponsorId);
           if (!s) return fail(404, 'No such sponsor.');
           assertEligible(s, now);
+          if (!['proposed', 'on_hold'].includes(r.stage) || r.funding !== 'unpaid') throw new RaffleRuleError('Only an unpaid proposal or held offer may be offered.');
+          await requireHost(r.eventId, env, deps, now);
           if (r.fulfilment === 'in_kind') return answer(await raffles.offer(r.id, { from: r.stage, amountMinor: null, quoteId: null, termsVersion: gate.version, actor: BOARD }));
           const amount = money(body.amountChf);
           if (amount === null || amount < 100 || amount > 1_000_000) return fail(400, 'Enter the amount in francs, from 1 to 10’000.', { field: 'amountChf' });
@@ -98,15 +101,21 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const figures = quoteFigures(amount, choice, await currentGate(fees, env));
           await closeRafflePaymentLink(r, lifecycle.stripe);
           if (r.paymentLinkId) await raffles.linkPayment(r.id, null, BOARD);
-          const { quote } = await fees.createQuote({
-            ...figures,
-            sponsorId: r.sponsorId,
-            subject: 'raffle',
-            subjectId: r.id,
-            purpose: `Raffle add-on: ${r.prize}, ${r.eventTitle}`.slice(0, 300),
-            createdBy: 'board',
-          });
-          return answer(await raffles.offer(r.id, { from: r.stage, amountMinor: amount, quoteId: quote.id, termsVersion: gate.version, actor: BOARD }));
+          return answer(
+            await raffleTransaction(env, r.id, deps, async ({ raffles, fees }) => {
+              const latest = await raffles.get(r.id);
+              if (latest?.stage !== r.stage || latest.funding !== 'unpaid') throw new RaffleRuleError('This offer has changed.');
+              const { quote } = await fees.createQuote({
+                ...figures,
+                sponsorId: r.sponsorId,
+                subject: 'raffle',
+                subjectId: r.id,
+                purpose: `Raffle add-on: ${r.prize}, ${r.eventTitle}`.slice(0, 300),
+                createdBy: 'board',
+              });
+              return raffles.offer(r.id, { from: r.stage, amountMinor: amount, quoteId: quote.id, termsVersion: gate.version, actor: BOARD });
+            }),
+          );
         }
         case 'decline': {
           const reason = text(body.reason, 1000);
@@ -141,6 +150,9 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           return stop('cancelled', text(body.reason, 1000));
         case 'resume': {
           if (r.stage !== 'on_hold') throw new RaffleRuleError('Only a raffle on hold can go ahead again.');
+          const ledger = await raffles.ledger(r.id);
+          if (!ledger.some((e) => e.kind === (r.fulfilment === 'in_kind' ? 'in_kind_received' : 'prize_purchase')))
+            throw new RaffleRuleError('Record the prize receipt or delivery before resuming.');
           const to = r.acceptedVersion && (r.funding === 'paid' || r.funding === 'in_kind') ? 'ready' : 'offered';
           if (to === 'offered') throw new RaffleRuleError('Send a new offer instead: it was not accepted and paid yet.');
           return answer(await raffles.moveStage(r.id, { from: 'on_hold', to, actor: BOARD }));
@@ -153,29 +165,53 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const reference = text(body.reference, 200);
           if (amount === null || amount < 1) return fail(400, 'Enter the refunded amount in francs.', { field: 'amountChf' });
           if (!reference) return fail(400, 'Give the Stripe refund id or bank reference.', { field: 'reference' });
-          await raffles.addLedger(r.id, { kind: 'refund', amountMinor: amount, note: 'Refund', reference }, BOARD);
-          let out = await raffles.setFunding(r.id, { from: 'refund_pending', to: 'refunded', actor: BOARD });
-          out = await raffles.clearFlag(r.id, 'refund_review', BOARD);
-          return answer(out);
+          return answer(
+            await raffleTransaction(env, r.id, deps, async ({ raffles }) => {
+              const current = (await raffles.get(r.id))!;
+              const prior = (await raffles.ledger(r.id)).find((e) => e.kind === 'refund' && e.reference === reference);
+              if (prior && prior.amountMinor === amount) return current;
+              if (prior || current.funding !== 'refund_pending') throw new RaffleRuleError('Check the existing refund before recording this one.');
+              await raffles.setFunding(r.id, { from: 'refund_pending', to: 'refunded', actor: BOARD });
+              await raffles.addLedger(r.id, { kind: 'refund', amountMinor: amount, note: 'Refund', reference }, BOARD);
+              return raffles.clearFlag(r.id, 'refund_review', BOARD);
+            }),
+          );
         }
         case 'open': {
+          const terms = termsGate(env);
+          if (!terms.open || r.acceptedVersion !== terms.version || r.termsVersion !== terms.version)
+            throw new RaffleRuleError('The currently approved raffle agreement must be accepted.');
+          if (r.flags.length) throw new RaffleRuleError('Resolve outstanding reviews before opening entries.');
+          const sponsor = await store.get(r.sponsorId);
+          if (!sponsor) return fail(404, 'No such sponsor.');
+          assertEligible(sponsor, now);
+          await requireHost(r.eventId, env, deps, now);
           const gate = rulesGate(env);
           if (!gate.open) throw new RaffleRuleError(gate.reason, 'gate');
           const closes = typeof body.closesAt === 'string' ? new Date(body.closesAt) : null;
           if (!closes || Number.isNaN(closes.getTime()) || closes <= now) return fail(400, 'Choose when entries close, in the future.', { field: 'closesAt' });
           if (closes.toISOString().slice(0, 10) > r.eventDate) return fail(400, 'Entries must close by the end of the meetup day.', { field: 'closesAt' });
-          let sharing: { purpose: string; privacyUrl: string; version: string } | null = null;
+          let sharing: { purpose: string; privacyUrl: string; version: string; noticeUrl: string } | null = null;
           if (body.sharing && typeof body.sharing === 'object') {
             const share = sharingGate(env, r);
             if (!share.open) throw new RaffleRuleError(share.reason, 'gate');
             const sb = body.sharing as Record<string, unknown>;
             const purpose = text(sb.purpose, 300);
-            const privacyUrl = typeof sb.privacyUrl === 'string' && sb.privacyUrl.startsWith('https://') && sb.privacyUrl.length <= 500 ? sb.privacyUrl : '';
+            const privacyUrl = typeof sb.privacyUrl === 'string' && approvedHttps(sb.privacyUrl) && sb.privacyUrl.length <= 500 ? sb.privacyUrl : '';
             if (purpose.length < 10) return fail(400, 'Say what the sponsor will use the contacts for, in a sentence entrants read.', { field: 'purpose' });
             if (!privacyUrl) return fail(400, 'Give the sponsor’s privacy notice (https).', { field: 'privacyUrl' });
-            sharing = { purpose, privacyUrl, version: share.version };
+            sharing = { purpose, privacyUrl, version: share.version, noticeUrl: share.noticeUrl };
           }
-          return answer(await raffles.openEntries(r.id, { rulesVersion: gate.version, rulesUrl: gate.url, closesAt: closes.toISOString(), actor: BOARD, sharing }));
+          return answer(
+            await raffles.openEntries(r.id, {
+              rulesVersion: gate.version,
+              rulesUrl: gate.url,
+              closesAt: closes.toISOString(),
+              actor: BOARD,
+              sharing,
+              retentionDays: retentionSchedule(env),
+            }),
+          );
         }
         case 'close': {
           const out = await raffles.moveStage(r.id, { from: 'open', to: 'closed', actor: BOARD });
@@ -185,25 +221,36 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
         }
         case 'draw': {
           const d = await raffles.draw(r.id, { actor: BOARD, pick: (n) => uniformIndex(n) });
-          if (!d.repeated) {
-            await tellWinner(d.draw.seq, d.entry);
-            await note(`:tada: Raffle drawn for ${slackText(r.eventTitle)} from ${d.draw.eligibleCount} entries. Winning code ${d.entry.claimCode}.`, lifecycle);
-          }
+          await deliverRaffleMail(env, raffles, store, origin, { entryId: d.entry.id, fetch: deps.fetch });
+          if (!d.repeated) await note(`:tada: Raffle drawn from ${d.draw.eligibleCount} entries.`, lifecycle);
           return answer((await raffles.get(r.id))!);
+        }
+        case 'claim':
+        case 'expire': {
+          if (typeof body.seq !== 'number' || !Number.isSafeInteger(body.seq)) return fail(400, 'Review the current draw first.');
+          await raffles.decideClaim(r.id, body.seq, body.action === 'claim' ? 'claimed' : 'expired', BOARD);
+          return answer(r);
         }
         case 'redraw': {
           const reason = text(body.reason, 500);
-          if (!reason) return fail(400, 'Give the reason for drawing again; it is kept with the draw.', { field: 'reason' });
-          const seq = Math.max(0, ...(await raffles.draws(r.id)).map((x) => x.seq));
-          const d = await raffles.redraw(r.id, { actor: BOARD, reason, pick: (n) => uniformIndex(n), afterSeq: seq });
-          await tellWinner(d.draw.seq, d.entry);
-          await note(`:repeat: Raffle for ${slackText(r.eventTitle)} drawn again (${d.draw.eligibleCount} entries left). Winning code ${d.entry.claimCode}.`, lifecycle);
+          const seq = body.afterSeq;
+          if (!reason || typeof seq !== 'number' || !Number.isSafeInteger(seq) || seq < 1) return fail(400, 'Review the draw and give a reason for drawing again.');
+          const result = await raffleTransaction(env, r.id, deps, async ({ raffles }) => {
+            const draws = await raffles.draws(r.id);
+            const replay = draws.find((d) => d.seq === seq + 1);
+            if (replay && replay.reason === reason) return { entryId: replay.entryId, repeated: true, count: replay.eligibleCount };
+            if ((await raffles.claimDecision(r.id, seq)) !== 'expired') throw new RaffleRuleError('Record that the claim expired under the published rules first.');
+            const d = await raffles.redraw(r.id, { actor: BOARD, reason, afterSeq: seq, pick: (n) => uniformIndex(n) });
+            return { entryId: d.entry.id, repeated: false, count: d.draw.eligibleCount };
+          });
+          await deliverRaffleMail(env, raffles, store, origin, { entryId: result.entryId, fetch: deps.fetch });
+          if (!result.repeated) await note(`:repeat: Raffle drawn again from ${result.count} entries.`, lifecycle);
           return answer((await raffles.get(r.id))!);
         }
         case 'fulfil': {
           const done = text(body.note, 500);
-          if (!done) return fail(400, 'Say how the prize reached the winner.', { field: 'note' });
-          return answer(await raffles.moveStage(r.id, { from: 'drawn', to: 'fulfilled', actor: BOARD, reason: done }));
+          if (!done || typeof body.seq !== 'number') return fail(400, 'Review the draw and say how the prize reached the winner.');
+          return answer(await raffles.fulfil(r.id, body.seq, done, BOARD));
         }
         case 'clear_flag':
           if (!FLAGS.includes(body.flag as Flag)) return fail(400, 'Unknown flag.', { field: 'flag' });

@@ -60,31 +60,31 @@ Cancelling or pausing a raffle with money in flags it `refund_review`. The board
 
 - **The entrant rules gate:** entries open only under an entrant rules version the owner approved and published (`RAFFLE_RULES_VERSION`, `RAFFLE_RULES_URL`). Opening freezes on the raffle the rules version and URL, the closing time (by the end of the meetup day), the prize and the meetup; the database refuses later changes to them.
 - **The entry page** `/raffle?r=<raffle id>` (noindex) shows the prize, the meetup, "Raffle supported by" the sponsor, the closing time and the rules. Entry is free and needs no account: a name or nickname, an email and the rules box. One entry per email per raffle, checked on the server, with rate limits per address and per connection and a honeypot. The answer is the same for a new and a repeated email, so nobody learns whether an address entered. A link alone does not prove someone was at the meetup.
-- **The entry email** has the claim code and the entrant's own link, `/raffle/manage#t=…` (the token is in the fragment and kept only as a SHA-256 hash). Opening the link shows the entry; the email counts as verified only when its owner clicks Confirm, so a mail scanner cannot confirm it. The entry counts either way.
+- **The entry email** has the claim code and the entrant's own link, `/raffle/manage#t=…` (the token is in the fragment and kept only as a SHA-256 hash). Opening the link shows the entry; the email counts as verified only when its owner clicks Confirm, so a mail scanner cannot confirm it. The entry counts either way. Entry, recovery and winner messages are queued durably and retried using the same provider key. Entrants can request another private link on the raffle page. The management page clears its token from the address bar and omits third-party analytics.
 
 ## The draw
 
 - **Once:** closing the entries freezes them; drawing is a compare-and-set from `closed` to `drawn` in one statement with the draw row. A second click returns the same winner. The winner is chosen uniformly from all entries (32-bit `crypto.getRandomValues`, rejection sampling), in entry order.
 - **Auditable:** each draw keeps its number, the eligible count, the index drawn, a SHA-256 fingerprint of the entries' ids in draw order, who drew and when. Draws are append-only.
 - **Redraw:** needs a reason, which is kept with the draw, and excludes earlier winners. It follows the rules published before entries opened.
-- **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. Recording the delivery marks the raffle fulfilled.
+- **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. The board records the claim before recording delivery. The delivery note stays private. A redraw requires a recorded expiry against the reviewed draw and a reason under the published rules. Retrying the same redraw returns the recorded result.
 
 ## Sharing with the sponsor
 
 Off unless the owner configured all of it. Entering and the draw never depend on it.
 
 - **The sharing gate** (`RAFFLE_SHARING_POLICY_VERSION`, `RAFFLE_SHARING_NOTICE_URL`, `RAFFLE_RETENTION_DAYS`, `RAFFLE_SHARING_TERMS_VERSION`; [Environment variables](/systems/operations/environment.md)): an approved raffle notice and recipient policy as one version, where entrants read it, the retention period, and the raffle terms version that allows sharing. It is open for a raffle only if its sponsor accepted that terms version. It is checked when entries open, on every release and on every read.
-- **Per raffle:** when opening entries with the gate open, the board may give the purpose entrants read and the sponsor's privacy notice. Both are frozen with the policy version; a raffle opened without them never asks anyone.
+- **Per raffle:** when opening entries with the gate open, the board may give the purpose entrants read and the sponsor's privacy notice. Both notices and the purpose are frozen with the policy version. Changing the approved version or operator notice URL pauses releases and reads. An entry records whether the displayed notice was accepted or declined; a raffle opened without them never asks anyone.
 - **The box** on the entry form is unticked, names the sponsor and the purpose, and links the sponsor's privacy notice and our raffle notice. It is separate from the rules box. A choice made there counts only once the entrant confirms the email; one made from the entrant's own link counts at once (the link proves the address).
 - **Withdrawal** works from the entrant's own link, without an account, at any time, even with sharing switched off. It stops any later share; a new choice afterwards is a new record.
 - **Release:** the board previews the entrants whose permission counts now, selects rows, picks one confirmed sponsor contact, the fields (name, email) and 1 to 30 days, and confirms with a tick. The share is the selection narrowed to valid permission at that moment: the board narrows, never widens. Each release is logged with the recipient, purpose, fields, entry ids and expiry.
-- **Access:** only the named contact, signed in, until expiry, while the gate is open. Every read is narrowed again to permission valid at that moment, so a withdrawal before access removes the row, and is logged with its row count. One sponsor can never read another's share. Releases can be withdrawn by the board.
+- **Access:** only the named contact, signed in, until expiry, while the gate is open. Every read is narrowed again to permission valid at that moment, so a withdrawal before access removes the row, and records exactly which entry references that recipient received. Withdrawal creates an outstanding deletion or suppression request against each delivery. Recipients see these requests in their account after expiry or when sharing is off. The board can see which requests the recipient acknowledged. One sponsor can never read another's share. Releases can be withdrawn by the board.
 - **Copies cannot be recalled.** The sponsor page says so; the recipient policy says what the sponsor must delete or stop using after a withdrawal.
-- **Retention:** once a raffle is fulfilled or cancelled and the retention period after its closing time has passed, the board can erase every entrant's name and email. Draws, counts and records stay.
+- **Retention.** At opening, the raffle freezes the approved number of days when the owner configures both `RAFFLE_RETENTION_DAYS` and `RAFFLE_RETENTION_ANCHOR=fulfilled_or_cancelled`. Fulfilment or cancellation starts that clock. The daily job or the board can erase expired entrant records independently of sharing. Erasure removes contact information, management access, outstanding mail and private delivery notes. Draws, pseudonymous delivery references and deletion acknowledgements remain. Existing raffles without a frozen schedule require an owner decision.
 
 ## Slack and data
 
-Slack gets the company, the meetup, amounts, entry counts, release counts and the winning claim code. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, and entrant contacts only through a release. The organisers' bot (`apps/web/src/server/sponsor-agent.ts`) has no access to raffles; a test keeps it that way. The raffle audit log holds entry ids and counts, never names or emails.
+Slack gets the company, the meetup, amounts, entry counts and release counts. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, and entrant contacts only through a release. The organisers' bot (`apps/web/src/server/sponsor-agent.ts`) has no access to raffles; a test keeps it that way. The raffle audit log holds entry ids and counts, never names or emails.
 
 ## Draft raffle notice and recipient policy (for the owner to review, not approved)
 
@@ -110,6 +110,12 @@ Open for the owner: the reply window and redraw timing, whether the winner must 
 
 - [Sponsorship](/domains/sponsorship/overview.md), [Processing fees](/domains/sponsorship/fees.md), [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
 - [Stripe](/systems/stripe.md), [Environment variables](/systems/operations/environment.md)
+
+## Payment review and holds
+
+The sponsor accepts the displayed quote and agreement version. The board rechecks the published host before offering the raffle. Checkout receipts and refund references are unique. A receipt, the funding change and the ledger entry commit together. An unmatched raffle receipt is available in the board raffle API. The board can read back the actual Stripe fee after settlement.
+
+The daily sponsorship check compares outstanding funded raffles with their host and sponsorship. A cancelled or postponed host, an ended sponsorship or the end of the paid term puts the raffle on hold. The board resolves the flags, confirms prize readiness and decides any refund separately.
 
 # Related specs
 

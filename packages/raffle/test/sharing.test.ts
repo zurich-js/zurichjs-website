@@ -25,7 +25,9 @@ async function openRaffle(store: RaffleStore, sponsorId: string, contactId: stri
     rulesUrl: 'https://zurichjs.com/raffle-rules',
     closesAt: '2026-12-09T19:30:00.000Z',
     actor: board,
-    sharing: sharing ? { purpose: 'send you an invitation to their JavaScript workshop', privacyUrl: 'https://acme.example/privacy', version: 'share-1' } : null,
+    sharing: sharing
+      ? { purpose: 'send you an invitation to their JavaScript workshop', privacyUrl: 'https://acme.example/privacy', version: 'share-1', noticeUrl: 'https://example.test/policy' }
+      : null,
   });
 }
 
@@ -69,6 +71,9 @@ async function sharingRules(store: RaffleStore, sponsorId: string, contactId: st
   expect(await store.withdrawConsent(a.id, at(31))).toBeNull();
   expect((await store.readShare(all.id, sponsorActor, at(32))).rows.map((x) => x.email)).toEqual(['p2@x.ch']);
   expect(await store.consentCounts(r.id)).toEqual({ given: 2, valid: 1, withdrawn: 1 });
+  const [task] = await store.deletionTasks(r.id, otherRecipient);
+  expect(task).toMatchObject({ entryId: a.id, shareId: all.id, acknowledged: false });
+  expect(await store.acknowledgeDeletion(r.id, otherRecipient, all.id, task!.consentId)).toBe(true);
   // A new choice after a withdrawal is a new record.
   await store.giveConsent(a.id, { verified: true, at: at(40) });
   expect((await store.consentOf(a.id))?.givenAt).toBe(at(40).toISOString());
@@ -114,8 +119,36 @@ d('consent and sharing on Postgres', () => {
     const sponsorId = pgdb
       .sql(`insert into sponsors (company_name, tier, cycle, payment_mode, status, source) values ('Acme', 'builder', 'yearly', 'card', 'active', 'invited') returning id`)
       .trim();
-    const contactId = pgdb.sql(`insert into sponsor_contacts (sponsor_id, email, name, role) values ('${sponsorId}', 'ana@acme.ch', 'Ana', 'primary') returning id`).trim();
-    const id = await sharingRules(postgresRaffleStore(pool), sponsorId, contactId, contactId);
+    pgdb.sql(`insert into "user"(id,name,email,"emailVerified") values ('u-ana','Ana','ana@acme.ch',true)`);
+    const contactId = pgdb
+      .sql(`insert into sponsor_contacts (sponsor_id, email, name, role,user_id) values ('${sponsorId}', 'ana@acme.ch', 'Ana', 'primary','u-ana') returning id`)
+      .trim();
+    const store = postgresRaffleStore(pool);
+    const id = await sharingRules(store, sponsorId, contactId, contactId);
+    const race = await openRaffle(store, sponsorId, contactId, true);
+    const { entry } = await store.addEntry(race.id, { name: 'Race', email: 'race@example.invalid', claimCode: 'BCDEFG', tokenHash: hex(999) }, at(1));
+    await store.giveConsent(entry.id, { verified: true, at: at(2) });
+    const share = await store.createShare(race.id, { recipientContactId: contactId, fields: ['email'], entryIds: [entry.id], expiresAt: at(60).toISOString(), actor: board });
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await postgresRaffleStore(client).revokeShare(share.id, board);
+      const reading = store.readShare(share.id, sponsorActor, at(3)).then(
+        () => 'delivered',
+        () => 'denied',
+      );
+      try {
+        await expect
+          .poll(() => pgdb.sql("select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%with allowed as materialized%'").trim(), { timeout: 3000 })
+          .toBe('1');
+      } finally {
+        await client.query('commit');
+      }
+      expect(await reading).toBe('denied');
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
     expect(pgdb.fails(`update raffles set share_purpose = 'anything' where id = '${id}'`)).toMatch(/frozen/);
     expect(
       pgdb.fails(

@@ -49,6 +49,10 @@ const raffleOf = (r: Row): Raffle => ({
   closesAt: iso(r.closes_at),
   sharePurpose: (r.share_purpose as string | null) ?? null,
   sharePrivacyUrl: (r.share_privacy_url as string | null) ?? null,
+  retentionDays: r.retention_days == null ? null : Number(r.retention_days),
+  noticeUrl: r.notice_url as string | null,
+  eraseAfter: iso(r.erase_after),
+  erasedAt: iso(r.erased_at),
   sharingVersion: (r.sharing_version as string | null) ?? null,
   createdAt: iso(r.created_at)!,
   updatedAt: iso(r.updated_at)!,
@@ -150,6 +154,74 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
   const missed = async (id: string) => ((await get(id)) ? conflict() : new RaffleNotFound());
 
   return {
+    claimMail: async (lease, entryId) =>
+      (
+        await q(
+          `with pending as (select key from raffle_mail where sent_at is null and (leased_at is null or leased_at < now()-interval '1 minute') and ($2::uuid is null or entry_id=$2) order by created_at limit 20 for update skip locked)
+      update raffle_mail m set lease=$1,leased_at=now() from pending p where m.key=p.key returning m.*`,
+          [lease, entryId ?? null],
+        )
+      ).map((r) => ({ key: String(r.key), entryId: String(r.entry_id), kind: r.kind as 'entry' | 'recovery' | 'winner', nonce: r.nonce as string | null })),
+    finishMail: async (key, lease, sent) => {
+      await q(`update raffle_mail set sent_at=case when $3 then now() end,nonce=case when $3 then null else nonce end,leased_at=null,lease=null where key=$1 and lease=$2`, [
+        key,
+        lease,
+        sent,
+      ]);
+    },
+    entryById: async (id) => {
+      const r = (await q('select * from raffle_entries where id=$1', [id]))[0];
+      return r ? entryOf(r) : null;
+    },
+    recover: async (rid, email, nonce, hash) => {
+      if (!UUID.test(rid)) return;
+      await q(
+        `with g as(insert into raffle_management_grants(token_hash,entry_id) select $4,id from raffle_entries where raffle_id=$1 and email=$2 returning entry_id)
+      insert into raffle_mail(key,entry_id,kind,nonce) select $4,entry_id,'recovery',$3 from g`,
+        [rid, email, nonce, hash],
+      );
+    },
+    claimDecision: async (id, seq) =>
+      ((await q('select decision from raffle_claims where raffle_id=$1 and seq=$2', [id, seq]))[0]?.decision as 'claimed' | 'expired' | undefined) ?? null,
+    decideClaim: async (id, seq, decision, actor) => {
+      const rows = await q(
+        `insert into raffle_claims(raffle_id,seq,decision,actor) select id,$2,$3,$4 from raffles where id=$1 and stage='drawn' and $2=(select max(seq) from raffle_draws where raffle_id=$1)
+        on conflict(raffle_id,seq) do update set decision=raffle_claims.decision where raffle_claims.decision=excluded.decision returning seq`,
+        [id, seq, decision, actor.id],
+      );
+      if (!rows.length) throw conflict();
+    },
+    fulfil: async (id, seq, note, actor) => {
+      const rows = await q(
+        `with done as(update raffles set stage='fulfilled',reason=null where id=$1 and stage='drawn' and $2=(select max(seq) from raffle_draws where raffle_id=$1) and exists(select 1 from raffle_claims where raffle_id=$1 and seq=$2 and decision='claimed') returning *),
+        detail as(insert into raffle_fulfilments(raffle_id,seq,note) select id,$2,$3 from done),
+        log as(insert into raffle_events(raffle_id,type,actor_kind,actor_id,payload) select id,'fulfilled',$4,$5,jsonb_build_object('seq',$2::int) from done) select * from done`,
+        [id, seq, note, actor.kind, actor.id],
+      );
+      if (!rows[0]) throw conflict();
+      return raffleOf(rows[0]);
+    },
+    unmatched: async (p) => {
+      await q('insert into raffle_unmatched_payments(session_id,link_id,quote_ref,raffle_ref,amount_minor,currency) values($1,$2,$3,$4,$5,$6) on conflict(session_id) do nothing', [
+        p.sessionId,
+        p.linkId,
+        p.quoteRef,
+        p.raffleRef,
+        p.amountMinor,
+        p.currency,
+      ]);
+    },
+    unmatchedPayments: async () =>
+      (await q('select * from raffle_unmatched_payments order by recorded_at desc')).map((r) => ({
+        sessionId: String(r.session_id),
+        linkId: r.link_id as string | null,
+        quoteRef: r.quote_ref as string | null,
+        raffleRef: r.raffle_ref as string | null,
+        amountMinor: Number(r.amount_minor),
+        currency: String(r.currency),
+      })),
+    outstanding: async () =>
+      (await q("select * from raffles where funding in ('paid','in_kind') and stage in ('offered','ready','open','closed','drawn') order by id")).map(raffleOf),
     async create(n, actor) {
       const rows = await q(
         `with s as (insert into raffles (sponsor_id, event_id, event_title, event_date, prize, quantity, budget_minor, fulfilment)
@@ -259,13 +331,13 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     stripeEventSeen: async (id) => (await q('select 1 from raffle_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into raffle_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),
 
-    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing }) {
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing, retentionDays }) {
       checkStage('ready', 'open', actor.kind);
       const out = await audited(
         `update raffles set stage = 'open', rules_version = $2, rules_url = $3, closes_at = $4, opened_at = now(),
-           share_purpose = $5, share_privacy_url = $6, sharing_version = $7
+           share_purpose = $5, share_privacy_url = $6, sharing_version = $7, notice_url=$8, retention_days=$9
          where id = $1 and stage = 'ready' returning *`,
-        [id, rulesVersion, rulesUrl, closesAt, sharing?.purpose ?? null, sharing?.privacyUrl ?? null, sharing?.version ?? null],
+        [id, rulesVersion, rulesUrl, closesAt, sharing?.purpose ?? null, sharing?.privacyUrl ?? null, sharing?.version ?? null, sharing?.noticeUrl ?? null, retentionDays ?? null],
         'entries_opened',
         actor,
         { rulesVersion, closesAt, sharingVersion: sharing?.version ?? null },
@@ -277,10 +349,13 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       if (!UUID.test(raffleId)) throw new RaffleNotFound();
       // Open and not closed yet, in the same statement as the insert.
       const rows = await q(
-        `insert into raffle_entries (raffle_id, name, email, claim_code, token_hash, created_at)
-         select $1, $2, $3, $4, $5, $6 from raffles where id = $1 and stage = 'open' and closes_at > $6
-         on conflict (raffle_id, email) do nothing returning *`,
-        [raffleId, e.name, e.email.toLowerCase(), e.claimCode, e.tokenHash, at.toISOString()],
+        `with ent as (insert into raffle_entries (raffle_id, name, email, claim_code, token_hash, created_at, notice_decision)
+         select $1, $2, $3, $4, $5, $6, $8 from (select id from raffles where id=$1 and stage='open' and closes_at>$6 for update) admitted
+         on conflict (raffle_id, email) do nothing returning *), consent as (
+           insert into raffle_consents(entry_id,raffle_id,recipient_sponsor_id,purpose,version,given_at)
+           select e.id,r.id,r.sponsor_id,r.share_purpose,r.sharing_version,e.created_at from ent e join raffles r on r.id=e.raffle_id where e.notice_decision and r.sharing_version is not null
+         ), queued as(insert into raffle_mail(key,entry_id,kind,nonce) select 'entry:'||id,id,'entry',$7 from ent where $7::text is not null) select * from ent`,
+        [raffleId, e.name, e.email.toLowerCase(), e.claimCode, e.tokenHash, at.toISOString(), e.mailNonce ?? null, e.noticeDecision ?? null],
       ).catch((err: { constraint?: string }) => {
         if (err.constraint === 'raffle_entries_raffle_id_claim_code_key') throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
         throw err;
@@ -293,7 +368,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     },
     entryByToken: async (hash) => {
       if (!/^[0-9a-f]{64}$/.test(hash)) return null;
-      const r = (await q('select * from raffle_entries where token_hash = $1', [hash]))[0];
+      const r = (await q('select * from raffle_entries where token_hash = $1 or id=(select entry_id from raffle_management_grants where token_hash=$1)', [hash]))[0];
       return r ? entryOf(r) : null;
     },
     async verifyEntry(entryId) {
@@ -338,7 +413,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
                     select $1, 1, $2, $3, $4, $5, $6, $7 from s returning *),
               e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
                     select raffle_id, 'drawn', actor_kind, actor_id, jsonb_build_object('seq', 1, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
-         select * from d`,
+         , queued as(insert into raffle_mail(key,entry_id,kind) select 'winner:'||raffle_id||':'||seq,entry_id,'winner' from d) select * from d`,
         [rid, eligible[index]!.id, eligible.length, hash, index, actor.kind, actor.id],
       );
       if (rows[0]) return { draw: drawOf(rows[0]), entry: eligible[index]!, repeated: false };
@@ -367,7 +442,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
                     on conflict (raffle_id, seq) do nothing returning *),
               e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
                     select raffle_id, 'redrawn', actor_kind, actor_id, jsonb_build_object('seq', seq, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
-         select * from d`,
+         , queued as(insert into raffle_mail(key,entry_id,kind) select 'winner:'||raffle_id||':'||seq,entry_id,'winner' from d) select * from d`,
         [rid, afterSeq, eligible[index]!.id, eligible.length, entriesHash(eligible), index, reason.trim().slice(0, 500), actor.kind, actor.id],
       );
       if (!rows[0]) throw conflict();
@@ -420,7 +495,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       )[0];
       return { given: Number(r?.given ?? 0), valid: Number(r?.valid ?? 0), withdrawn: Number(r?.withdrawn ?? 0) };
     },
-    async createShare(rid, { recipientContactId, fields, entryIds, expiresAt, actor }) {
+    async createShare(rid, { exact, recipientContactId, fields, entryIds, expiresAt, actor }) {
       const r = await must(rid);
       if (!r.sharingVersion || !r.sharePurpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
       // One statement: narrow to valid consent now, record the share, append the audit row.
@@ -429,12 +504,12 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
                      from raffle_entries e join raffle_consents c on c.entry_id = e.id join raffles r on r.id = e.raffle_id
                      where e.raffle_id = $1 and e.id = any($2::uuid[]) and ${VALID_CONSENT}),
               s as (insert into raffle_shares (raffle_id, recipient_contact_id, purpose, fields, entry_ids, expires_at)
-                    select $1, $3, $4, $5, ok.ids, $6 from ok where ok.ids is not null returning *),
+                    select $1, $3, $4, $5, ok.ids, $6 from ok where ok.ids is not null and (not $9::boolean or cardinality(ok.ids)=cardinality($2::uuid[])) and exists(select 1 from sponsor_contacts ct join raffles rr on rr.sponsor_id=ct.sponsor_id where rr.id=$1 and ct.id=$3 and (ct.added_by <> 'sponsor' or ct.user_id is not null)) returning *),
               a as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
                     select $1, 'shared', $7, $8, jsonb_build_object('shareId', s.id, 'recipientContactId', s.recipient_contact_id, 'purpose', s.purpose,
                                                                     'fields', to_jsonb(s.fields), 'entryIds', to_jsonb(s.entry_ids), 'expiresAt', s.expires_at) from s)
          select * from s`,
-        [rid, entryIds.filter((x) => UUID.test(x)), recipientContactId, r.sharePurpose, fields, expiresAt, actor.kind, actor.id],
+        [rid, entryIds.filter((x) => UUID.test(x)), recipientContactId, r.sharePurpose, fields, expiresAt, actor.kind, actor.id, exact ?? false],
       );
       if (!rows[0]) throw new RaffleRuleError('None of the chosen entries has a valid consent now.');
       return shareOf(rows[0]);
@@ -456,31 +531,66 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       return shareOf(rows[0]);
     },
     async readShare(id, actor, at) {
-      const s = UUID.test(id) ? (await q('select * from raffle_shares where id = $1', [id]))[0] : null;
-      if (!s) throw new RaffleNotFound();
-      const share = shareOf(s);
-      if (share.revokedAt || at.toISOString() >= share.expiresAt) throw new RaffleRuleError('This share has expired or was withdrawn.');
-      const rows = (
+      if (!UUID.test(id)) throw new RaffleNotFound();
+      const result = (
         await q(
-          `select e.id, e.name, e.email from raffle_entries e join raffle_consents c on c.entry_id = e.id join raffles r on r.id = e.raffle_id
-           where e.id = any($1::uuid[]) and e.raffle_id = $2 and ${VALID_CONSENT} order by e.created_at, e.id`,
-          [share.entryIds, share.raffleId],
+          `with allowed as materialized (
+        select s.* from raffle_shares s join raffles r on r.id=s.raffle_id
+        join sponsor_contacts contact on contact.id=s.recipient_contact_id and contact.sponsor_id=r.sponsor_id
+        where s.id=$1 and contact.user_id=$2 and s.revoked_at is null and s.expires_at>$3 and r.erased_at is null
+        for share of s,contact,r
+      ), delivered as materialized (
+        select e.id,c.id as consent_id,e.created_at,
+          case when 'name'=any(s.fields) then e.name else '' end name,
+          case when 'email'=any(s.fields) then e.email::text else '' end email
+        from allowed s join raffles r on r.id=s.raffle_id join raffle_entries e on e.raffle_id=r.id and e.id=any(s.entry_ids)
+        join raffle_consents c on c.entry_id=e.id where ${VALID_CONSENT} for share of c
+      ), receipts as (
+        insert into raffle_deliveries(share_id,consent_id) select $1,consent_id from delivered on conflict do nothing
+      ), audit as (
+        insert into raffle_events(raffle_id,type,actor_kind,actor_id,payload)
+        select raffle_id,'share_read','sponsor',$2,jsonb_build_object('shareId',id,'entryIds',(select coalesce(jsonb_agg(id),'[]') from delivered),'rows',(select count(*) from delivered)) from allowed
+      )
+      select s.*,(select coalesce(jsonb_agg(jsonb_build_object('id',id,'name',name,'email',email) order by created_at,id),'[]') from delivered) as rows from allowed s`,
+          [id, actor.id, at.toISOString()],
         )
-      ).map((e) => ({ id: e.id as string, name: share.fields.includes('name') ? (e.name as string) : '', email: share.fields.includes('email') ? (e.email as string) : '' }));
-      await q(`insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload) values ($1, 'share_read', $2, $3, $4::jsonb)`, [
-        share.raffleId,
-        actor.kind,
-        actor.id,
-        JSON.stringify({ shareId: id, rows: rows.length }),
-      ]);
-      return { share, rows };
+      )[0];
+      if (!result) throw new RaffleRuleError('This share has expired or was withdrawn.');
+      return { share: shareOf(result), rows: result.rows as Pick<Entry, 'id' | 'name' | 'email'>[] };
     },
+    dueForErasure: async (at) =>
+      (await q('select id from raffles where erased_at is null and erase_after <= $1 order by erase_after limit 100', [at.toISOString()])).map((x) => String(x.id)),
+    deletionTasks: async (rid, contact) =>
+      (
+        await q(
+          `select d.share_id,d.consent_id,c.entry_id,d.acknowledged_at
+      from raffle_deliveries d join raffle_consents c on c.id=d.consent_id join raffle_shares s on s.id=d.share_id
+      where c.withdrawn_at is not null and s.raffle_id=$1 and ($2::uuid is null or s.recipient_contact_id=$2)`,
+          [rid, contact ?? null],
+        )
+      ).map((x) => ({ shareId: String(x.share_id), consentId: String(x.consent_id), entryId: String(x.entry_id), acknowledged: x.acknowledged_at != null })),
+    acknowledgeDeletion: async (rid, contact, share, consent) =>
+      UUID.test(share) &&
+      UUID.test(consent) &&
+      (
+        await q(
+          `update raffle_deliveries d set acknowledged_at=coalesce(d.acknowledged_at,now())
+      from raffle_consents c,raffle_shares s where d.share_id=s.id and d.consent_id=c.id and s.raffle_id=$1 and s.recipient_contact_id=$2
+      and d.share_id=$3 and d.consent_id=$4 and c.withdrawn_at is not null returning d.share_id`,
+          [rid, contact, share, consent],
+        )
+      ).length === 1,
     async eraseEntries(rid, actor) {
       const rows = await q(
-        `with e as (update raffle_entries set name = 'Erased', email = 'erased-' || id || '@invalid.invalid'
-                    where raffle_id = $1 and email <> ('erased-' || id || '@invalid.invalid') returning id),
+        `with due as (update raffles set erased_at=now(),reason=case when stage='fulfilled' then null else reason end where id=$1 and erased_at is null returning id),
+                    forget_grants as(delete from raffle_management_grants where entry_id in(select e.id from raffle_entries e join due r on r.id=e.raffle_id)),
+                    forget_mail as(delete from raffle_mail where entry_id in(select e.id from raffle_entries e join due r on r.id=e.raffle_id)),
+                    forget_notes as(update raffle_fulfilments set note=null where raffle_id in(select id from due)),
+                    stop_consent as(update raffle_consents set withdrawn_at=now() where raffle_id in(select id from due) and withdrawn_at is null),
+                    e as (update raffle_entries set name = 'Erased', token_hash=encode(sha256(gen_random_uuid()::text::bytea),'hex'),email_verified_at=null, email = 'erased-' || id || '@invalid.invalid'
+                    where raffle_id in(select id from due) and email <> ('erased-' || id || '@invalid.invalid') returning id),
               a as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
-                    select $1, 'entries_erased', $2, $3, jsonb_build_object('count', (select count(*) from e)))
+                    select $1, 'entries_erased', $2, $3, jsonb_build_object('count', (select count(*) from e)) from due)
          select count(*)::int as n from e`,
         [rid, actor.kind, actor.id],
       );

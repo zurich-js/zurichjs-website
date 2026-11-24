@@ -2,11 +2,16 @@
 
 ## 2026-11-24
 
+- Raffle releases record each delivery and track recipient deletion requests. The daily job erases entrant details on the schedule approved when entries opened. [Raffle add-ons](/domains/sponsorship/raffles.md)
+
 - **Update**: [Raffle add-ons](/domains/sponsorship/raffles.md) can share entrant contacts with the sponsor, off unless the owner configured the raffle notice, recipient policy, retention and sharing terms: an unticked box per entrant, counted once the email is confirmed, withdrawable from the entrant's link; releases narrowed by the board and again on every read, to one sponsor contact for a limited time; erasure after the retention period.
+- Raffle admissions serialize with closing. Private mail survives a delivery failure, and the board records claims, expiries and fulfilment separately. [Raffle add-ons](/domains/sponsorship/raffles.md)
 - **Update**: [Raffle add-ons](/domains/sponsorship/raffles.md) take entries on `/raffle` under owner-approved entrant rules (`RAFFLE_RULES_VERSION`), one per email, with a claim code and an entrant's own link to confirm the email; the board draws once, uniformly and auditably, redraws with a reason, and records delivery. Winners are public by claim code only.
+- Raffle funding and ledger writes share one transaction. The daily check puts outstanding raffles on hold when the host or sponsor loses eligibility.
 - **Added**: [Raffle add-ons](/domains/sponsorship/raffles.md): an existing sponsor proposes a separately paid raffle for a meetup; the board offers it with a frozen quote under owner-approved raffle terms; the sponsor accepts and pays through its own link, handled by a raffle part of the Stripe webhook that never touches the sponsorship. Gift accounting, holds, cancellations and refund decisions are recorded states for the board.
+- The board previews one-time sponsorship offers, reviews unmatched card payments and reconciles actual Stripe fees. [Processing fees](/domains/sponsorship/fees.md)
 - **Added**: [Processing fees](/domains/sponsorship/fees.md). Every board payment link freezes a quote in rappen; the board can choose "Sponsor covers the fees" once a card tariff is entered and the owner set `SPONSOR_FEE_POLICY_VERSION`. The surcharge is its own Stripe line, the sponsor sees base, fee and total first, and stale or mismatched payments are flagged.
-- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state from Sanity ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state and page link from Sanity, even when the rest of the account fails to load. Whether a covered meetup has happened is decided on its current Sanity date, and a row stays when that date cannot be checked ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
 ## 2026-11-19
 

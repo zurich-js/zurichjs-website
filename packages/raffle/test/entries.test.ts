@@ -104,6 +104,36 @@ d('entries and draws on Postgres', () => {
     pgdb.stop();
   });
 
+  it('closes after the last successful admission commits and includes it in the draw', async () => {
+    const sid = pgdb
+      .sql("insert into sponsors (company_name,tier,cycle,payment_mode,status,source) values ('Race fixture','builder','yearly','card','active','invited') returning id")
+      .trim();
+    const cid = pgdb.sql(`insert into sponsor_contacts (sponsor_id,email,name,role) values ('${sid}','race@example.invalid','Race','primary') returning id`).trim();
+    const store = postgresRaffleStore(pool);
+    const raffle = await readyRaffle(store, sid, cid);
+    await store.openEntries(raffle.id, { rulesVersion: 'fixture', rulesUrl: 'https://example.invalid/rules', closesAt: CLOSES, actor: board });
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await postgresRaffleStore(client).addEntry(raffle.id, { name: 'Fixture', email: 'entry@example.invalid', claimCode: 'ABCDEF', tokenHash: hex(789) }, OPENED);
+      const closing = store.moveStage(raffle.id, { from: 'open', to: 'closed', actor: board });
+      try {
+        await expect
+          .poll(() => pgdb.sql("select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%update raffles%'").trim(), { timeout: 3000 })
+          .toBe('1');
+      } finally {
+        await client.query('commit');
+        await closing;
+      }
+      const result = await store.draw(raffle.id, { actor: board, pick: () => 0 });
+      expect(result.draw.eligibleCount).toBe(1);
+      expect(result.entry.email).toBe('entry@example.invalid');
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
+  });
+
   it('runs the same, freezes the terms once open, and keeps draws append-only', async () => {
     const sponsorId = pgdb
       .sql(`insert into sponsors (company_name, tier, cycle, payment_mode, status, source) values ('Acme', 'builder', 'yearly', 'card', 'active', 'invited') returning id`)

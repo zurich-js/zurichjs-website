@@ -29,11 +29,15 @@ import {
   type Contact,
   type Cycle,
   type EndedReason,
+  type FeeStore,
   type Sponsor,
   type SponsorMeetup,
   type Tier,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
+import { MembershipUnavailable } from './membership-db.ts';
+import { feeStore } from './sponsor-fees.ts';
+import { withdrawOffer } from './sponsor-offers.ts';
 import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, note, planLabel, slackText, tierBenefits, who, zurichDay, type NotifyDeps } from './sponsor.ts';
 import {
   cancelAtPeriodEnd,
@@ -53,6 +57,24 @@ import {
 export interface LifecycleDeps extends NotifyDeps {
   stripe: StripeDeps;
   now?: () => Date;
+  /** Payment quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
+}
+
+/** The fee store, or null where there is no database (the in-memory tests without one). */
+const feesOf = (deps: LifecycleDeps): FeeStore | null => {
+  try {
+    return deps.fees ?? feeStore(deps.env);
+  } catch (cause) {
+    if (cause instanceof MembershipUnavailable) return null;
+    throw cause;
+  }
+};
+
+/** The board's open offer no longer stands: void its quote and switch its link off. */
+async function endOffer(s: Sponsor, deps: LifecycleDeps) {
+  const fees = feesOf(deps);
+  if (fees) await withdrawOffer(s, fees, deps.store, deps.stripe);
 }
 
 /** An expected refusal, with a sentence for the person and an HTTP status for the route. */
@@ -264,6 +286,7 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
   if (s.stripeSubscriptionId) await cancelNow(s.stripeSubscriptionId, deps.stripe);
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
+  await endOffer(s, deps);
   if (s.stripeSubscriptionId) await deps.store.linkStripe(s.id, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
 }
 
@@ -357,6 +380,7 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
+  await endOffer(s, deps);
   let updated = await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
@@ -391,6 +415,8 @@ export async function setBundle(s: Sponsor, meetups: SponsorMeetup[], pricePerMe
     if (pricePerMeetup !== s.pricePerMeetup) updated = await deps.store.update(s.id, { pricePerMeetup }, actor);
     await closeCheckout(s, deps.store, deps.stripe);
     if (s.paymentLinkId) await closePaymentLink(s, deps.store, deps.stripe);
+    // The offer was for the old bundle: withdrawn, so the sponsor is never sent to a link that is off.
+    await endOffer(s, deps);
   } else {
     updated = await deps.store.update(s.id, { paidUntil: afterLastMeetup(meetups) }, actor);
   }

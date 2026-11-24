@@ -34,9 +34,7 @@ export const handleRaffleSharing = (request: Request, id: string, deps: SponsorA
       const now = deps.now === undefined ? new Date() : new Date(deps.now);
       const gate = sharingGate(env, r);
       const recipients = (await store.contacts(r.sponsorId)).filter(confirmed);
-      const ended = r.stage === 'fulfilled' || r.stage === 'cancelled';
-      const erasableFrom = gate.open && ended && r.closesAt ? new Date(Date.parse(r.closesAt) + gate.retentionDays * DAY) : null;
-
+      const erasableFrom = r.eraseAfter ? new Date(r.eraseAfter) : null;
       const answer = async () => {
         const [counts, preview, shares] = await Promise.all([
           raffles.consentCounts(r.id),
@@ -46,6 +44,8 @@ export const handleRaffleSharing = (request: Request, id: string, deps: SponsorA
         return json(200, {
           ok: true,
           gate: gate.open ? { open: true, version: gate.version, retentionDays: gate.retentionDays } : gate,
+          deletionTasks: await raffles.deletionTasks(r.id),
+          erasedAt: (await raffles.get(r.id))?.erasedAt,
           offered: !!r.sharingVersion,
           purpose: r.sharePurpose,
           counts,
@@ -92,7 +92,19 @@ export const handleRaffleSharing = (request: Request, id: string, deps: SponsorA
       if (!Number.isInteger(days) || days < 1 || days > 30) return fail(400, 'Choose for how many days, from 1 to 30.', { field: 'days' });
       const entryIds = Array.isArray(body.entryIds) ? body.entryIds.filter((x): x is string => typeof x === 'string').slice(0, 5000) : [];
       if (!entryIds.length) return fail(400, 'Choose the entries to release.', { field: 'entryIds' });
+      const selected = (await raffles.consentedEntries(r.id)).filter((e) => entryIds.includes(e.id));
+      const preview = JSON.stringify([
+        r.id,
+        gate.version,
+        r.sharePurpose,
+        [recipient.id, recipient.name, recipient.email],
+        fields,
+        days,
+        selected.map((e) => [e.id, ...fields.map((f) => e[f])]),
+      ]);
+      if (selected.length !== new Set(entryIds).size || body.preview !== preview) return fail(409, 'The release preview changed. Review the rows and confirm again.');
       const share = await raffles.createShare(r.id, {
+        exact: true,
         recipientContactId: recipient.id,
         fields,
         entryIds,

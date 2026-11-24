@@ -11,6 +11,7 @@ import { memoryFeeStore, memoryStore, type FeeStore, type NewSponsor, type Spons
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAdminRaffle } from '../src/pages/api/membership/admin/raffles/[id].ts';
 import { handleAdminRaffles } from '../src/pages/api/membership/admin/raffles/index.ts';
+import { holdIneligibleRaffles } from '../src/server/raffle.ts';
 import { handleRaffleAnswer } from '../src/pages/api/sponsorship/raffles/[id].ts';
 import { handleRaffles } from '../src/pages/api/sponsorship/raffles/index.ts';
 import { handleStripeWebhook } from '../src/pages/api/stripe/webhook.ts';
@@ -186,11 +187,13 @@ describe('raffle add-ons', () => {
       quote: { base: 'CHF 500.00', surcharge: 'CHF 15.25', total: 'CHF 515.25' },
     });
 
+    expect((await act(id, { action: 'offer', amountChf: '500' })).status).toBe(409);
+    expect(await fees.quote(offered.raffle.quote.id)).toMatchObject({ status: 'open' });
     // Accepting needs the box, the offer's terms version and an eligible sponsorship.
     const answer = (body: unknown, user = ana) => handleRaffleAnswer(post(body), id, sponsorDeps(gated, user));
     expect((await answer({ action: 'accept', termsVersion: 'raffle-2026-12' })).status).toBe(400);
     expect((await answer({ action: 'accept', termsVersion: 'raffle-old', confirm: true })).status).toBe(409);
-    const accepted = (await (await answer({ action: 'accept', termsVersion: 'raffle-2026-12', confirm: true })).json()) as Record<string, any>;
+    const accepted = (await (await answer({ action: 'accept', quoteId: offered.raffle.quote.id, termsVersion: 'raffle-2026-12', confirm: true })).json()) as Record<string, any>;
     expect(accepted.raffle).toMatchObject({ accepted: true, payUrl: 'https://buy.stripe.com/raffle_1' });
     const link = stripe.calls.find((c) => c.path === 'payment_links')!;
     expect(link.params.get('metadata[source]')).toBe('zurichjs.com/partners/raffle');
@@ -210,6 +213,7 @@ describe('raffle add-ons', () => {
       id: 'cs_r1',
       mode: 'payment',
       payment_status: 'paid',
+      currency: 'chf',
       amount_total: 51_525,
       payment_link: 'plink_r1',
       metadata: { source: 'zurichjs.com/partners/raffle', raffleId: id, sponsorId: s.id, quoteId: offered.raffle.quote.id },
@@ -260,16 +264,29 @@ describe('raffle add-ons', () => {
     const id = ((await (await propose()).json()) as Record<string, any>).raffle.id as string;
     const offered = ((await (await act(id, { action: 'offer', amountChf: '300' })).json()) as Record<string, any>).raffle;
     expect(offered.quote).toMatchObject({ feeChoice: 'absorb', total: 'CHF 300.00' });
-    await handleRaffleAnswer(post({ action: 'accept', termsVersion: 'raffle-2026-12', confirm: true }), id, sponsorDeps());
+    await handleRaffleAnswer(post({ action: 'accept', quoteId: offered.quote?.id ?? null, termsVersion: 'raffle-2026-12', confirm: true }), id, sponsorDeps());
     // The board ends the sponsorship before the sponsor pays.
     await sponsors.transition(s.id, { to: 'ended', actor: board, reason: 'terminated' });
     // A session from the link, with no metadata, and a different total.
-    await webhook(stripeEvent('evt_r2', { id: 'cs_r2', mode: 'payment', payment_status: 'paid', amount_total: 29_000, payment_link: 'plink_r1', metadata: {} }));
+    await webhook(stripeEvent('evt_r2', { id: 'cs_r2', mode: 'payment', payment_status: 'paid', currency: 'chf', amount_total: 29_000, payment_link: 'plink_r1', metadata: {} }));
     const r = (await raffles.get(id))!;
     expect(r.funding).toBe('paid');
-    expect(r.flags.sort()).toEqual(['amount_mismatch', 'late_payment']);
+    expect(r.flags.sort()).toEqual(['amount_mismatch', 'late_payment', 'refund_review']);
+    expect(r.stage).toBe('on_hold');
     expect((await sponsors.get(s.id))!.status).toBe('ended');
     expect(slack.join('\n')).toContain('stopped being eligible');
+  });
+
+  it('holds outstanding funding when the confirmed host is cancelled', async () => {
+    const { sponsor: s } = await sponsors.create(sponsorRow(), { email: ana.email, name: 'Ana', role: 'primary' }, board);
+    const id = (await (await propose()).json()).raffle.id;
+    const offer = (await (await act(id, { action: 'offer', amountChf: '300' })).json()).raffle;
+    await raffles.setFunding(id, { from: 'unpaid', to: 'paid', actor: board });
+    const lookup = async () => [{ id: 'event-dec', status: 'cancelled', title: 'Fixture', datetime: null }];
+    await holdIneligibleRaffles(raffles, sponsors, lookup, NOW);
+    await holdIneligibleRaffles(raffles, sponsors, lookup, NOW);
+    expect(await raffles.get(id)).toMatchObject({ stage: 'on_hold', funding: 'paid', quoteId: offer.quote.id, flags: ['meetup_changed', 'refund_review'] });
+    expect(await sponsors.get(s.id)).toMatchObject({ status: 'active' });
   });
 
   it('runs an in-kind prize without any payment', async () => {
@@ -278,7 +295,9 @@ describe('raffle add-ons', () => {
     const offered = ((await (await act(id, { action: 'offer' })).json()) as Record<string, any>).raffle;
     expect(offered).toMatchObject({ stage: 'offered', quote: null, amount: null });
     const accepted = (
-      (await (await handleRaffleAnswer(post({ action: 'accept', termsVersion: 'raffle-2026-12', confirm: true }), id, sponsorDeps())).json()) as Record<string, any>
+      (await (
+        await handleRaffleAnswer(post({ action: 'accept', quoteId: offered.quote?.id ?? null, termsVersion: 'raffle-2026-12', confirm: true }), id, sponsorDeps())
+      ).json()) as Record<string, any>
     ).raffle;
     expect(accepted).toMatchObject({ accepted: true, payUrl: null });
     expect(stripe.calls).toEqual([]);

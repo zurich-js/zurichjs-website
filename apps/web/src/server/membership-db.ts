@@ -13,19 +13,19 @@
  * ("not available yet") instead of crashing.
  */
 import pg from 'pg';
-import { postgresStore, type MemberStore, type Queryable } from '@zurichjs/membership';
+import { postgresStore, type MemberStore } from '@zurichjs/membership';
 import { membershipUrl } from './db-url.ts';
 import type { Env } from './http.ts';
 
 export class MembershipUnavailable extends Error {}
 
-let pool: Queryable | undefined;
+let pool: pg.Pool | undefined;
 
-export function membershipDb(env: Env): Queryable {
+export function membershipDb(env: Env): pg.Pool {
   const url = membershipUrl(env);
   if (!url) throw new MembershipUnavailable('DATABASE_URL is not set');
   // Serverless functions: a few connections each, through Neon's pooler (the -pooler host).
-  pool ??= new pg.Pool({ connectionString: url, max: 3, idleTimeoutMillis: 10_000 }) as unknown as Queryable;
+  pool ??= new pg.Pool({ connectionString: url, max: 3, idleTimeoutMillis: 10_000 });
   return pool;
 }
 

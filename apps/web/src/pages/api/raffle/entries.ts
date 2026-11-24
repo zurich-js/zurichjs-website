@@ -7,12 +7,9 @@
  * has the claim code and the entrant's own link, where they confirm the address.
  */
 import { claimCode, RaffleRuleError } from '@zurichjs/raffle';
-import { renderEmail } from '@zurichjs/emails';
-import { sendMemberEmail } from '@zurichjs/integrations';
+import { deliverRaffleMail, managementGrant } from '../../../server/raffle-mail.ts';
 import type { APIRoute } from 'astro';
-import { longDate } from '../../../server/dates.ts';
 import { fail, isEmail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
-import { manageUrl, newEntryToken } from '../../../server/raffle.ts';
 import { raffleRoute, type RaffleRouteDeps } from '../../../server/raffle-route.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 
@@ -26,6 +23,16 @@ export const handleEnter = (request: Request, deps: RaffleRouteDeps = {}) =>
       if (rateLimited('raffle-enter', clientKey(request), 10, 10 * 60_000)) return fail(429, 'Too many entries from here. Wait a few minutes, then try again.');
       const body = (await readJsonObject(request)) ?? {};
       if (typeof body.company === 'string' && body.company) return json(200, { ok: true });
+      if (body.action === 'recover') {
+        const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+        const rid = typeof body.raffleId === 'string' ? body.raffleId : '';
+        if (!isEmail(email) || !rid) return fail(400, 'Enter your raffle email.');
+        if (!rateLimited('raffle-recovery', rid + ':' + email, 3, 60 * 60_000)) {
+          const { nonce, hash } = managementGrant(env);
+          await raffles.recover(rid, email, nonce, hash);
+        }
+        return json(200, { ok: true });
+      }
       const name = typeof body.name === 'string' ? body.name.replace(/\s+/g, ' ').trim() : '';
       if (!name || name.length > 80) return fail(400, 'Enter a name or nickname, up to 80 characters.', { field: 'name' });
       const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
@@ -37,31 +44,17 @@ export const handleEnter = (request: Request, deps: RaffleRouteDeps = {}) =>
       if (!r || !r.openedAt) return fail(404, 'No such raffle.');
       if (r.stage !== 'open' || !r.closesAt || now.toISOString() >= r.closesAt) throw new RaffleRuleError('Entries for this raffle are closed.');
 
-      const { token, hash } = newEntryToken();
+      const { nonce, hash } = managementGrant(env);
       let added: Awaited<ReturnType<typeof raffles.addEntry>> | null = null;
       for (let i = 0; i < 3 && !added; i++) {
         try {
-          added = await raffles.addEntry(r.id, { name, email, claimCode: claimCode(), tokenHash: hash }, now);
+          added = await raffles.addEntry(r.id, { name, email, claimCode: claimCode(), tokenHash: hash, mailNonce: nonce }, now);
         } catch (cause) {
           if (!(cause instanceof RaffleRuleError && /Claim code/.test(cause.message))) throw cause;
         }
       }
       if (!added) throw new Error('No free claim code after three tries.');
-      if (added.created) {
-        const s = await sponsors.get(r.sponsorId);
-        const message = renderEmail('raffle-entry', {
-          name,
-          prize: r.prize,
-          meetup: `${r.eventTitle}, ${longDate(r.eventDate)}`,
-          sponsorName: s?.companyName ?? 'a sponsor',
-          claimCode: added.entry.claimCode,
-          manageUrl: manageUrl(origin, token),
-          rulesUrl: r.rulesUrl!,
-        });
-        await sendMemberEmail(env, { to: email, ...message }, { idempotencyKey: `raffle-entry:${added.entry.id}`, fetch: deps.fetch, log: deps.log }).catch((e: Error) =>
-          (deps.log ?? console.log)(`[raffle] entry email for ${added.entry.id} failed: ${e.message}`),
-        );
-      }
+      await deliverRaffleMail(env, raffles, sponsors, origin, { fetch: deps.fetch, entryId: added.entry.id });
       return json(200, { ok: true });
     },
     'save your entry',

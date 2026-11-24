@@ -25,6 +25,7 @@ export const handleAdminRaffles = (request: Request, deps: SponsorAdminDeps = {}
       return json(200, {
         ok: true,
         raffles: views,
+        unmatchedPayments: sponsorId ? undefined : await raffles.unmatchedPayments(),
         terms: gate.open ? { open: true, version: gate.version } : gate,
         rules: rules.open ? { open: true, version: rules.version } : rules,
         fees: gateView(await currentGate(fees, env)),

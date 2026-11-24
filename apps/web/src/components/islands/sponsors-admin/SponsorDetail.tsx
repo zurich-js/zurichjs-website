@@ -16,6 +16,7 @@ import { lastDay, longDate, shortDateTime } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, TextButton, optional } from '../forms/shared.tsx';
+import { SponsorPayments } from './fees.tsx';
 import { Coverage } from './Coverage.tsx';
 import { Raffles } from './Raffles.tsx';
 import { ActionForm, actionsFor, canRecordPayment, planName, type Done, type OpenAction } from './actions.tsx';
@@ -204,6 +205,7 @@ export function SponsorDetail({
         </div>
       </section>
 
+      {s.cycle === 'once' && <SponsorPayments {...ctx} />}
       {s.cycle !== 'once' && <Coverage sponsor={s} {...ctx} />}
       <Raffles id={id} onSignedOut={onSignedOut} />
       <Contacts contacts={d.contacts} sponsor={s} {...ctx} />

@@ -93,7 +93,7 @@ export interface Entry {
   createdAt: string;
 }
 
-export type NewEntry = Pick<Entry, 'name' | 'email' | 'claimCode'> & { tokenHash: string };
+export type NewEntry = Pick<Entry, 'name' | 'email' | 'claimCode'> & { tokenHash: string; mailNonce?: string };
 
 /**
  * One draw, kept forever. `seq` 1 is the draw; a later one is a redraw, which needs a reason. The

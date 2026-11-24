@@ -18,7 +18,31 @@ export interface OfferInput {
 
 export type NewLedgerEntry = Pick<LedgerEntry, 'kind' | 'amountMinor' | 'note' | 'reference'>;
 
+export interface UnmatchedPayment {
+  sessionId: string;
+  linkId: string | null;
+  quoteRef: string | null;
+  raffleRef: string | null;
+  amountMinor: number;
+  currency: string;
+}
+export interface RaffleMail {
+  key: string;
+  entryId: string;
+  kind: 'entry' | 'winner' | 'recovery';
+  nonce: string | null;
+}
 export interface RaffleStore {
+  claimMail(lease: string, entryId?: string): Promise<RaffleMail[]>;
+  finishMail(key: string, lease: string, sent: boolean): Promise<void>;
+  recover(raffleId: string, email: string, nonce: string, hash: string): Promise<void>;
+  entryById(id: string): Promise<Entry | null>;
+  claimDecision(id: string, seq: number): Promise<'claimed' | 'expired' | null>;
+  decideClaim(id: string, seq: number, decision: 'claimed' | 'expired', actor: Actor): Promise<void>;
+  fulfil(id: string, seq: number, note: string, actor: Actor): Promise<Raffle>;
+  unmatched(payment: UnmatchedPayment): Promise<void>;
+  unmatchedPayments(): Promise<UnmatchedPayment[]>;
+  outstanding(): Promise<Raffle[]>;
   create(r: NewRaffle, actor: Actor): Promise<Raffle>;
   get(id: string): Promise<Raffle | null>;
   /** Newest first. */
@@ -88,17 +112,22 @@ export const conflict = () => new RaffleRuleError('The raffle changed in the mea
 export function readyBlocker(r: Raffle): string | null {
   if (r.funding !== 'paid' && r.funding !== 'in_kind') return 'It is not paid yet (or the in-kind prize has not arrived).';
   if (!r.acceptedVersion || r.acceptedVersion !== r.termsVersion) return 'The sponsor has not accepted the raffle terms of this offer.';
+  if (r.flags.length) return 'Resolve the outstanding review before continuing.';
   return null;
 }
 
 export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore {
   const now = () => (opts.now ?? (() => new Date()))().toISOString();
   const raffles = new Map<string, Raffle>();
+  const unmatched = new Map<string, UnmatchedPayment>();
   const ledger: LedgerEntry[] = [];
   const log: RaffleEvent[] = [];
   const seen = new Set<string>();
   const entries: (Entry & { tokenHash: string })[] = [];
   const draws: Draw[] = [];
+  const mail = new Map<string, RaffleMail & { lease?: string; leasedAt?: number }>();
+  const grants = new Map<string, string>();
+  const claims = new Map<string, 'claimed' | 'expired'>();
   let n = 0;
   const plainEntry = ({ tokenHash: _, ...e }: Entry & { tokenHash: string }): Entry => ({ ...e });
   const record = (raffleId: string, type: string, actor: Actor, payload: Record<string, unknown> = {}) =>
@@ -116,6 +145,50 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
   const copy = (r: Raffle | undefined) => (r ? { ...r, flags: [...r.flags] } : null);
 
   return {
+    claimMail: async (lease, entryId) => {
+      const rows = [...mail.values()].filter((m) => (!entryId || m.entryId === entryId) && (!m.lease || Date.now() - (m.leasedAt ?? 0) > 60000)).slice(0, 20);
+      return rows.map((m) => {
+        m.lease = lease;
+        m.leasedAt = Date.now();
+        return { ...m };
+      });
+    },
+    finishMail: async (key, lease, sent) => {
+      const m = mail.get(key);
+      if (m?.lease === lease) {
+        if (sent) mail.delete(key);
+        else m.lease = undefined;
+      }
+    },
+    entryById: async (id) => {
+      const e = entries.find((x) => x.id === id);
+      return e ? plainEntry(e) : null;
+    },
+    recover: async (rid, email, nonce, hash) => {
+      const e = entries.find((x) => x.raffleId === rid && x.email === email);
+      if (!e) return;
+      grants.set(hash, e.id);
+      mail.set(hash, { key: hash, entryId: e.id, kind: 'recovery', nonce });
+    },
+    claimDecision: async (id, seq) => claims.get(`${id}:${seq}`) ?? null,
+    decideClaim: async (id, seq, decision, actor) => {
+      const key = `${id}:${seq}`;
+      if (must(id).stage !== 'drawn' || draws.filter((d) => d.raffleId === id).at(-1)?.seq !== seq || (claims.has(key) && claims.get(key) !== decision)) throw conflict();
+      if (!claims.has(key)) record(id, decision, actor, { seq });
+      claims.set(key, decision);
+    },
+    fulfil: async (id, seq, _note, actor) => {
+      const r = must(id);
+      if (r.stage !== 'drawn' || claims.get(`${id}:${seq}`) !== 'claimed' || draws.filter((d) => d.raffleId === id).at(-1)?.seq !== seq) throw conflict();
+      record(id, 'fulfilled', actor, { seq });
+      return save({ ...r, stage: 'fulfilled', reason: null });
+    },
+    unmatched: async (p) => {
+      if (!unmatched.has(p.sessionId)) unmatched.set(p.sessionId, { ...p });
+    },
+    unmatchedPayments: async () => [...unmatched.values()],
+    outstanding: async () =>
+      [...raffles.values()].filter((r) => ['paid', 'in_kind'].includes(r.funding) && ['offered', 'ready', 'open', 'closed', 'drawn'].includes(r.stage)).map((r) => copy(r)!),
     async create(input, actor) {
       const at = now();
       const r: Raffle = {
@@ -209,6 +282,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     },
     async addLedger(id, e, actor) {
       must(id);
+      if ((e.kind === 'refund' || e.kind === 'payment') && e.reference && ledger.some((x) => x.kind === e.kind && x.reference === e.reference)) throw conflict();
       const entry: LedgerEntry = { ...e, id: String(ledger.length + 1), raffleId: id, actor, at: now() };
       ledger.push(entry);
       record(id, 'ledger_added', actor, { kind: e.kind, amountMinor: e.amountMinor });
@@ -231,12 +305,17 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
       if (existing) return { entry: plainEntry(existing), created: false };
       if (r.stage !== 'open' || !r.closesAt || at.toISOString() >= r.closesAt) throw new RaffleRuleError('Entries are closed.', 'conflict');
       if (entries.some((x) => x.raffleId === raffleId && x.claimCode === e.claimCode)) throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
-      const entry = { ...e, email: e.email.toLowerCase(), id: `en_${++n}`, raffleId, emailVerifiedAt: null, createdAt: at.toISOString() };
+      const { mailNonce, ...input } = e;
+      const entry = { ...input, email: e.email.toLowerCase(), id: `en_${++n}`, raffleId, emailVerifiedAt: null, createdAt: at.toISOString() };
       entries.push(entry);
+      if (mailNonce) {
+        const key = `entry:${entry.id}`;
+        mail.set(key, { key, entryId: entry.id, kind: 'entry', nonce: mailNonce });
+      }
       return { entry: plainEntry(entry), created: true };
     },
     entryByToken: async (hash) => {
-      const e = entries.find((x) => x.tokenHash === hash);
+      const e = entries.find((x) => x.tokenHash === hash || grants.get(hash) === x.id);
       return e ? plainEntry(e) : null;
     },
     async verifyEntry(entryId) {
@@ -278,6 +357,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         at: now(),
       };
       draws.push(d);
+      const key = `winner:${rid}:${d.seq}`;
+      mail.set(key, { key, entryId: d.entryId, kind: 'winner', nonce: null });
       save({ ...r, stage: 'drawn' });
       record(rid, 'drawn', actor, { seq: 1, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
       return { draw: { ...d }, entry: eligible[index]!, repeated: false };
@@ -307,6 +388,8 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         at: now(),
       };
       draws.push(d);
+      const key = `winner:${rid}:${d.seq}`;
+      mail.set(key, { key, entryId: d.entryId, kind: 'winner', nonce: null });
       record(rid, 'redrawn', actor, { seq: d.seq, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
       return { draw: { ...d }, entry: eligible[index]! };
     },

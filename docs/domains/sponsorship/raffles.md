@@ -60,18 +60,18 @@ Cancelling or pausing a raffle with money in flags it `refund_review`. The board
 
 - **The entrant rules gate:** entries open only under an entrant rules version the owner approved and published (`RAFFLE_RULES_VERSION`, `RAFFLE_RULES_URL`). Opening freezes on the raffle the rules version and URL, the closing time (by the end of the meetup day), the prize and the meetup; the database refuses later changes to them.
 - **The entry page** `/raffle?r=<raffle id>` (noindex) shows the prize, the meetup, "Raffle supported by" the sponsor, the closing time and the rules. Entry is free and needs no account: a name or nickname, an email and the rules box. One entry per email per raffle, checked on the server, with rate limits per address and per connection and a honeypot. The answer is the same for a new and a repeated email, so nobody learns whether an address entered. A link alone does not prove someone was at the meetup.
-- **The entry email** has the claim code and the entrant's own link, `/raffle/manage#t=…` (the token is in the fragment and kept only as a SHA-256 hash). Opening the link shows the entry; the email counts as verified only when its owner clicks Confirm, so a mail scanner cannot confirm it. The entry counts either way.
+- **The entry email** has the claim code and the entrant's own link, `/raffle/manage#t=…` (the token is in the fragment and kept only as a SHA-256 hash). Opening the link shows the entry; the email counts as verified only when its owner clicks Confirm, so a mail scanner cannot confirm it. The entry counts either way. Entry, recovery and winner messages are queued durably and retried using the same provider key. Entrants can request another private link on the raffle page. The management page clears its token from the address bar and omits third-party analytics.
 
 ## The draw
 
 - **Once:** closing the entries freezes them; drawing is a compare-and-set from `closed` to `drawn` in one statement with the draw row. A second click returns the same winner. The winner is chosen uniformly from all entries (32-bit `crypto.getRandomValues`, rejection sampling), in entry order.
 - **Auditable:** each draw keeps its number, the eligible count, the index drawn, a SHA-256 fingerprint of the entries' ids in draw order, who drew and when. Draws are append-only.
 - **Redraw:** needs a reason, which is kept with the draw, and excludes earlier winners. It follows the rules published before entries opened.
-- **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. Recording the delivery marks the raffle fulfilled.
+- **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. The board records the claim before recording delivery. The delivery note stays private. A redraw requires a recorded expiry against the reviewed draw and a reason under the published rules. Retrying the same redraw returns the recorded result.
 
 ## Slack and data
 
-Slack gets the company, the meetup, amounts, entry counts and the winning claim code. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, never entrants.
+Draw notifications to Slack contain counts only. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, never entrants.
 
 ## Draft entrant rules (for the owner to review, not approved)
 
@@ -89,6 +89,12 @@ Open for the owner: the reply window and redraw timing, whether the winner must 
 
 - [Sponsorship](/domains/sponsorship/overview.md), [Processing fees](/domains/sponsorship/fees.md), [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
 - [Stripe](/systems/stripe.md), [Environment variables](/systems/operations/environment.md)
+
+## Payment review and holds
+
+The sponsor accepts the displayed quote and agreement version. The board rechecks the published host before offering the raffle. Checkout receipts and refund references are unique. A receipt, the funding change and the ledger entry commit together. An unmatched raffle receipt is available in the board raffle API. The board can read back the actual Stripe fee after settlement.
+
+The daily sponsorship check compares outstanding funded raffles with their host and sponsorship. A cancelled or postponed host, an ended sponsorship or the end of the paid term puts the raffle on hold. The board resolves the flags, confirms prize readiness and decides any refund separately.
 
 # Related specs
 

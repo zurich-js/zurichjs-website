@@ -119,6 +119,74 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
   const missed = async (id: string) => ((await get(id)) ? conflict() : new RaffleNotFound());
 
   return {
+    claimMail: async (lease, entryId) =>
+      (
+        await q(
+          `with pending as (select key from raffle_mail where sent_at is null and (leased_at is null or leased_at < now()-interval '1 minute') and ($2::uuid is null or entry_id=$2) order by created_at limit 20 for update skip locked)
+      update raffle_mail m set lease=$1,leased_at=now() from pending p where m.key=p.key returning m.*`,
+          [lease, entryId ?? null],
+        )
+      ).map((r) => ({ key: String(r.key), entryId: String(r.entry_id), kind: r.kind as 'entry' | 'recovery' | 'winner', nonce: r.nonce as string | null })),
+    finishMail: async (key, lease, sent) => {
+      await q(`update raffle_mail set sent_at=case when $3 then now() end,nonce=case when $3 then null else nonce end,leased_at=null,lease=null where key=$1 and lease=$2`, [
+        key,
+        lease,
+        sent,
+      ]);
+    },
+    entryById: async (id) => {
+      const r = (await q('select * from raffle_entries where id=$1', [id]))[0];
+      return r ? entryOf(r) : null;
+    },
+    recover: async (rid, email, nonce, hash) => {
+      if (!UUID.test(rid)) return;
+      await q(
+        `with g as(insert into raffle_management_grants(token_hash,entry_id) select $4,id from raffle_entries where raffle_id=$1 and email=$2 returning entry_id)
+      insert into raffle_mail(key,entry_id,kind,nonce) select $4,entry_id,'recovery',$3 from g`,
+        [rid, email, nonce, hash],
+      );
+    },
+    claimDecision: async (id, seq) =>
+      ((await q('select decision from raffle_claims where raffle_id=$1 and seq=$2', [id, seq]))[0]?.decision as 'claimed' | 'expired' | undefined) ?? null,
+    decideClaim: async (id, seq, decision, actor) => {
+      const rows = await q(
+        `insert into raffle_claims(raffle_id,seq,decision,actor) select id,$2,$3,$4 from raffles where id=$1 and stage='drawn' and $2=(select max(seq) from raffle_draws where raffle_id=$1)
+        on conflict(raffle_id,seq) do update set decision=raffle_claims.decision where raffle_claims.decision=excluded.decision returning seq`,
+        [id, seq, decision, actor.id],
+      );
+      if (!rows.length) throw conflict();
+    },
+    fulfil: async (id, seq, note, actor) => {
+      const rows = await q(
+        `with done as(update raffles set stage='fulfilled',reason=null where id=$1 and stage='drawn' and $2=(select max(seq) from raffle_draws where raffle_id=$1) and exists(select 1 from raffle_claims where raffle_id=$1 and seq=$2 and decision='claimed') returning *),
+        detail as(insert into raffle_fulfilments(raffle_id,seq,note) select id,$2,$3 from done),
+        log as(insert into raffle_events(raffle_id,type,actor_kind,actor_id,payload) select id,'fulfilled',$4,$5,jsonb_build_object('seq',$2::int) from done) select * from done`,
+        [id, seq, note, actor.kind, actor.id],
+      );
+      if (!rows[0]) throw conflict();
+      return raffleOf(rows[0]);
+    },
+    unmatched: async (p) => {
+      await q('insert into raffle_unmatched_payments(session_id,link_id,quote_ref,raffle_ref,amount_minor,currency) values($1,$2,$3,$4,$5,$6) on conflict(session_id) do nothing', [
+        p.sessionId,
+        p.linkId,
+        p.quoteRef,
+        p.raffleRef,
+        p.amountMinor,
+        p.currency,
+      ]);
+    },
+    unmatchedPayments: async () =>
+      (await q('select * from raffle_unmatched_payments order by recorded_at desc')).map((r) => ({
+        sessionId: String(r.session_id),
+        linkId: r.link_id as string | null,
+        quoteRef: r.quote_ref as string | null,
+        raffleRef: r.raffle_ref as string | null,
+        amountMinor: Number(r.amount_minor),
+        currency: String(r.currency),
+      })),
+    outstanding: async () =>
+      (await q("select * from raffles where funding in ('paid','in_kind') and stage in ('offered','ready','open','closed','drawn') order by id")).map(raffleOf),
     async create(n, actor) {
       const rows = await q(
         `with s as (insert into raffles (sponsor_id, event_id, event_title, event_date, prize, quantity, budget_minor, fulfilment)
@@ -244,10 +312,10 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       if (!UUID.test(raffleId)) throw new RaffleNotFound();
       // Open and not closed yet, in the same statement as the insert.
       const rows = await q(
-        `insert into raffle_entries (raffle_id, name, email, claim_code, token_hash, created_at)
-         select $1, $2, $3, $4, $5, $6 from raffles where id = $1 and stage = 'open' and closes_at > $6
-         on conflict (raffle_id, email) do nothing returning *`,
-        [raffleId, e.name, e.email.toLowerCase(), e.claimCode, e.tokenHash, at.toISOString()],
+        `with ent as (insert into raffle_entries (raffle_id, name, email, claim_code, token_hash, created_at)
+         select $1, $2, $3, $4, $5, $6 from (select id from raffles where id=$1 and stage='open' and closes_at>$6 for update) admitted
+         on conflict (raffle_id, email) do nothing returning *), queued as(insert into raffle_mail(key,entry_id,kind,nonce) select 'entry:'||id,id,'entry',$7 from ent where $7::text is not null) select * from ent`,
+        [raffleId, e.name, e.email.toLowerCase(), e.claimCode, e.tokenHash, at.toISOString(), e.mailNonce ?? null],
       ).catch((err: { constraint?: string }) => {
         if (err.constraint === 'raffle_entries_raffle_id_claim_code_key') throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
         throw err;
@@ -260,7 +328,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     },
     entryByToken: async (hash) => {
       if (!/^[0-9a-f]{64}$/.test(hash)) return null;
-      const r = (await q('select * from raffle_entries where token_hash = $1', [hash]))[0];
+      const r = (await q('select * from raffle_entries where token_hash = $1 or id=(select entry_id from raffle_management_grants where token_hash=$1)', [hash]))[0];
       return r ? entryOf(r) : null;
     },
     async verifyEntry(entryId) {
@@ -297,7 +365,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
                     select $1, 1, $2, $3, $4, $5, $6, $7 from s returning *),
               e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
                     select raffle_id, 'drawn', actor_kind, actor_id, jsonb_build_object('seq', 1, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
-         select * from d`,
+         , queued as(insert into raffle_mail(key,entry_id,kind) select 'winner:'||raffle_id||':'||seq,entry_id,'winner' from d) select * from d`,
         [rid, eligible[index]!.id, eligible.length, hash, index, actor.kind, actor.id],
       );
       if (rows[0]) return { draw: drawOf(rows[0]), entry: eligible[index]!, repeated: false };
@@ -326,7 +394,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
                     on conflict (raffle_id, seq) do nothing returning *),
               e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
                     select raffle_id, 'redrawn', actor_kind, actor_id, jsonb_build_object('seq', seq, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
-         select * from d`,
+         , queued as(insert into raffle_mail(key,entry_id,kind) select 'winner:'||raffle_id||':'||seq,entry_id,'winner' from d) select * from d`,
         [rid, afterSeq, eligible[index]!.id, eligible.length, entriesHash(eligible), index, reason.trim().slice(0, 500), actor.kind, actor.id],
       );
       if (!rows[0]) throw conflict();

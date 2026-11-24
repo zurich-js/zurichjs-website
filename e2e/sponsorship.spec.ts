@@ -190,8 +190,8 @@ test.describe('the sponsorship page (/partners/account)', () => {
               ok: true,
               checked: true,
               meetups: [
-                { eventId: 'e-dec', title: 'ZurichJS Meetup December', date: '2026-12-09', state: 'cancelled' },
-                { eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming' },
+                { eventId: 'e-dec', title: 'ZurichJS Meetup December', date: '2026-12-09', state: 'cancelled', url: '/events/zurichjs-december' },
+                { eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming', url: '/events/zurichjs-january' },
               ],
             },
           }),
@@ -205,6 +205,26 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await expect(section.getByText('ZurichJS Meetup January')).toBeVisible();
     await expect(section.getByText('Cancelled')).toBeVisible();
     await expect(section.getByText('Upcoming')).toBeVisible();
+    await expect(section.getByRole('link', { name: 'ZurichJS Meetup January' })).toHaveAttribute('href', '/events/zurichjs-january');
+    expect(await axe(page)).toEqual([]);
+  });
+
+  test('signed in: the covered meetups still show when the sponsorship itself fails to load', async ({ page }) => {
+    await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t load your billing right now.' } }));
+    await page.route('**/api/sponsorship/coverage', (route) =>
+      route.fulfill({
+        json: {
+          ok: true,
+          once: false,
+          checked: true,
+          meetups: [{ eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming', url: '/events/zurichjs-january' }],
+        },
+      }),
+    );
+    await page.goto(ACCOUNT);
+    await expect(page.getByText('We couldn’t load your billing right now.')).toBeVisible();
+    const section = page.getByRole('region', { name: 'Meetups you sponsor' });
+    await expect(section.getByRole('link', { name: 'ZurichJS Meetup January' })).toBeVisible();
     expect(await axe(page)).toEqual([]);
   });
 

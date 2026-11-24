@@ -3,7 +3,7 @@
  * token is in the fragment, so it never reaches a server log. Opening the page only shows the
  * entry; the email is confirmed when its owner clicks Confirm.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { Notice } from '@zurichjs/design/islands/Notice';
@@ -29,20 +29,29 @@ export default function RaffleManage({ contactEmail }: { contactEmail: string })
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
-  const token = typeof location === 'undefined' ? '' : (new URLSearchParams(location.hash.slice(1)).get('t') ?? '');
+  const [token] = useState(() => (typeof location === 'undefined' ? '' : (new URLSearchParams(location.hash.slice(1)).get('t') ?? '')));
 
-  const call = async (action: 'view' | 'confirm') => {
-    const res = await fetch('/api/raffle/manage', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, action }) }).catch(() => null);
-    const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; entry?: EntryView }) : null;
-    return res?.ok && data?.entry
-      ? { ok: true as const, entry: data.entry }
-      : { ok: false as const, status: res?.status ?? 0, error: data?.error ?? 'We couldn’t reach the site. Check your connection and try again.' };
-  };
+  const call = useCallback(
+    async (action: 'view' | 'confirm') => {
+      const res = await fetch('/api/raffle/manage', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, action }) }).catch(() => null);
+      const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; entry?: EntryView }) : null;
+      return res?.ok && data?.entry
+        ? { ok: true as const, entry: data.entry }
+        : { ok: false as const, status: res?.status ?? 0, error: data?.error ?? 'We couldn’t reach the site. Check your connection and try again.' };
+    },
+    [token],
+  );
 
   useEffect(() => {
-    void call('view').then((r) => setLoad(r.ok ? { kind: 'ready', entry: r.entry } : { kind: 'invalid', message: r.error }));
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once
-  }, []);
+    if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+    let current = true;
+    void call('view').then((r) => {
+      if (current) setLoad(r.ok ? { kind: 'ready', entry: r.entry } : { kind: 'invalid', message: r.error });
+    });
+    return () => {
+      current = false;
+    };
+  }, [call]);
 
   if (load.kind === 'loading')
     return (

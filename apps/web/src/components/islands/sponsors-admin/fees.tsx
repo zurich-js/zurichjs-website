@@ -2,11 +2,13 @@
  * Processing fees in the board's views: who covers them on an offer, and the fee settings (the
  * gate and the card tariffs). The server computes every amount; these only show it.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { FEE_CHOICE_LABEL, type FeeChoice } from '@zurichjs/sponsorship';
 import { longDate } from '../../../server/dates.ts';
+import type { paymentView } from '../../../pages/api/membership/admin/sponsors/[id]/payments.ts';
+import type { PaymentLinkPreview } from '../../../pages/api/membership/admin/sponsors/[id]/payment-link.ts';
 import type { gateView, quoteView, tariffView } from '../../../server/sponsor-fees.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, optional } from '../forms/shared.tsx';
@@ -18,17 +20,86 @@ type TariffView = ReturnType<typeof tariffView>;
 
 const FEES = '/api/membership/admin/fees';
 
+/** The latest `onSignedOut`, for effects that should not re-run when the parent re-renders. */
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  ref.current = value;
+  return ref;
+}
+
 /** The fee gate, loaded once: null while loading. */
 export function useFeeGate(onSignedOut: () => void) {
   const [gate, setGate] = useState<Gate | null>(null);
+  const signedOut = useLatest(onSignedOut);
   useEffect(() => {
+    let current = true;
     void api<{ gate: Gate }>(FEES).then(({ status, body }) => {
-      if (status === 401) return onSignedOut();
+      if (!current) return;
+      if (status === 401) return signedOut.current();
       setGate(status === 200 ? body.gate : { open: false, reason: body.error ?? 'Could not load the fee settings. ZurichJS covers the fees.' });
     });
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once
-  }, []);
+    return () => {
+      current = false;
+    };
+  }, [signedOut]);
   return gate;
+}
+
+/** The server's figures for an offer before it is made: null while loading or after an error. */
+export function usePreview(id: string, feeChoice: FeeChoice, onSignedOut: () => void) {
+  const [preview, setPreview] = useState<PaymentLinkPreview | null>(null);
+  const [error, setError] = useState('');
+  const signedOut = useLatest(onSignedOut);
+  useEffect(() => {
+    let current = true;
+    setPreview(null);
+    setError('');
+    void api<{ preview: PaymentLinkPreview }>(`/api/membership/admin/sponsors/${encodeURIComponent(id)}/payment-link?feeChoice=${feeChoice}`).then(({ status, body }) => {
+      if (!current) return;
+      if (status === 401) return signedOut.current();
+      if (status !== 200) return setError(body.error ?? 'Could not work out the amounts. Try again.');
+      setPreview(body.preview);
+    });
+    return () => {
+      current = false;
+    };
+  }, [id, feeChoice, signedOut]);
+  return { preview, error };
+}
+
+/** What the sponsor will be asked to pay, and what the card payment should cost and leave, before the link is made. */
+export function OfferPreview({ preview: p, error }: { preview: PaymentLinkPreview | null; error: string }) {
+  if (error) return <Notice kind="error">{error}</Notice>;
+  if (!p) return <p class="m-0 text-compact text-ink-2">Working out the amounts…</p>;
+  const rows: [string, string][] = [
+    ['For', p.purpose],
+    ['Amount', p.base],
+    ...(p.surcharge ? ([['Processing fee the sponsor pays', p.surcharge]] as [string, string][]) : []),
+    ['Total the sponsor pays', p.total],
+    ...(p.estimate
+      ? ([
+          [`Card fee, estimated from tariff ${p.estimate.tariffVersion}`, p.estimate.fee],
+          ['ZurichJS receives, estimated', p.estimate.net],
+        ] as [string, string][])
+      : []),
+  ];
+  return (
+    <div class="flex flex-col gap-2">
+      <dl class="m-0 grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
+        {rows.map(([k, v]) => (
+          <div key={k} class="flex min-w-0 flex-col gap-0.5">
+            <dt class="text-meta text-grey-text">{k}</dt>
+            <dd class="m-0 text-body font-bold break-words">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p class="m-0 text-compact text-ink-2">
+        {p.estimate
+          ? 'The actual card fee is recorded once Stripe reports it.'
+          : 'No card tariff is entered, so the card fee is not estimated. Stripe reports the actual fee after payment.'}
+      </p>
+    </div>
+  );
 }
 
 /** Who covers processing fees on this offer. "Sponsor covers the fees" shows only with the gate open. */
@@ -65,14 +136,19 @@ export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
   const [done, setDone] = useState('');
   const err = (field: string) => (error?.field === field ? error.message : undefined);
 
+  const signedOut = useLatest(onSignedOut);
   useEffect(() => {
+    let current = true;
     void api<{ gate: Gate; tariffs: TariffView[] }>(FEES).then(({ status, body }) => {
-      if (status === 401) return onSignedOut();
+      if (!current) return;
+      if (status === 401) return signedOut.current();
       if (status !== 200) return setLoadError(body.error ?? 'Could not load the fee settings.');
       setData(body);
     });
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once
-  }, []);
+    return () => {
+      current = false;
+    };
+  }, [signedOut]);
 
   const save = async (e: Event) => {
     e.preventDefault();
@@ -165,6 +241,95 @@ export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
             </form>
           )}
         </>
+      )}
+    </Block>
+  );
+}
+
+type Payment = ReturnType<typeof paymentView>;
+export function SponsorPayments({ id, onSignedOut, onChanged }: { id: string; onSignedOut: () => void; onChanged: () => void }) {
+  const url = `/api/membership/admin/sponsors/${encodeURIComponent(id)}/payments`;
+  const signedOut = useLatest(onSignedOut);
+  const [payments, setPayments] = useState<Payment[] | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [settlements, setSettlements] = useState<Record<string, string>>({});
+  const [reload, setReload] = useState(0);
+  useEffect(() => {
+    let current = true;
+    setError('');
+    void api<{ payments: Payment[] }>(url)
+      .then(({ status, body }) => {
+        if (!current) return;
+        if (status === 401) return signedOut.current();
+        if (status !== 200) return setError(body.error ?? 'Could not load payments.');
+        setPayments(body.payments);
+      })
+      .catch(() => {
+        if (current) setError('Could not load payments.');
+      });
+    return () => {
+      current = false;
+    };
+  }, [url, signedOut, reload]);
+  const decide = async (action: 'reconcile' | 'accept' | 'dismiss', sessionId?: string) => {
+    setBusy(true);
+    setError('');
+    try {
+      const { status, body } = await post<{ payments: Payment[] }>(url, { action, sessionId, note: sessionId ? settlements[sessionId] : undefined });
+      if (status === 401) return signedOut.current();
+      if (status !== 200) return setError(body.error ?? 'Could not update the payment.');
+      setPayments(body.payments);
+      onChanged();
+    } catch {
+      setError('Could not update the payment. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Block id="h-payments" title="Card payments">
+      {error && (
+        <>
+          <Notice kind="error">{error}</Notice>
+          <Button variant="secondary" onClick={() => setReload((n) => n + 1)}>
+            Reload payments
+          </Button>
+        </>
+      )}
+      {!payments && !error && <p>Loading payments…</p>}
+      {payments?.length === 0 && <p>No payments recorded.</p>}
+      {payments?.map((p) => (
+        <div key={p.sessionId} class="flex flex-col gap-2">
+          <strong>{p.amount}</strong>
+          <span>{p.sessionId}</span>
+          <span>
+            {p.reason ?? 'Payment received.'} {p.resolution && `Board decision: ${p.resolution}.`}
+          </span>
+          <span>{p.fee ? `Stripe fee ${p.fee}. ZurichJS received ${p.net}.` : 'Stripe fee pending.'}</span>
+          {p.outcome === 'review' && !p.resolution && (
+            <>
+              <TextField
+                label="How this payment was settled"
+                value={settlements[p.sessionId] ?? ''}
+                onInput={(e) => setSettlements({ ...settlements, [p.sessionId]: inputValue(e) })}
+              />
+              <div class="flex flex-wrap gap-2">
+                <Button variant="secondary" disabled={busy} onClick={() => void decide('accept', p.sessionId)}>
+                  Accept payment for sponsorship
+                </Button>
+                <Button variant="secondary" disabled={busy || !settlements[p.sessionId]?.trim()} onClick={() => void decide('dismiss', p.sessionId)}>
+                  Record settlement
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+      {payments?.some((p) => p.fee === null) && (
+        <Button variant="secondary" disabled={busy} onClick={() => void decide('reconcile')}>
+          Check actual fees with Stripe
+        </Button>
       )}
     </Block>
   );

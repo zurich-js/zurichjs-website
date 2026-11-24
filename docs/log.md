@@ -3,6 +3,7 @@
 ## 2026-11-24
 
 - **Update**: the admin area tells an outage from a sign-out, offers Try again when a load fails, gives reads a 20 s limit, and counts every member and sponsorship; lists stop at 500 rows and say so ([Membership frontend](/domains/membership/frontend.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)). New island primitives `Loading` and `LoadFailed` ([Components](/systems/design-system/components.md)).
+- **Update**: admin sign-out is only shown once the site confirms it; a late answer for a member opened earlier is ignored; writes give up after 65 s and say when the outcome is unknown ([Membership frontend](/domains/membership/frontend.md)).
 
 ## 2026-11-19
 

@@ -20,20 +20,19 @@ export const handleAdminSponsor = (request: Request, id: string, deps: SponsorAd
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
       const today = zurichDay(deps.now ? new Date(deps.now) : new Date());
-      const [contacts, agreements, logos, documents, meetups, events, needs, pending] = await Promise.all([
+      const [contacts, agreements, logos, documents, meetups, events, pending] = await Promise.all([
         store.contacts(s.id),
         store.agreements(s.id),
         store.logos(s.id),
         store.documents(s.id),
         store.meetups(s.id),
         store.events(s.id),
-        attention(s, store, today),
         s.stripeSubscriptionId && s.status !== 'ended' ? pendingChange(s.stripeSubscriptionId, lifecycle.stripe).catch(() => null) : null,
       ]);
       return json(200, {
         ok: true,
         sponsor: adminSponsorView(s, meetups, documents.length > 0),
-        attention: needs,
+        attention: attention(s, { meetups, latestLogo: logos[0] ?? null }, today),
         contacts: contacts.map(contactView),
         agreements: agreements.map(agreementView),
         logos: logos.map(logoView),

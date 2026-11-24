@@ -3,7 +3,7 @@
 ## 2026-11-24
 
 - **Added**: [Processing fees](/domains/sponsorship/fees.md). Every board payment link freezes a quote in rappen; the board can choose "Sponsor covers the fees" once a card tariff is entered and the owner set `SPONSOR_FEE_POLICY_VERSION`. The surcharge is its own Stripe line, the sponsor sees base, fee and total first, and stale or mismatched payments are flagged.
-- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state from Sanity ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state and page link from Sanity, even when the rest of the account fails to load. Whether a covered meetup has happened is decided on its current Sanity date, and a row stays when that date cannot be checked ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
 ## 2026-11-19
 

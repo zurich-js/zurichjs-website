@@ -1,9 +1,9 @@
 /**
  * "Meetups you sponsor" on /partners/account: the meetups the sponsorship covers, loaded on their
- * own from GET /api/sponsorship/coverage, so a billing problem never hides them. Each meetup says
- * its state in words (upcoming, happened, cancelled, moved).
+ * own from GET /api/sponsorship/coverage. The page shows this section even when the sponsorship
+ * itself could not be loaded. Each meetup says its state in words and links to its page.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { Notice } from '@zurichjs/design/islands/Notice';
@@ -21,25 +21,32 @@ const STATE: Record<CoveredState, { label: string; tone: TagTone }> = {
   unknown: { label: 'No longer listed', tone: 'grey' },
 };
 
-type Load = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; meetups: CoveredMeetup[]; checked: boolean };
+type Load = { kind: 'loading' } | { kind: 'none' } | { kind: 'error'; message: string } | { kind: 'ready'; once: boolean; meetups: CoveredMeetup[]; checked: boolean };
 
-export function CoveredMeetups({ once, contactEmail, onSignedOut }: { once: boolean; contactEmail: string; onSignedOut: () => void }) {
+type Answer = { ok?: boolean; error?: string; once?: boolean; meetups?: CoveredMeetup[]; checked?: boolean };
+
+export function CoveredMeetups({ contactEmail, onSignedOut }: { contactEmail: string; onSignedOut: () => void }) {
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
-
-  const fetchCoverage = async () => {
-    setLoad({ kind: 'loading' });
-    const res = await fetch('/api/sponsorship/coverage', { credentials: 'same-origin' }).catch(() => null);
-    if (res?.status === 401) return onSignedOut();
-    const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; meetups?: CoveredMeetup[]; checked?: boolean }) : null;
-    if (!res?.ok || !data?.ok) return setLoad({ kind: 'error', message: data?.error ?? 'We couldn’t load your meetups. Check your connection and try again.' });
-    setLoad({ kind: 'ready', meetups: data.meetups ?? [], checked: data.checked !== false });
-  };
+  const [attempt, setAttempt] = useState(0);
+  const signedOut = useRef(onSignedOut);
+  signedOut.current = onSignedOut;
 
   useEffect(() => {
-    void fetchCoverage();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
-  }, []);
+    const request = new AbortController();
+    setLoad({ kind: 'loading' });
+    void (async () => {
+      const res = await fetch('/api/sponsorship/coverage', { credentials: 'same-origin', signal: request.signal }).catch(() => null);
+      const data = res ? ((await res.json().catch(() => ({}))) as Answer) : null;
+      if (request.signal.aborted) return;
+      if (res?.status === 401) return signedOut.current();
+      if (res?.status === 404) return setLoad({ kind: 'none' });
+      if (!res?.ok || !data?.ok) return setLoad({ kind: 'error', message: data?.error ?? 'We couldn’t load your meetups. Check your connection and try again.' });
+      setLoad({ kind: 'ready', once: data.once === true, meetups: data.meetups ?? [], checked: data.checked !== false });
+    })();
+    return () => request.abort();
+  }, [attempt]);
 
+  if (load.kind === 'none') return null;
   return (
     <section aria-labelledby="h-covered" aria-busy={load.kind === 'loading'} class={cardClass('outline', 'lg')}>
       <Heading id="h-covered" size="subsection">
@@ -54,7 +61,7 @@ export function CoveredMeetups({ once, contactEmail, onSignedOut }: { once: bool
         <>
           <Notice tone="danger" live title={load.message} />
           <div>
-            <Button variant="secondary" onClick={() => void fetchCoverage()}>
+            <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
               Try again
             </Button>
           </div>
@@ -62,7 +69,7 @@ export function CoveredMeetups({ once, contactEmail, onSignedOut }: { once: bool
       )}
       {load.kind === 'ready' && !load.meetups.length && (
         <p class="m-0 text-body text-ink-2 text-pretty">
-          {once
+          {load.once
             ? 'The meetups in your plan show here once you have chosen them.'
             : `No meetups are confirmed for your sponsorship yet. We agree each meetup with you, then it shows here. Questions: ${contactEmail}.`}
         </p>
@@ -74,7 +81,13 @@ export function CoveredMeetups({ once, contactEmail, onSignedOut }: { once: bool
             {load.meetups.map((m) => (
               <li key={m.eventId} class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-4">
                 <div class="flex min-w-0 flex-col">
-                  <span class="text-lead font-bold break-words">{m.title}</span>
+                  {m.url ? (
+                    <a href={m.url} class="text-lead font-bold break-words text-black">
+                      {m.title}
+                    </a>
+                  ) : (
+                    <span class="text-lead font-bold break-words">{m.title}</span>
+                  )}
                   <span class="text-compact text-ink-2">{longDate(m.date)}</span>
                 </div>
                 <Tag tone={STATE[m.state].tone}>{STATE[m.state].label}</Tag>

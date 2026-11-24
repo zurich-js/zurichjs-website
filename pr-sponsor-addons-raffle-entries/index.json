@@ -1,0 +1,278 @@
+[
+  {
+    "file": "entry-open-390.png",
+    "caption": "Entry page: prize, meetup, sponsor credit, closing time, form with unticked rules box (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-open-1440.png",
+    "caption": "Entry page: prize, meetup, sponsor credit, closing time, form with unticked rules box (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-open-375.png",
+    "caption": "Entry page: prize, meetup, sponsor credit, closing time, form with unticked rules box (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-open-1280.png",
+    "caption": "Entry page: prize, meetup, sponsor credit, closing time, form with unticked rules box (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-open-320.png",
+    "caption": "Entry page: prize, meetup, sponsor credit, closing time, form with unticked rules box (320px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-invalid-390.png",
+    "caption": "Entry form: missing name, bad email, rules not accepted (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-invalid-1440.png",
+    "caption": "Entry form: missing name, bad email, rules not accepted (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-sent-390.png",
+    "caption": "Entered: same answer for a new and a repeated email (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-sent-1440.png",
+    "caption": "Entered: same answer for a new and a repeated email (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-closed-error-390.png",
+    "caption": "Entries closed while filling in (409 from the server) (390px, MOCK: entries answered 409; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-closed-error-1440.png",
+    "caption": "Entries closed while filling in (409 from the server) (1440px, MOCK: entries answered 409; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-drawn-390.png",
+    "caption": "After the draw: winning claim code only, no names (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-drawn-1440.png",
+    "caption": "After the draw: winning claim code only, no names (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-drawn-375.png",
+    "caption": "After the draw: winning claim code only, no names (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-drawn-1280.png",
+    "caption": "After the draw: winning claim code only, no names (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-drawn-320.png",
+    "caption": "After the draw: winning claim code only, no names (320px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-missing-390.png",
+    "caption": "Unknown or not yet public raffle (404) (390px, MOCK: info answered 404; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-missing-1440.png",
+    "caption": "Unknown or not yet public raffle (404) (1440px, MOCK: info answered 404; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-error-390.png",
+    "caption": "Raffle failed to load (502): error and Try again (390px, MOCK: info answered 502; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-error-1440.png",
+    "caption": "Raffle failed to load (502): error and Try again (1440px, MOCK: info answered 502; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-loading-390.png",
+    "caption": "Loading (390px, MOCK: info held for 10s; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-loading-1440.png",
+    "caption": "Loading (1440px, MOCK: info held for 10s; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-unconfirmed-390.png",
+    "caption": "Entrant’s own link: entry and claim code; email confirmed only on click (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-unconfirmed-1440.png",
+    "caption": "Entrant’s own link: entry and claim code; email confirmed only on click (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-unconfirmed-375.png",
+    "caption": "Entrant’s own link: entry and claim code; email confirmed only on click (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-unconfirmed-1280.png",
+    "caption": "Entrant’s own link: entry and claim code; email confirmed only on click (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-unconfirmed-320.png",
+    "caption": "Entrant’s own link: entry and claim code; email confirmed only on click (320px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-invalid-390.png",
+    "caption": "Invalid link (404) (390px, MOCK: manage answered 404; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-invalid-1440.png",
+    "caption": "Invalid link (404) (1440px, MOCK: manage answered 404; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-open-form-390.png",
+    "caption": "Board: open entries with a closing time; what opening freezes (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-open-form-1440.png",
+    "caption": "Board: open entries with a closing time; what opening freezes (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-rules-closed-390.png",
+    "caption": "Board: entrant rules not approved, no Open entries button (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-rules-closed-1440.png",
+    "caption": "Board: entrant rules not approved, no Open entries button (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-open-390.png",
+    "caption": "Board: entries open, counts and the entry page link (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-open-1440.png",
+    "caption": "Board: entries open, counts and the entry page link (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-draw-confirm-390.png",
+    "caption": "Board: the draw’s confirm step (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-draw-confirm-1440.png",
+    "caption": "Board: the draw’s confirm step (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-drawn-390.png",
+    "caption": "Board: drawn and drawn again with a reason; winner name and email for the board only (MOCK names) (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-drawn-1440.png",
+    "caption": "Board: drawn and drawn again with a reason; winner name and email for the board only (MOCK names) (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-drawn-375.png",
+    "caption": "Board: drawn and drawn again with a reason; winner name and email for the board only (MOCK names) (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-drawn-1280.png",
+    "caption": "Board: drawn and drawn again with a reason; winner name and email for the board only (MOCK names) (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffle-drawn-320.png",
+    "caption": "Board: drawn and drawn again with a reason; winner name and email for the board only (MOCK names) (320px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "flow-enter.mp4",
+    "caption": "Entrant enters: validation, rules box, check your email (MOCK API)"
+  },
+  {
+    "file": "flow-enter.gif",
+    "caption": "Entrant enters: validation, rules box, check your email (MOCK API)"
+  },
+  {
+    "file": "flow-confirm-email.mp4",
+    "caption": "Entrant confirms the email from their own link (MOCK API)"
+  },
+  {
+    "file": "flow-confirm-email.gif",
+    "caption": "Entrant confirms the email from their own link (MOCK API)"
+  },
+  {
+    "file": "flow-board-open-close-draw.mp4",
+    "caption": "Board opens entries, closes them and draws once (MOCK API)"
+  },
+  {
+    "file": "flow-board-open-close-draw.gif",
+    "caption": "Board opens entries, closes them and draws once (MOCK API)"
+  }
+]

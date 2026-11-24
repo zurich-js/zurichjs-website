@@ -148,8 +148,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
     }
     await w.run();
   }
-  // Only as many notices are claimed as the time left can send; the rest wait for the next run.
-  const limit = deps.deadline ? Math.min(200, Math.floor(deps.deadline.remaining() / PER_NOTICE_MS)) : 200;
-  if (limit > 0) out.notices = await sendNotices(deps, { limit, budget: deps.deadline });
+  // No notice is claimed without time to send one; the rest wait for the next run.
+  if (!deps.deadline || deps.deadline.remaining() >= PER_NOTICE_MS) out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
   return out;
 }

@@ -23,7 +23,7 @@ import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass, cx, noticeClass, type ButtonVariant } from '@zurichjs/design/recipes';
 import { setSignedIn } from '@zurichjs/design/session';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
-import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
+import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, renewalReference, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
@@ -416,7 +416,6 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
       return setView({ kind: 'signed-out', notice: q.link });
     }
     const data = ((await res.json().catch(() => null)) ?? {}) as Partial<Me> & { ok?: boolean; error?: string };
-    // "Not configured" is the route's own JSON 503; a platform error page is an outage, with Try again.
     if (res.status === 503 && data.ok === false) return setView({ kind: 'unavailable' });
     if (!res.ok || !data.ok) return setView({ kind: 'error', message: data.error ?? `We couldn’t load your sponsorship. Try again, or write to ${contactEmail}.` });
     const me = data as Me;
@@ -750,7 +749,12 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
           <TextButton
             disabled={!!busy}
             onClick={() =>
-              void post('/api/sponsorship/plan', 'keep', { tier: s.tier, cycle: s.cycle }, `Done. You stay on ${planName(s.tier, s.cycle)}. The scheduled change is cancelled.`)
+              void post(
+                '/api/sponsorship/plan',
+                'keep',
+                { tier: s.tier, cycle: s.cycle, replaces: renewalReference(pending) },
+                `Done. You stay on ${planName(s.tier, s.cycle)}. The scheduled change is cancelled.`,
+              )
             }
           >
             {busy === 'keep' ? 'Keeping…' : 'Keep current plan'}
@@ -891,8 +895,7 @@ function ChangePlan({
   const same = tier === s.tier && cycle === s.cycle;
   const timing = manual ? (same ? 'none' : 'now') : changeTiming({ tier: s.tier, cycle: s.cycle }, { tier, cycle });
   const scheduled = !!pending && pending.tier === tier && pending.cycle === cycle;
-  // A change from the renewal replaces whatever is scheduled, so it waits until Stripe has said what that is.
-  const unchecked = timing === 'renewal' && !!ctx.me.pendingChangeUnknown;
+  const unchecked = !manual && timing !== 'none' && !!ctx.me.pendingChangeUnknown;
   const unchanged = timing === 'none' || scheduled || unchecked;
   const errorOf = (k: string) => errs.errorOf(sig.local, k);
   const plan = planName(tier, cycle);
@@ -901,7 +904,7 @@ function ChangePlan({
     timing === 'none'
       ? 'This is your current plan.'
       : unchecked
-        ? `${plan} would apply from your next renewal, but we couldn’t check for a change already waiting for it. Check again before you confirm.`
+        ? `We couldn’t check whether you already have a change scheduled for renewal. Check again before confirming ${plan}.`
         : scheduled && pending
           ? `This change is already scheduled for ${longDate(pending.from)}.`
           : timing === 'now'
@@ -921,7 +924,11 @@ function ChangePlan({
     setBusy(true);
     errs.setServer(null);
     result.set(null);
-    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null }>('/api/sponsorship/plan', { json: { tier, cycle, ...sig.payload } }, ctx);
+    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null }>(
+      '/api/sponsorship/plan',
+      { json: { tier, cycle, replaces: renewalReference(pending), ...sig.payload } },
+      ctx,
+    );
     setBusy(false);
     if (!r) return;
     if (!r.ok) {
@@ -951,6 +958,7 @@ function ChangePlan({
       <Benefits summary={`What ${tierInfo(tier).name} includes`} items={benefitsOf(tier)} />
       <p class="m-0 text-compact font-bold" aria-live="polite">
         {effect}
+        {!unchanged && pending && ` This replaces ${planName(pending.tier, pending.cycle)}, scheduled for ${longDate(pending.from)}.`}
       </p>
       {!unchanged && <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />}
       <ResultNotice result={result} />

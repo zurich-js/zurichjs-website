@@ -24,6 +24,7 @@ import {
   chf,
   cycleInfo,
   feeLabel,
+  renewalReference,
   tierInfo,
   type Actor,
   type Contact,
@@ -38,7 +39,9 @@ import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, n
 import {
   cancelAtPeriodEnd,
   cancelNow,
-  cancelPendingChange,
+  prepareCardPlan,
+  readPlanSubscription,
+  releaseSchedule,
   checkPrices,
   closeCheckout,
   closePaymentLink,
@@ -187,6 +190,7 @@ export async function changePlan(
   actor: Actor,
   deps: LifecycleDeps,
   signer: Signer | null,
+  replaces: string | null,
 ): Promise<{ sponsor: Sponsor; timing: 'none' | 'now' | 'renewal'; from: string | null }> {
   if (s.cycle === 'once' || to.cycle === 'once') {
     if (s.status !== 'pending' || s.source !== 'self_serve')
@@ -196,19 +200,25 @@ export async function changePlan(
   const { timing, from } = await appliesLabel(s, to, deps);
   let sponsor = s;
 
+  const subscription = s.stripeSubscriptionId && s.status !== 'pending' ? await readPlanSubscription(s.stripeSubscriptionId, deps.stripe) : null;
+  if (subscription && renewalReference(subscription.pending) !== replaces) throw new SponsorshipError('The renewal plan changed. Reload the page and check it before confirming.');
   if (timing === 'none') {
-    if (s.stripeSubscriptionId && (await cancelPendingChange(s.stripeSubscriptionId, deps.stripe)))
+    if (subscription?.schedule && subscription.pending) {
+      await releaseSchedule(subscription.schedule, deps.stripe);
       await note(`:leftwards_arrow_with_hook: ${who(s)} keeps ${previous}; the change waiting for the renewal is cancelled.`, deps);
+    }
     return { sponsor, timing, from };
   }
+  const card = subscription ? await prepareCardPlan(subscription, to, deps.stripe) : null;
+  if (timing === 'renewal' && !card) throw new SponsorshipError('There is no subscription to change.');
   if (signer && s.status !== 'pending') await sign(s, signer, 'change', actor, deps, `${summary({ ...s, ...to })} (from ${previous})`);
 
   if (timing === 'now') {
     if (s.status === 'pending') await closeCheckout(s, deps.store, deps.stripe);
-    else if (s.stripeSubscriptionId) await upgradeNow(s.stripeSubscriptionId, to, deps.stripe);
+    else if (card) await upgradeNow(card, deps.stripe);
     sponsor = await deps.store.update(s.id, { tier: to.tier, cycle: to.cycle }, actor);
-  } else {
-    await scheduleChange(s.stripeSubscriptionId!, to, deps.stripe);
+  } else if (card) {
+    await scheduleChange(card, deps.stripe);
   }
 
   if (s.status !== 'pending') {

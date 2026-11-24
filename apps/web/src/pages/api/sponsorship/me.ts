@@ -24,7 +24,6 @@ import { tierInfo } from '@zurichjs/sponsorship';
 
 export const prerender = false;
 
-/** A change waiting for the renewal; `unknown` when Stripe failed or answered with a schedule pendingChange cannot read. */
 const changeOf = async (s: Sponsor, deps: SponsorRouteDeps, env: Record<string, string | undefined>) => {
   if (!s.stripeSubscriptionId || !(s.status === 'active' || s.status === 'past_due')) return { change: null, unknown: false };
   try {
@@ -39,7 +38,7 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
   signedInSponsor(
     request,
     deps,
-    async ({ user, contact, sponsor: s, invitation, store, env }) => {
+    async ({ user, contact, sponsor: s, invitation, store, env, deps }) => {
       const base = { ok: true, email: user.email, agreementVersion: AGREEMENT.version };
       if (!s || !contact)
         return json(200, {

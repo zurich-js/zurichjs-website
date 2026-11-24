@@ -88,7 +88,6 @@ export default function MemberAccount({ contactEmail }: Props) {
       return setView({ kind: 'signed-out', notice: n.link });
     }
     const body = ((await res.json().catch(() => null)) ?? {}) as Partial<Me> & { ok?: boolean; error?: string };
-    // "Not configured" is the route's own JSON 503; a platform error page is an outage, with Try again.
     if (res.status === 503 && body.ok === false) return setView({ kind: 'unavailable' });
     if (!res.ok || !body.ok) return setView({ kind: 'error', message: body.error ?? `We couldn’t load your membership. Try again, or write to ${contactEmail}.` });
     const me = body as Me;

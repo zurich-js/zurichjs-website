@@ -358,7 +358,7 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await card.getByRole('button', { name: 'Change tier or how often you pay' }).click();
     const form = page.locator('#panel-change');
     await form.getByRole('radio', { name: 'Monthly' }).check();
-    await expect(form.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+    await expect(form.getByText(/We couldn’t check whether you already have a change scheduled/)).toBeVisible();
     await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
     unknown = false;
     await form.getByRole('button', { name: 'Check again' }).click();
@@ -370,9 +370,30 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: true }));
     await page.goto(`${ACCOUNT}?change=friend-monthly`);
     const linked = page.getByRole('region', { name: 'Change tier or how often you pay' });
-    await expect(linked.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+    await expect(linked.getByText(/We couldn’t check whether you already have a change scheduled/)).toBeVisible();
     await expect(linked.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
     await expect(linked.getByRole('button', { name: 'Check again' })).toBeVisible();
+  });
+
+  test('a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces', async ({ page }) => {
+    let unknown = true;
+    const requests: unknown[] = [];
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: unknown, pendingChange: unknown ? null : { tier: 'friend', cycle: 'monthly', from: '2027-11-02' } }));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      requests.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ok: true, timing: 'now', from: null } });
+    });
+    await page.goto(`${ACCOUNT}?change=builder-yearly`);
+    const form = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    await expect(form.getByRole('button', { name: 'Check again' })).toBeVisible();
+    await expect(form.getByRole('button', { name: 'Confirm the change' })).toHaveCount(0);
+    unknown = false;
+    await form.getByRole('button', { name: 'Check again' }).click();
+    await expect(form.getByText(/replaces Community Friend.*month.*2nd November 2027/)).toBeVisible();
+    expect(requests).toEqual([]);
+    await form.getByRole('checkbox').check();
+    await form.getByRole('button', { name: 'Confirm the change' }).click();
+    expect(requests).toEqual([expect.objectContaining({ tier: 'builder', cycle: 'yearly', replaces: 'friend-monthly@2027-11-02' })]);
   });
 
   test('a sponsorship that is ending can be kept: /end/undo is called and the page says it continues', async ({ page }) => {

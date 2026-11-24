@@ -5,7 +5,7 @@
  * Choosing the current plan drops a waiting change. Opening /partners/account?change=builder-yearly
  * (the link in our "please confirm" email) fills this in.
  *
- * POST /api/sponsorship/plan   (session cookie)   { tier, cycle, confirm? | signerName?, signerTitle?, agreementVersion }
+ * POST /api/sponsorship/plan   (session cookie)   { tier, cycle, replaces? (tier-cycle@date shown at confirmation), confirm? | signerName?, signerTitle?, agreementVersion }
  *   200 { ok, sponsor, timing: 'none' | 'now' | 'renewal', from } · 400 · 404 · 409 · 401 · 503 · 502
  */
 import type { APIRoute } from 'astro';
@@ -28,6 +28,7 @@ export const handlePlan = (request: Request, deps: SponsorRouteDeps = {}) =>
       const plan = parsePlan(body);
       if (!plan.ok) return fail(400, plan.error, { field: plan.field });
       if (sponsor.status === 'pending') return fail(409, 'Choose the plan when you pay.');
+      if (body.replaces != null && typeof body.replaces !== 'string') return fail(400, 'Reload the page to check the renewal plan.');
       const same = plan.value.tier === sponsor.tier && plan.value.cycle === sponsor.cycle;
       let signer = null;
       if (!same) {
@@ -36,7 +37,7 @@ export const handlePlan = (request: Request, deps: SponsorRouteDeps = {}) =>
         signer = await resolveSigner(sponsor, contact, sig.value, user.email, lifecycle);
         if (!signer) return fail(400, 'Confirm the change under the sponsorship agreement.', { field: 'agreement' });
       }
-      const r = await changePlan(sponsor, plan.value, { kind: 'sponsor', id: user.id }, lifecycle, signer);
+      const r = await changePlan(sponsor, plan.value, { kind: 'sponsor', id: user.id }, lifecycle, signer, body.replaces ?? null);
       return json(200, { ok: true, sponsor: sponsorView(r.sponsor), timing: r.timing, from: r.from });
     },
     'change the sponsorship',

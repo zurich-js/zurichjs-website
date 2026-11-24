@@ -1,7 +1,8 @@
-/** /api/sponsorship/me's pendingChange and pendingChangeUnknown for each answer Stripe can give. */
-import type { SponsorStore } from '@zurichjs/sponsorship';
+import { AGREEMENT, type SponsorStore } from '@zurichjs/sponsorship';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
+
+import { handlePlan } from '../src/pages/api/sponsorship/plan.ts';
 
 const user = { id: 'usr_1', email: 'ana@acme.example' };
 const contact = { id: 'c1', sponsorId: 's1', userId: user.id, name: 'Ana', email: user.email, role: 'primary' };
@@ -71,5 +72,44 @@ describe('the scheduled change on /api/sponsorship/me', () => {
       pendingChange: null,
       pendingChangeUnknown: true,
     });
+  });
+});
+
+describe('confirming a card upgrade', () => {
+  const waiting = { id: 'sched_1', metadata: { plan: 'sponsor_friend_monthly' }, phases: [{ end_date: later }] };
+  const shown = 'friend-monthly@2027-02-18';
+
+  it.each([
+    { reason: 'the schedule is unreadable', schedule: 'sched_1', replaces: shown, priceAvailable: true },
+    { reason: 'the renewal changed after the form loaded', schedule: waiting, replaces: 'friend-quarterly@2027-02-18', priceAvailable: true },
+    { reason: 'the target price is unavailable', schedule: waiting, replaces: shown, priceAvailable: false },
+  ])('leaves the signature, renewal and subscription alone when $reason', async ({ schedule, replaces, priceAvailable }) => {
+    const writes: string[] = [];
+    const response = await handlePlan(
+      new Request('https://fixture.invalid/api/sponsorship/plan', {
+        method: 'POST',
+        headers: { origin: 'https://fixture.invalid', 'content-type': 'application/json' },
+        body: JSON.stringify({ tier: 'builder', cycle: 'yearly', signerName: 'Ana Muster', signerTitle: 'Director', agreementVersion: AGREEMENT.version, replaces }),
+      }),
+      {
+        env: { STRIPE_SECRET_KEY: 'fixture' },
+        session: async () => user as never,
+        now: () => NOW,
+        store: {
+          ...store,
+          acceptAgreement: vi.fn(async () => {
+            writes.push('signature');
+            throw new Error('Unexpected signature');
+          }),
+        },
+        fetch: async (url, init) => {
+          const path = new URL(String(url)).pathname;
+          if (init?.method === 'POST') writes.push(path);
+          return Response.json(path.endsWith('/prices') ? { data: priceAvailable ? [{ id: 'new_price', product: 'product' }] : [] } : { ...current, id: 'sub_1', schedule });
+        },
+      },
+    );
+    expect(response.status).toBe(priceAvailable ? 409 : 503);
+    expect(writes).toEqual([]);
   });
 });

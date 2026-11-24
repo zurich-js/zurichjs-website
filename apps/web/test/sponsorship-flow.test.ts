@@ -250,11 +250,22 @@ describe('sponsorship flow', () => {
     expect((await webhook(stripeEvent('evt_1', 'invoice.paid', {}))).status).toBe(200);
     expect(w.emails).toHaveLength(sent);
 
-    // Upgrade on the same cycle, one tick: now, prorated, and the card must pay it.
-    expect(await (await handlePlan(post('/api/sponsorship/plan', { ...tick, tier: 'builder', cycle: 'quarterly' }), user())).json()).toMatchObject({
+    // The upgrade replaces the monthly renewal they reviewed on the page.
+    w.sub.schedule = 'sub_sched_1';
+    w.sub.plan = 'sponsor_friend_monthly';
+    const beforeUpgrade = w.calls.length;
+    expect(
+      await (await handlePlan(post('/api/sponsorship/plan', { ...tick, tier: 'builder', cycle: 'quarterly', replaces: 'friend-monthly@2027-02-18' }), user())).json(),
+    ).toMatchObject({
       timing: 'now',
       sponsor: { tier: 'builder' },
     });
+    expect(w.calls.slice(beforeUpgrade).map(({ method, path }) => [method, path])).toEqual([
+      ['GET', 'subscriptions/sub_acme'],
+      ['GET', 'prices'],
+      ['POST', 'subscription_schedules/sub_sched_1/release'],
+      ['POST', 'subscriptions/sub_acme'],
+    ]);
     const upgrade = w.calls.find((c) => c.params.get('proration_behavior') === 'always_invoice')!;
     expect(upgrade.params.get('payment_behavior')).toBe('error_if_incomplete');
     expect((await store.agreements(sponsor.id))[0]).toMatchObject({ context: 'change', signerName: 'Grace Hopper' });

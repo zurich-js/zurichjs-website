@@ -54,6 +54,17 @@ export function parseDonation(body: Record<string, unknown>): { ok: true; data: 
 
 export class StripeUnavailable extends Error {}
 
+export class StripeRequestError extends Error {
+  readonly status: number;
+  readonly code: string | undefined;
+
+  constructor(path: string, status: number, code: string | undefined, message: string) {
+    super(`Stripe ${path} failed: HTTP ${status} ${message}`.trim());
+    this.status = status;
+    this.code = code;
+  }
+}
+
 const STRIPE_API = 'https://api.stripe.com';
 
 /** The API version every call uses, and the membership webhook endpoint is created on. */
@@ -82,8 +93,8 @@ export async function stripeApi<T>(env: Env, fetchImpl: Fetch, method: 'GET' | '
     body: method === 'POST' ? params?.toString() : undefined,
     signal: AbortSignal.timeout(15_000),
   });
-  const json = (await res.json()) as T & { error?: { message?: string } };
-  if (!res.ok) throw new Error(`Stripe ${path} failed: HTTP ${res.status} ${json.error?.message ?? ''}`.trim());
+  const json = (await res.json()) as T & { error?: { message?: string; code?: string } };
+  if (!res.ok) throw new StripeRequestError(path, res.status, json.error?.code, json.error?.message ?? '');
   return json;
 }
 

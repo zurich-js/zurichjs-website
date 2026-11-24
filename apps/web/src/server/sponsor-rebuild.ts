@@ -23,6 +23,17 @@ export const statusChangeIsPublic = (from: Status, to: Status) => isRunning(from
 /** A pending sponsorship is not on the site, so its details can change freely. */
 export const patchIsPublic = (patch: SponsorPatch, after: Pick<Sponsor, 'status'>) => after.status !== 'pending' && PUBLIC_FIELDS.some((k) => k in patch);
 
+/** A concurrent move gets a fresh version and survives acknowledgement of the earlier build. */
+export async function queueCoverage(store: SponsorStore, queue: (reason: string) => Promise<void>, versions: string[]) {
+  if (!versions.length) return;
+  try {
+    await queue('sponsored meetups moved');
+    await store.acknowledgeMeetupRebuilds(versions);
+  } catch (error) {
+    console.warn('[sponsorship] meetup rebuild still pending', error);
+  }
+}
+
 export function withRebuilds(store: SponsorStore, queue: (reason: string) => Promise<void>): SponsorStore {
   const safely = async (reason: string) => {
     try {
@@ -33,10 +44,20 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
   };
   return {
     ...store,
+    async paidInvoice(id, payment, actor, opts) {
+      const before = await store.get(id);
+      const saved = await store.paidInvoice(id, payment, actor, opts);
+      if (before && (before.tier !== saved.tier || statusChangeIsPublic(before.status, saved.status))) await safely('sponsorship payment applied');
+      return saved;
+    },
     async create(input, contact, actor, opts) {
       const created = await store.create(input, contact, actor, opts);
       // An imported sponsorship starts running.
-      if (isRunning(created.sponsor.status)) await safely('sponsorship added as running');
+      if (isRunning(created.sponsor.status)) {
+        const version = opts?.meetups?.length ? (await store.get(created.sponsor.id))?.meetupRebuildId : null;
+        if (version) await queueCoverage(store, queue, [version]);
+        else await safely('sponsorship added as running');
+      }
       return created;
     },
     async transition(id, input) {
@@ -52,12 +73,9 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
       return s;
     },
     async setMeetups(id, list, actor) {
-      // A running one-time sponsor is thanked on the meetups it covers: moving them changes those pages.
-      const before = (await store.meetups(id)).map((m) => m.eventId);
       const saved = await store.setMeetups(id, list, actor);
-      const after = saved.map((m) => m.eventId);
-      const moved = before.length !== after.length || before.some((e) => !after.includes(e));
-      if (moved && isRunning((await store.get(id))?.status ?? 'pending')) await safely('sponsored meetups moved');
+      const version = (await store.get(id))?.meetupRebuildId;
+      if (version) await queueCoverage(store, queue, [version]);
       return saved;
     },
   };

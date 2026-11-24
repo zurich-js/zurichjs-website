@@ -7,7 +7,7 @@
  * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
+import { settleInvoice, DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
 import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
@@ -329,6 +329,11 @@ export function postgresStore(db: Queryable): SponsorStore {
       UUID.test(sponsorId)
         ? (await q('select event_id, title, date from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => camel<SponsorMeetup>(r))
         : [],
+    pendingMeetupRebuilds: async () =>
+      (await q<{ meetup_rebuild_id: string }>('select meetup_rebuild_id from sponsors where meetup_rebuild_id is not null')).map((r) => r.meetup_rebuild_id),
+    async acknowledgeMeetupRebuilds(versions) {
+      await q('update sponsors set meetup_rebuild_id = null where meetup_rebuild_id = any($1::uuid[])', [versions]);
+    },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];
       // One statement: upsert the new list, remove only meetups not in it (the two never touch the
@@ -477,9 +482,14 @@ export function postgresStore(db: Queryable): SponsorStore {
         error ? [id, error] : [id],
       );
     },
-    async beginLinkAttempt(sponsorId, request) {
+    async beginLinkAttempt(sponsorId, request, key = crypto.randomUUID()) {
       if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
-      const r = (await q('insert into sponsor_payment_link_attempts (sponsor_id, request) values ($1, $2) returning *', [sponsorId, request]))[0]!;
+      const [r] = await q(
+        `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
+        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *`,
+        [sponsorId, request, key],
+      );
+      if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
       return attemptOf(r);
     },
     async linkAttemptCreated(key, linkId) {
@@ -502,7 +512,7 @@ export function postgresStore(db: Queryable): SponsorStore {
         : (
             await q(
               `select * from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
-           order by created_at, key limit $2`,
+           order by updated_at, created_at, key limit $2`,
               [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
             )
           ).map(attemptOf),
@@ -521,26 +531,32 @@ export function postgresStore(db: Queryable): SponsorStore {
     },
     paidInvoice: (sponsorId, p, actor, { clearOverdue }) =>
       tx(async (t) => {
-        // The sponsor row is locked first: overdueInvoice for the same sponsor waits, then sees this payment.
-        const s = (await t('select * from sponsors where id = $1 for update', [sponsorId]))[0];
-        if (!s) throw new NotFound('sponsor');
-        await t(`insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, 'invoice_paid', $2, $3, $4::jsonb)`, [
-          sponsorId,
-          actor.kind,
-          actor.id,
-          JSON.stringify({ invoice: p.invoice, ...(p.created ? { created: p.created } : {}) }),
-        ]);
-        if (!clearOverdue || s.status !== 'past_due') return sponsorOf(s);
-        const rows = await auditedOn(t)(
-          `update sponsors set status = 'active' where id = $1 and status = 'past_due' returning *, id as sponsor_ref`,
-          [sponsorId],
-          'status_changed',
-          actor,
-          { invoice: p.invoice },
-          "'past_due'",
-          "'active'",
+        const [row] = await t('select * from sponsors where id = $1 for update', [sponsorId]);
+        if (!row) throw new NotFound('sponsor');
+        const before = sponsorOf(row);
+        const history = (await t("select * from sponsor_events where sponsor_id = $1 and type in ('status_changed','stripe_linked','invoice_paid') order by id", [sponsorId])).map(
+          eventOf,
         );
-        return sponsorOf(rows[0]!);
+        const settled = settleInvoice(before, history, p, clearOverdue);
+        if (!settled) return before;
+        const s = settled.sponsor;
+        const payload = { invoice: p.invoice, subscriptionId: p.subscriptionId, ...(p.created ? { created: p.created } : {}) };
+        const [saved] = await auditedOn(t)(
+          `update sponsors set status=$2, tier=$3, cycle=$4, payment_mode=$5, stripe_subscription_id=$6,
+           checkout_session_id=$7, started_at=$8, paid_until=$9 where id=$1 returning *, id as sponsor_ref`,
+          [sponsorId, s.status, s.tier, s.cycle, s.paymentMode, s.stripeSubscriptionId, s.checkoutSessionId, s.startedAt, s.paidUntil],
+          'invoice_paid',
+          actor,
+          payload,
+        );
+        if (before.status !== s.status)
+          await t(
+            `insert into sponsor_events (sponsor_id,type,from_status,to_status,actor_kind,actor_id,payload)
+           values ($1,'status_changed',$2,$3,$4,$5,$6::jsonb)`,
+            [sponsorId, before.status, s.status, actor.kind, actor.id, JSON.stringify(payload)],
+          );
+        if (settled.notices.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(settled.notices)]);
+        return sponsorOf(saved!);
       }),
     overdueInvoice: (sponsorId, p, actor, notices) =>
       tx(async (t) => {
@@ -554,7 +570,7 @@ export function postgresStore(db: Queryable): SponsorStore {
           [sponsorId, p.invoice],
         );
         if (paid.length) return { sponsor: s, outcome: 'paid' as const };
-        if (p.subscriptionId && s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: s, outcome: 'stale' as const };
+        if (!p.subscriptionId || s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: s, outcome: 'stale' as const };
         if (!['active', 'past_due', 'ending'].includes(s.status)) return { sponsor: s, outcome: 'not_running' as const };
         if (notices.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(notices)]);
         if (s.status !== 'active') return { sponsor: s, outcome: 'overdue' as const };

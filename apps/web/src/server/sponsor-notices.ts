@@ -1,16 +1,6 @@
 /**
- * Notices a sponsorship change owes: the sponsor's emails and the board's Slack notes
- * (docs/domains/sponsorship/overview.md, "Notices"). They are written to `sponsor_notices` with the
- * change (`transition({ notices })`, or `queueNotices` right after it), then sent: by the request
- * that made the change, and by the daily check for anything a request could not send (a timeout,
- * Resend or Slack down, a function stopped by the platform). So a saved change is never left
- * without its email or note, and the key makes each one once only: a retried request or a second
- * delivery of a Stripe event queues nothing new.
- *
- * An email is rendered when it is sent, from the sponsorship as it is then and the props stored
- * with the notice. Each contact's email carries the notice key as its Resend idempotency key.
- * A notice that says Stripe stopped (`after: 'stripe-closed'`) waits until the sponsorship no longer
- * points at anything in Stripe.
+ * Queued sponsorship notices are delivered by the request or daily check. Termination confirmations
+ * wait for known Stripe objects and unresolved payment-link attempts.
  *
  * Delivery is at least once. A notice is marked sent after Resend or Slack accepted it; if that
  * write fails twice, the claim is kept rather than released, so no sender takes the notice again
@@ -48,7 +38,8 @@ const PER_NOTICE_MS = 16_000;
 async function send(n: SponsorNotice, deps: NotifyDeps): Promise<void> {
   const body = n.body as NoticeBody;
   const s = body.kind === 'email' || body.after ? await deps.store.get(n.sponsorId) : null;
-  if (body.after === 'stripe-closed' && s && leftInStripe(s)) throw new NotYet('waiting until Stripe is closed');
+  if (body.after === 'stripe-closed' && (!s || leftInStripe(s) || (await deps.store.unsettledLinkAttempts({ sponsorId: n.sponsorId, limit: 1 })).length))
+    throw new NotYet('waiting until Stripe is closed');
   if (body.kind === 'slack') {
     await (deps.slack ?? sponsorSlack(deps.env, deps.fetch)).post(body.text);
     return;

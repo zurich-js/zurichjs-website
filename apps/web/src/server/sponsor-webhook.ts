@@ -25,7 +25,7 @@
  * a sponsorship that has ended, or a second payment for a one-time one, changes nothing and is
  * flagged in Slack.
  */
-import { TransitionError, fromLookupKey, isRecurring, label, paymentEvidence, type NewNotice, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { currentOfferId, TransitionError, fromLookupKey, label, paymentEvidence, type NewNotice, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { longDate } from './dates.ts';
 import { fail, json, type Env } from './http.ts';
@@ -252,7 +252,18 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
             break;
           }
         }
-        if (s.stripeSubscriptionId !== subscriptionId) s = await store.linkStripe(s.id, { subscriptionId, checkoutSessionId: null }, actor);
+        if (s.status === 'ended' || (s.checkoutSessionId && o.id !== s.checkoutSessionId) || (meta?.offerId && meta.offerId !== currentOfferId(s.id, await store.events(s.id))))
+          break;
+        if (s.stripeSubscriptionId !== subscriptionId) {
+          const bound = await store.linkStripeIf(
+            s.id,
+            { status: s.status, subscriptionId: s.stripeSubscriptionId, checkoutSessionId: s.checkoutSessionId },
+            { subscriptionId, checkoutSessionId: null },
+            actor,
+          );
+          if (!bound) break;
+          s = bound;
+        }
         if (s.paymentMode === 'manual') s = await store.update(s.id, { paymentMode: 'card' }, actor);
         break;
       }
@@ -261,7 +272,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const inv = o as unknown as Invoice;
         const src = sourceOf(inv);
         if (!src || src.metadata.source !== SPONSOR_SOURCE || !inv.amount_paid) break;
-        let s = await sponsorOf(store, { sponsorId: src.metadata.sponsorId, subscriptionId: src.subscription });
+        const s = await sponsorOf(store, { sponsorId: src.metadata.sponsorId, subscriptionId: src.subscription });
         if (!s) {
           log(`[sponsorship] invoice ${inv.id}: no sponsor; skipped`);
           break;
@@ -281,39 +292,34 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         // still clears "payment overdue" once Stripe has the subscription paid up.
         const newTerm = !inv.billing_reason || inv.billing_reason === 'subscription_create' || inv.billing_reason === 'subscription_cycle';
         const period = termOf(inv);
-        // Recorded first, and a new term clears "payment overdue" in the same step: a failure for this
-        // invoice handled at the same moment is decided wholly before or after it, and one arriving
-        // later changes nothing.
-        s = await store.paidInvoice(s.id, { invoice: inv.id, ...(event.created ? { created: event.created } : {}) }, actor, { clearOverdue: newTerm && !!period });
-        if (!period || !newTerm) {
-          if (s.status === 'past_due' && (await subscriptionPaidUp(src.subscription, stripeDeps))) await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } });
-          break;
-        }
-        // The first payment: still pending, or this very invoice activated it (a retry after a failure).
-        const first = s.status === 'pending' || (await activation(store, s.id))?.payload.invoice === inv.id;
-        if (s.stripeSubscriptionId !== src.subscription) s = await store.linkStripe(s.id, { subscriptionId: src.subscription, checkoutSessionId: null }, actor);
-        // The plan Stripe charged is the truth (two payment pages with different tiers, an applied switch).
+        const offerId = src.metadata.offerId ?? currentOfferId(s.id, await store.events(s.id));
         const charged = fromLookupKey(inv.lines?.data?.map((l) => l.price?.lookup_key).find(Boolean));
-        const paidUntil = zurichDayOf(period.end);
-        s = await store.update(
+        const plan = { ...s, ...charged };
+        const end = period ? zurichDayOf(period.end) : null;
+        const start = period ? zurichDayOf(period.start) : null;
+        const label = start && end ? termLabel(start, end) : null;
+        await store.paidInvoice(
           s.id,
           {
-            ...(s.paidUntil && s.paidUntil >= paidUntil ? {} : { paidUntil }),
-            ...(s.startedAt ? {} : { startedAt: zurichDayOf(period.start) }),
-            ...(charged && (charged.tier !== s.tier || charged.cycle !== s.cycle) ? charged : {}),
-            ...(s.paymentMode === 'card' ? {} : { paymentMode: 'card' as const }),
+            invoice: inv.id,
+            subscriptionId: src.subscription,
+            offerId,
+            created: event.created,
+            ...(newTerm && start && end && label
+              ? {
+                  term: {
+                    start,
+                    end,
+                    plan: charged,
+                    welcome: s.status === 'pending' ? await welcomeNotices(plan, inv.id, label, longDate(end), notify) : [],
+                    renewal: slackNotice(`sponsor-paid:${inv.id}`, `:repeat: Paid: ${who(plan)}, ${label}.`),
+                  },
+                }
+              : {}),
           },
           actor,
+          { clearOverdue: !!(newTerm && period) || (s.status === 'past_due' && (await subscriptionPaidUp(src.subscription, stripeDeps))) },
         );
-        const term = termLabel(zurichDayOf(period.start), paidUntil);
-        if (s.status === 'pending')
-          await moveTo(store, s, 'active', event.id, {
-            payload: { invoice: inv.id },
-            notices: await welcomeNotices(s, inv.id, term, isRecurring(s.cycle) ? longDate(paidUntil) : null, notify),
-          });
-        else if (!first) {
-          await store.queueNotices(s.id, [slackNotice(`sponsor-paid:${inv.id}`, `:repeat: Paid: ${who(s)}, ${term}.`)]);
-        }
         break;
       }
 
@@ -374,7 +380,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if (!s || s.stripeSubscriptionId !== sub.id) break;
         touched = s.id;
         if (s.status === 'ended') {
-          await store.linkStripe(s.id, { subscriptionId: null }, actor);
+          await store.linkStripeIf(s.id, { subscriptionId: sub.id }, { subscriptionId: null }, actor);
           break;
         }
         const reason = s.status === 'ending' ? 'cancelled' : 'lapsed';
@@ -391,7 +397,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
             ),
           ],
         });
-        await store.linkStripe(s.id, { subscriptionId: null, checkoutSessionId: null }, actor);
+        await store.linkStripeIf(s.id, { subscriptionId: sub.id, checkoutSessionId: s.checkoutSessionId }, { subscriptionId: null, checkoutSessionId: null }, actor);
         break;
       }
 

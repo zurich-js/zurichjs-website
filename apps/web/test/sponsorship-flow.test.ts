@@ -462,6 +462,7 @@ describe('sponsorship flow', () => {
     await webhook(
       stripeEvent('evt_m', 'checkout.session.completed', {
         mode: 'subscription',
+        id: (await store.get(sponsor.id))!.checkoutSessionId,
         subscription: 'sub_globex',
         metadata: { source: 'zurichjs.com/partners', sponsorId: sponsor.id },
       }),

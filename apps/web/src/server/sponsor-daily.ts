@@ -17,6 +17,7 @@
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  */
 import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/sponsorship';
+import { queueCoverage, queueRebuild } from './sponsor-rebuild.ts';
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, who, zurichDay } from './sponsor.ts';
 import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
@@ -35,7 +36,7 @@ const reminderDue = (left: number) => [...REMIND_DAYS].sort((a, b) => a - b).fin
  * `deadline` is the scheduled function's time budget (any `{ remaining() }`, such as deadline.ts):
  * notices still queued when it runs low are left for the next run.
  */
-export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<{
+export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number }; queueRebuild?: typeof queueRebuild }): Promise<{
   completed: number;
   ended: number;
   closed: number;
@@ -108,7 +109,12 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
       ]);
     }
   }
-  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log })).closed;
+  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: () => !deps.deadline || deps.deadline.remaining() > 16_000 })).closed;
   out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
+  const hasBudget = () => !deps.deadline || deps.deadline.remaining() > 16_000;
+  if (hasBudget()) {
+    const versions = await deps.store.pendingMeetupRebuilds();
+    if (hasBudget()) await queueCoverage(deps.store, deps.queueRebuild ?? queueRebuild, versions);
+  }
   return out;
 }

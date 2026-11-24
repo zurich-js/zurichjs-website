@@ -20,6 +20,7 @@
  */
 import {
   confirmedContact,
+  currentOfferId,
   fromLookupKey,
   isRecurring,
   meetupPrice,
@@ -34,7 +35,7 @@ import {
 } from '@zurichjs/sponsorship';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
-import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
+import { StripeRequestError, StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 
 type Fetch = typeof fetch;
 
@@ -155,7 +156,9 @@ async function onceLineItem(s: Sponsor, meetups: SponsorMeetup[], deps: StripeDe
  * Stripe's answer when the page is already gone: no such object, or a session that is no longer
  * open (expired or paid). Anything else (an outage, a timeout) leaves the page payable.
  */
-const alreadyClosed = (e: unknown) => /HTTP 404|No such|status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test((e as Error).message ?? '');
+const resourceMissing = (e: unknown) => e instanceof StripeRequestError && e.status === 404 && e.code === 'resource_missing';
+const alreadyClosed = (e: unknown) =>
+  resourceMissing(e) || (e instanceof StripeRequestError && e.status === 400 && /status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test(e.message));
 
 /**
  * Closes the sponsor's last Checkout session, so an old tab can never be paid as well. The id is
@@ -179,12 +182,13 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
   const customer = await ensureCustomer(s, contacts, store, deps);
   await closeCheckout(s, store, deps);
   const account = new URL('/partners/account', origin).toString();
+  const metadata = { ...meta(s), offerId: currentOfferId(s.id, await store.events(s.id)) };
   const common = {
     customer,
     success_url: `${account}?checkout=done`,
     cancel_url: `${account}?checkout=cancelled`,
     client_reference_id: s.id,
-    metadata: meta(s),
+    metadata,
     payment_method_types: ['card'],
     locale: 'en',
   };
@@ -214,7 +218,7 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
         ...common,
         mode: 'subscription',
         line_items: [{ price: (await priceFor(s.tier, s.cycle, deps)).id, quantity: 1 }],
-        subscription_data: { metadata: meta(s), ...(trial ? { trial_end: trial } : {}) },
+        subscription_data: { metadata, ...(trial ? { trial_end: trial } : {}) },
       }),
     );
   }
@@ -222,18 +226,12 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
   return session.url;
 }
 
-/**
- * A payment link for a one-time sponsorship the board agreed with a signed contract: one card
- * payment for the meetups, usable once, then switched off by the webhook. Replaces any earlier link.
- *
- * Stripe is asked only after the request is recorded (a link attempt), with the attempt's key as
- * the idempotency key. Whatever fails after that (Stripe's answer, saving the link, a second request
- * saving its own link first), the attempt stays unsettled and recoverPaymentLinks switches its link
- * off: this sponsor's earlier attempts are recovered here first, everyone's by the daily check.
- */
+/** Record the exact create request before sending it. Only the winning attempt becomes the sponsor's link. */
 export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], store: SponsorStore, origin: string, deps: StripeDeps): Promise<string> {
   if (isRecurring(s.cycle)) throw new Error('Payment links are for one-time sponsorships.');
-  await recoverPaymentLinks(store, deps, { sponsorId: s.id });
+  const recovery = await recoverPaymentLinks(store, deps, { sponsorId: s.id });
+  if (recovery.failed || (await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 1 })).length)
+    throw new StripeUnavailable('An earlier payment link is awaiting confirmation from Stripe.');
   await closePaymentLink(s, store, deps);
   const item = await onceLineItem(s, meetups, deps);
   const price =
@@ -248,16 +246,17 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
           )
         ).id;
   const what = `Sponsorship of ${meetupList(meetups) || 'one meetup'}`.slice(0, 500);
+  const key = crypto.randomUUID();
   const request = stripeForm({
     line_items: [{ price, quantity: item.quantity }],
-    metadata: meta(s),
+    metadata: { ...meta(s), attemptId: key },
     payment_method_types: ['card'],
     payment_intent_data: { metadata: meta(s), description: what },
     invoice_creation: { enabled: true, invoice_data: { metadata: meta(s), description: what } },
     restrictions: { completed_sessions: { limit: 1 } },
     after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
   }).toString();
-  const attempt = await store.beginLinkAttempt(s.id, request);
+  const attempt = await store.beginLinkAttempt(s.id, request, key);
   const link = await askForLink(attempt, deps);
   await store.linkAttemptCreated(attempt.key, link.id);
   // Kept only while no other link was saved (two tabs, two organisers) and nobody paid meanwhile (a
@@ -284,47 +283,67 @@ const askForLink = (a: Pick<LinkAttempt, 'key' | 'request'>, deps: StripeDeps) =
 
 const deactivateLink = (id: string, deps: StripeDeps) =>
   api(deps, 'POST', `payment_links/${encodeURIComponent(id)}`, stripeForm({ active: false })).catch((e: unknown) => {
-    if (!alreadyClosed(e)) throw e;
+    if (!resourceMissing(e)) throw e;
   });
 
-/** Stripe refused the request itself (4xx other than a conflict or rate limit): no link was made with that key. */
-const refused = (e: unknown) => /HTTP 4\d\d/.test((e as Error).message ?? '') && !/HTTP (409|429)/.test((e as Error).message ?? '');
+// Stripe retains idempotency keys for at least 24 hours. Leave time for clock skew and request delivery.
+const REPLAY_WINDOW_MS = 23 * 60 * 60 * 1000;
 
-/**
- * Switches off the link of an attempt that was not kept; false when it was kept meanwhile (a
- * request that won). A link Stripe never answered with is asked for again with the same key first.
- */
-async function closeAttempt(a: LinkAttempt, store: SponsorStore, deps: StripeDeps): Promise<boolean> {
-  if (!(await store.claimLinkCleanup(a.key, a.linkId ?? undefined))) return false;
-  let id = a.linkId;
-  if (!id) {
-    const link = await askForLink(a, deps).catch((e: unknown) => {
-      if (refused(e)) return null;
-      throw e;
-    });
-    if (link) await store.claimLinkCleanup(a.key, link.id);
-    id = link?.id ?? null;
+interface LinkCreatedEvent {
+  id: string;
+  request?: { idempotency_key?: string } | null;
+  data: { object: { id: string; metadata?: { attemptId?: string; sponsorId?: string } } };
+}
+
+async function recoverLinkId(a: LinkAttempt, deps: StripeDeps, canStart: () => boolean): Promise<string> {
+  const created = Date.parse(a.createdAt);
+  const age = (deps.now?.().getTime() ?? Date.now()) - created;
+  if (age >= 0 && age < REPLAY_WINDOW_MS) return (await askForLink(a, deps)).id;
+  // An empty event history is inconclusive, including when Stripe has aged out the event.
+  let cursor: string | undefined;
+  while (canStart()) {
+    const page: { data: LinkCreatedEvent[]; has_more: boolean } = await api(
+      deps,
+      'GET',
+      'events',
+      stripeForm({
+        type: 'payment_link.created',
+        created: { gte: Math.floor(created / 1000) - 3600, lte: Math.ceil((created + REPLAY_WINDOW_MS) / 1000) + 3600 },
+        limit: 100,
+        starting_after: cursor,
+      }),
+    );
+    const found = page.data.find(
+      (e) => e.request?.idempotency_key === `sponsor-payment-link:${a.key}` || (e.data.object.metadata?.attemptId === a.key && e.data.object.metadata.sponsorId === a.sponsorId),
+    );
+    if (found) return found.data.object.id;
+    const next = page.data.at(-1)?.id;
+    if (!page.has_more || !next || next === cursor) break;
+    cursor = next;
   }
-  if (id) await deactivateLink(id, deps);
+  throw new StripeUnavailable('The original payment link could not be identified.');
+}
+
+async function closeAttempt(a: LinkAttempt, store: SponsorStore, deps: StripeDeps, canStart = () => true): Promise<boolean> {
+  if (!(await store.claimLinkCleanup(a.key, a.linkId ?? undefined))) return false;
+  const id = a.linkId ?? (await recoverLinkId(a, deps, canStart));
+  if (!a.linkId) await store.claimLinkCleanup(a.key, id);
+  if (!canStart()) throw new StripeUnavailable('Payment link cleanup is pending.');
+  await deactivateLink(id, deps);
   await store.linkAttemptClosed(a.key);
   return true;
 }
 
-/**
- * Settles payment link attempts a request left behind (of one sponsor, or all): an attempt still
- * open after its request ended, or one being switched off. Each link that is not the sponsor's
- * saved link is switched off. A Stripe failure leaves the attempt for the next run and never stops
- * the others. Returns how many links were switched off.
- */
 export async function recoverPaymentLinks(
   store: SponsorStore,
   deps: StripeDeps & { log?: (m: string) => void },
-  opts: { sponsorId?: string; limit?: number } = {},
+  opts: { sponsorId?: string; limit?: number; canStart?: () => boolean } = {},
 ): Promise<{ closed: number; failed: number }> {
   const out = { closed: 0, failed: 0 };
   for (const a of await store.unsettledLinkAttempts({ sponsorId: opts.sponsorId, limit: opts.limit ?? 50 })) {
+    if (opts.canStart && !opts.canStart()) break;
     try {
-      if (await closeAttempt(a, store, deps)) out.closed++;
+      if (await closeAttempt(a, store, deps, opts.canStart)) out.closed++;
     } catch (cause) {
       out.failed++;
       (deps.log ?? console.log)(`[sponsorship] payment link attempt ${a.key} not switched off, tried again later: ${(cause as Error).message}`);
@@ -499,7 +518,7 @@ export async function resumeSubscription(subscriptionId: string, reference: stri
 /** Ends a subscription now (the board ending a sponsorship outright, or a duplicate). Already ended is fine. */
 export async function cancelNow(subscriptionId: string, deps: StripeDeps): Promise<void> {
   await api(deps, 'DELETE', `subscriptions/${encodeURIComponent(subscriptionId)}`).catch((e: Error) => {
-    if (!/No such subscription|canceled/i.test(e.message)) throw e;
+    if (!resourceMissing(e)) throw e;
   });
 }
 

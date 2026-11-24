@@ -77,6 +77,8 @@ export interface Sponsor {
   /** A Stripe payment link the board created for a one-time sponsorship (with a contract on file). */
   paymentLinkId: string | null;
   paymentLinkUrl: string | null;
+  /** Queue acknowledgement clears only this version of the public meetup coverage. */
+  meetupRebuildId: string | null;
   /** Board-only notes. */
   notes: string | null;
   /** While `ending`: when it was agreed, and the day it ends (first day without it). */
@@ -215,15 +217,11 @@ export interface SponsorEvent {
   at: string;
 }
 
-/**
- * A payment link asked of Stripe, recorded before the call (sponsor_payment_link_attempts): the
- * exact request, sent with `key` as its idempotency key, so the same link can be asked for again
- * and switched off when the first answer was lost.
- */
+/** A closing attempt with no link ID remains unresolved until the provider identifies its link. */
 export interface LinkAttempt {
   key: string;
   sponsorId: string;
-  /** The form body sent to Stripe (the same body with the same key gets the same link back). */
+  /** Exact form body used within the provider replay window. */
   request: string;
   linkId: string | null;
   state: 'open' | 'kept' | 'closing' | 'closed';

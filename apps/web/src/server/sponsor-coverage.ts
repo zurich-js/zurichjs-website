@@ -61,15 +61,11 @@ export async function coveredMeetups(rows: SponsorMeetup[], lookup: LiveLookup, 
   };
 }
 
-/**
- * Whether the board may take a meetup off, decided on the date the sponsor sees: the meetup's
- * current date in Sanity, or the stored date when Sanity no longer lists it. When Sanity cannot be
- * reached the date cannot be verified, and the row stays.
- */
 export async function removalCheck(row: SponsorMeetup, lookup: LiveLookup, now: Date): Promise<'removable' | 'happened' | 'unverified'> {
-  const { meetups, checked } = await coveredMeetups([row], lookup, now);
-  if (!checked) return 'unverified';
-  return meetups[0]!.state === 'past' ? 'happened' : 'removable';
+  const matches = await lookup([row.eventId]).catch(() => []);
+  const datetime = matches.find((m) => m.id === row.eventId)?.datetime;
+  if (!datetime || !Number.isFinite(Date.parse(datetime))) return 'unverified';
+  return zurichDay(new Date(datetime)) < zurichDay(now) ? 'happened' : 'removable';
 }
 
 /**

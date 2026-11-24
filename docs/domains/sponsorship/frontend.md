@@ -3,7 +3,7 @@ type: Frontend Area
 title: Sponsorship frontend
 description: The sponsor's account page, the sponsorship agreement page, and the board's sponsor admin with its day-to-day tasks.
 tags: [sponsorship, frontend, admin]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Sponsorship frontend
@@ -15,7 +15,8 @@ Pages: `apps/web/src/pages/partners/account.astro`, `apps/web/src/pages/partners
 A static shell with a Preact island; it holds no sponsor data in the HTML. Sign-in is the members' email link.
 
 - **Start or finish:** billing details, plan, and the agreement (name, role), then card payment in Stripe Checkout. A sponsor with a contract on file skips signing.
-- **A change from the board** arrives as a link (`?change=builder-yearly`, `?change=end`) that fills the change in; nothing changes until a contact confirms it with one tick.
+- **A change from the board** arrives as a link (`?change=builder-yearly`, `?change=end`) that fills the change in; nothing changes until a contact confirms it with one tick. A link that no longer applies (the sponsorship is ending, pending or one-time) says so instead of being ignored.
+- **After Checkout:** the page waits for Stripe's confirmation; if it is slow, "Back to your sponsorship" shows the page as it is and "Check again" waits again. Dates of signatures and logos are Zurich days, as in the emails.
 - **Self-serve:** change tier or billing (a higher tier on the same billing applies now, anything else from the next renewal); end, and take it back until the end; Stripe's portal for the card and receipts; company and billing details (synced to Stripe); logo upload; colleagues (primary, billing, other). A colleague added by someone else must sign in and accept before they see or receive anything.
 
 ## `/partners/agreement` (noindex)
@@ -33,7 +34,8 @@ For the board, behind the same `ADMIN_PASSWORD` and protection as the membership
 - **Move a sponsor up, down or out** after talking to them: open the sponsor › **Send a change to confirm**. They get a link that fills it in; until they confirm nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
 - **Show a sponsor on the site at their tier:** open the sponsor › Edit details › **Partner id**, and enter the id of their partner record (for example `gyff`). A running sponsorship then sets their tier on the home page, `/partners` and Tonight within a few minutes; without a partner id they are listed by name only, without a logo ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 - **Bundles:** Add a sponsor with billing one-time, the meetups and a price per meetup; attach the signed contract; **Create payment link** and send it to them.
-- **Logos:** Slack says when one is uploaded; add it to the partner document in Sanity and publish ([Partners](/domains/partners/overview.md)).
+- **Logos:** Slack says when one is uploaded to a running sponsorship; add it to their partner record ([Partners](/domains/partners/overview.md)). An ended sponsorship cannot upload one, and a pending one is not published until it runs.
+- **Started online, not paid:** a company that started on its own and left Checkout is flagged as such, not as an unanswered invitation; there is nothing to send them.
 
 ## Related concepts
 

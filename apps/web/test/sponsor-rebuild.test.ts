@@ -76,13 +76,17 @@ describe('a rebuild when a sponsorship changes what the site shows', () => {
 
 describe('the build-time reader', () => {
   it('maps a row of the sponsors table', () => {
-    expect(sponsorshipRow({ id: 'a', company_name: 'GYFF', website: null, tier: 'builder', status: 'active', partner_id: 'gyff' })).toEqual({
+    expect(
+      sponsorshipRow({ id: 'a', company_name: 'GYFF', website: null, tier: 'builder', status: 'active', partner_id: 'gyff', cycle: 'once', event_ids: ['event-dec'] }),
+    ).toEqual({
       id: 'a',
       companyName: 'GYFF',
       website: null,
       tier: 'builder',
       status: 'active',
       partnerId: 'gyff',
+      cycle: 'once',
+      eventIds: ['event-dec'],
     });
   });
 });

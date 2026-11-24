@@ -248,9 +248,9 @@ export async function withSponsorships(
       }),
     ]);
     if (!rows) return content;
-    const { partners, notes } = applySponsorships(content.partners, rows);
+    const { partners, events, notes } = applySponsorships(content.partners, rows, content.events);
     for (const n of notes) log(`[content] sponsorships: ${n}`);
-    return { ...content, partners };
+    return { ...content, partners, events };
   } catch (err) {
     log(
       `\n[content] The sponsorships database is not reachable (${(err as Error).message || (err as { code?: string }).code || String(err)}). Sponsors and tiers come from the partner list alone.\n`,

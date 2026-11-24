@@ -82,6 +82,7 @@ The sponsorships database overrides the partner list for who is a current sponso
 - **Ended** and linked, with none running: the partner becomes a past sponsor without a tier. A partner who is also a host or another kind keeps its own current flag and only loses the tier.
 - **Running without a partner record** (no partner id, or one that matches nothing): listed as a current sponsor at its tier by company name and website, without a logo. If the company name equals a partner record's, nothing is added (so no company is listed twice) and the build log says to set the partner id.
 - **Pending** sponsorships, and partners no sponsorship is linked to, change nothing. A partner withdrawn from promotion is never brought back.
+- **One-time** (a sponsor of one or more meetups, running only through one-time sponsorships): current for its paid term like any other (until the day after its last meetup, when the daily check ends it), but thanked on the meetups it sponsors rather than as a season sponsor: those events list it as a sponsor, and other upcoming events leave it out of "this season". The partner carries the meetups as `coverage`. A recurring sponsorship next to it makes it a season sponsor. How long a one-time sponsor stays listed beyond its meetups is an open owner question.
 
 **Where it is read:** at build time. `apps/web/src/lib/content.ts` hands `loadContent` the reader `publicSponsorships` (one short-lived connection, the same database URL as the functions), and `applySponsorships` applies the rows to the partners from Sanity or from the code-side record. The build never fails because of it:
 
@@ -98,6 +99,8 @@ The sponsorships database overrides the partner list for who is a current sponso
 
 **Moving a sponsor to another tier on the site** is therefore board work in `/admin/sponsors`, not a code change: the sponsorship has to be running at that tier, and its partner id has to be set ([Sponsorship frontend](/domains/sponsorship/frontend.md)).
 
+**Notes to the board** follow this: a new sponsor's note asks for the Partner id when it is missing, ended and tier-change notes say the site follows at the next build, and a logo note asks to add the logo to the partner record only once the sponsorship runs. No note asks for a Sanity edit to list or unlist a sponsor (a first `partner` document in Sanity replaces the whole code-side list, [Partners](/domains/partners/overview.md)).
+
 ## Data and files
 
 The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events handled Stripe event ids, and the notices (emails and Slack notes) still to send. Logos and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
@@ -105,6 +108,7 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 ## Emails and Slack
 
 - **Emails** (`packages/emails/src/sponsors.ts`, sent with Resend): invite, agreement copy, welcome, payment problem, change to confirm, change, ending, resumed, ended, payment recorded. Every email names the tier's benefits.
+- **Invitations again:** each click on "Email the invitation again" sends one email (the click's id is the idempotency key, so a double click sends once). A running sponsorship gets access to its page instead ("You can now manage …"). A colleague added by another contact and not accepted gets nothing (409). The last primary contact cannot be removed, since payment emails go to the primary without a billing contact, and a recorded bank transfer says who gets the confirmation.
 - **Notices:** every email and Slack note a change owes is a notice in `sponsor_notices`, written in the same statement as the change (or right after it, for an agreement copy or a recorded payment), keyed so it exists once. The request that made the change sends it; anything it could not send (a timeout, Resend or Slack down, a function stopped by the platform) stays queued and the daily check sends it. A sender claims a notice before sending, so two senders never send it twice. An email is rendered when it is sent, from the sponsorship as it is then. So a saved change always gets its email and note, a retried request or a second delivery of a Stripe event adds nothing, and the same renewal delivered twice at once posts one note.
 - **Slack:** notes in `SLACK_SPONSORSHIP_CHANNEL_ID`, else the membership channel, else the agent's. The organisers' bot can answer questions about sponsors (`apps/web/src/server/sponsor-agent.ts`: read only, company-level facts, names marked as data) ([Slack content agent](/systems/slack-agent.md)).
 

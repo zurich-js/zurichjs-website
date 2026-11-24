@@ -427,14 +427,21 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
     if (busy) return;
     setBusy(true);
     setError(null);
-    const { status, body } = await post(`${BASE}/${id}/payment`, { paidUntil, amount: received ?? undefined, reference: reference.trim() || undefined });
+    const { status, body } = await post<{ confirmationTo?: string[] }>(`${BASE}/${id}/payment`, {
+      paidUntil,
+      amount: received ?? undefined,
+      reference: reference.trim() || undefined,
+    });
     setBusy(false);
     if (status === 401) return onSignedOut();
     if (status !== 200) {
       setConfirming(false);
       return setError({ field: body.field, message: body.error ?? 'Could not record the payment.' });
     }
-    onDone({ text: `Bank transfer recorded: paid through ${through}. Their billing contact was emailed a confirmation.` });
+    const to = body.confirmationTo ?? [];
+    onDone({
+      text: `Bank transfer recorded: paid through ${through}. ${to.length ? `A confirmation goes to ${to.join(', ')}.` : 'No confirmation sent: they have no billing or primary contact.'}`,
+    });
   };
 
   return (

@@ -1,0 +1,150 @@
+[
+  {
+    "file": "entry-with-sharing-box-390.png",
+    "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-with-sharing-box-1440.png",
+    "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-with-sharing-box-375.png",
+    "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "entry-with-sharing-box-1280.png",
+    "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-shared-390.png",
+    "caption": "Entrant’s link: permission given, withdraw without an account (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-shared-1440.png",
+    "caption": "Entrant’s link: permission given, withdraw without an account (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-shared-375.png",
+    "caption": "Entrant’s link: permission given, withdraw without an account (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-shared-1280.png",
+    "caption": "Entrant’s link: permission given, withdraw without an account (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-not-shared-390.png",
+    "caption": "Entrant’s link: no permission yet, optional opt-in (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "manage-not-shared-1440.png",
+    "caption": "Entrant’s link: no permission yet, optional opt-in (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-shared-contacts-390.png",
+    "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-shared-contacts-1440.png",
+    "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-shared-none-390.png",
+    "caption": "Sponsor: everyone withdrew since the release (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-shared-none-1440.png",
+    "caption": "Sponsor: everyone withdrew since the release (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-release-390.png",
+    "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-release-1440.png",
+    "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-release-375.png",
+    "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (375px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-release-1280.png",
+    "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (1280px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-gate-off-390.png",
+    "caption": "Board: sharing gate off, nothing can be released (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-gate-off-1440.png",
+    "caption": "Board: sharing gate off, nothing can be released (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-erase-390.png",
+    "caption": "Board: a withdrawn release, and erasure after the retention period (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-sharing-erase-1440.png",
+    "caption": "Board: a withdrawn release, and erasure after the retention period (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "flow-entrant-withdraws.mp4",
+    "caption": "Entrant withdraws permission from their own link (MOCK API)"
+  },
+  {
+    "file": "flow-entrant-withdraws.gif",
+    "caption": "Entrant withdraws permission from their own link (MOCK API)"
+  },
+  {
+    "file": "flow-board-releases.mp4",
+    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)"
+  },
+  {
+    "file": "flow-board-releases.gif",
+    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)"
+  }
+]

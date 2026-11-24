@@ -219,10 +219,13 @@ describe('sponsorship lifecycle', () => {
       }
       return f(url, init);
     }) as typeof fetch;
-    const r = await handlePlan(post('/api/sponsorship/plan', { confirm: true, agreementVersion: AGREEMENT.version, tier: 'builder', cycle: 'quarterly' }), {
-      ...user(),
-      fetch: scheduled,
-    });
+    const r = await handlePlan(
+      post('/api/sponsorship/plan', { confirm: true, agreementVersion: AGREEMENT.version, tier: 'builder', cycle: 'quarterly', replaces: 'friend-yearly@2027-02-18' }),
+      {
+        ...user(),
+        fetch: scheduled,
+      },
+    );
     expect(await r.json()).toMatchObject({ timing: 'now', droppedChange: 'Community Friend, CHF 3’000 a year' });
     expect(w.emails.at(-1)!.text).toContain('The change to Community Friend, CHF 3’000 a year that was waiting for your renewal no longer applies.');
   });

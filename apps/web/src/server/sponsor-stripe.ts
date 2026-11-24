@@ -55,12 +55,16 @@ export async function priceFor(tier: Tier, cycle: Cycle, deps: StripeDeps): Prom
   const key = priceLookupKey(tier, cycle);
   const cached = prices.get(key);
   if (cached) return cached;
-  const res = await api<{ data: { id: string; product: string | { id: string } }[] }>(deps, 'GET', 'prices', stripeForm({ lookup_keys: [key], active: true, limit: 1 }));
-  const p = res.data[0];
-  if (!p) throw new StripeUnavailable(`No active Stripe price with lookup key ${key}. Run pnpm sponsorship:stripe-setup.`);
-  const found = { id: p.id, product: typeof p.product === 'string' ? p.product : p.product.id };
+  const found = await activePrice(key, deps);
   prices.set(key, found);
   return found;
+}
+
+async function activePrice(key: string, deps: StripeDeps) {
+  const res = await api<{ data: { id: string; product: string | { id: string } }[] }>(deps, 'GET', 'prices', stripeForm({ lookup_keys: [key], active: true, limit: 1 }));
+  const p = res.data[0];
+  if (!p?.id) throw new StripeUnavailable(`No active Stripe price with lookup key ${key}. Run pnpm sponsorship:stripe-setup.`);
+  return { id: p.id, product: typeof p.product === 'string' ? p.product : p.product.id };
 }
 
 /** "Hardstrasse 1\n8005 Zürich" → Stripe's address fields (Switzerland unless the last line names another country). */
@@ -393,65 +397,79 @@ export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promi
   return end ? day(end) : null;
 }
 
-/** A plan change waiting for the renewal: { tier, cycle, from }. Null once it took effect. */
+export class UnreadableSchedule extends Error {}
+
+/**
+ * A plan change waiting for the renewal: { tier, cycle, from }. Null when no schedule is attached,
+ * or once its change took effect. An attached schedule that came back unexpanded, or without the
+ * plan and date this site writes (scheduleChange), throws UnreadableSchedule.
+ */
 export async function pendingChange(subscriptionId: string, deps: StripeDeps): Promise<{ tier: Tier; cycle: Cycle; from: string } | null> {
-  const s = await getSub(subscriptionId, deps, true);
-  const sched = typeof s.schedule === 'object' ? s.schedule : null;
-  const plan = fromLookupKey(sched?.metadata?.plan);
-  const from = sched?.phases?.[0]?.end_date;
-  if (!sched || !plan || !from) return null;
+  return readPendingChange(await getSub(subscriptionId, deps, true), deps);
+}
+
+function readPendingChange(s: StripeSubscription, deps: StripeDeps) {
+  if (!s.schedule) return null;
+  if (typeof s.schedule === 'string' || !s.schedule.id) throw new UnreadableSchedule('Reload the page to check the scheduled plan before confirming.');
+  const sched = s.schedule;
   // After the switch the schedule stays attached for one more term: not "waiting" any more.
-  if (from <= nowUnix(deps) || sched.metadata?.plan === s.items?.data?.[0]?.price?.lookup_key) return null;
+  if (sched.metadata?.plan && sched.metadata.plan === s.items?.data?.[0]?.price?.lookup_key) return null;
+  const plan = fromLookupKey(sched.metadata?.plan);
+  const from = sched.phases?.[0]?.end_date;
+  if (!plan || typeof from !== 'number' || !Number.isFinite(from)) throw new UnreadableSchedule(`schedule ${sched.id} of ${s.id} has no readable plan or first phase`);
+  if (from <= nowUnix(deps)) return null;
   return { ...plan, from: day(from) };
 }
 
 export async function cancelPendingChange(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
   const id = scheduleId(await getSub(subscriptionId, deps));
   if (!id) return false;
-  await api(deps, 'POST', `subscription_schedules/${encodeURIComponent(id)}/release`);
+  await releaseSchedule(id, deps);
   return true;
 }
 
-/**
- * A higher tier on the same cycle, now: Stripe charges the prorated difference at once. A change
- * that was waiting for the renewal is released first and returned, so the sponsor can be told.
- */
-export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ droppedChange: { tier: Tier; cycle: Cycle } | null }> {
-  let sub = await getSub(subscriptionId, deps);
-  let droppedChange: { tier: Tier; cycle: Cycle } | null = null;
-  if (scheduleId(sub)) {
-    const waiting = await pendingChange(subscriptionId, deps);
-    droppedChange = waiting && { tier: waiting.tier, cycle: waiting.cycle };
-    await cancelPendingChange(subscriptionId, deps);
-    sub = await getSub(subscriptionId, deps);
-  }
-  const item = sub.items?.data?.[0];
-  if (!item) throw new Error(`Subscription ${subscriptionId} has no item.`);
-  const price = (await priceFor(plan.tier, plan.cycle, deps)).id;
-  if (item.price?.id === price) return { droppedChange };
+export async function readPlanSubscription(id: string, deps: StripeDeps) {
+  const sub = await getSub(id, deps, true);
+  const pending = readPendingChange(sub, deps);
+  return { id, schedule: scheduleId(sub), pending, item: sub.items?.data?.[0], metadata: sub.metadata ?? {} };
+}
+
+export async function prepareCardPlan(subscription: Awaited<ReturnType<typeof readPlanSubscription>>, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps) {
+  const item = subscription.item;
+  if (!item?.id || !item.price?.id) throw new Error(`Subscription ${subscription.id} has no priced item.`);
+  const price = (await activePrice(priceLookupKey(plan.tier, plan.cycle), deps)).id;
+  return { ...subscription, itemId: item.id, current: item.price.id, price, plan };
+}
+
+type CardPlan = Awaited<ReturnType<typeof prepareCardPlan>>;
+
+export async function releaseSchedule(id: string, deps: StripeDeps) {
+  await api(deps, 'POST', `subscription_schedules/${encodeURIComponent(id)}/release`);
+}
+
+/** A higher tier on the same cycle, now: Stripe charges the prorated difference at once. */
+export async function upgradeNow(change: CardPlan, deps: StripeDeps): Promise<CardPlan['pending']> {
+  const { id: subscriptionId, itemId, price, current, schedule } = change;
+  if (current === price) return null;
+  if (schedule) await releaseSchedule(schedule, deps);
   await api(
     deps,
     'POST',
     `subscriptions/${encodeURIComponent(subscriptionId)}`,
-    stripeForm({ items: [{ id: item.id, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
+    stripeForm({ items: [{ id: itemId, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
     `sponsor-upgrade:${subscriptionId}:${price}`,
   );
-  return { droppedChange };
+  return change.pending;
 }
 
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */
-export async function scheduleChange(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ from: string }> {
-  const sub = await getSub(subscriptionId, deps);
-  const current = sub.items?.data?.[0]?.price?.id;
-  if (!current) throw new Error(`Subscription ${subscriptionId} has no price.`);
-  const next = (await priceFor(plan.tier, plan.cycle, deps)).id;
-  const existing = scheduleId(sub);
+export async function scheduleChange(change: CardPlan, deps: StripeDeps): Promise<{ from: string }> {
+  const { id: subscriptionId, plan, current, price: next, schedule: existing, metadata } = change;
   const sched = existing
     ? await api<StripeSchedule>(deps, 'GET', `subscription_schedules/${encodeURIComponent(existing)}`)
     : await api<StripeSchedule>(deps, 'POST', 'subscription_schedules', stripeForm({ from_subscription: subscriptionId }));
   const now = nowUnix(deps);
   const phase = sched.phases.find((p) => p.start_date <= now && now < p.end_date) ?? sched.phases[0]!;
-  const metadata = sub.metadata ?? {};
   await api(
     deps,
     'POST',

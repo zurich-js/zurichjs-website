@@ -3,7 +3,7 @@ type: Frontend Area
 title: Sponsorship frontend
 description: The sponsor's account page, the sponsorship agreement page, and the board's sponsor admin with its day-to-day tasks.
 tags: [sponsorship, frontend, admin]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Sponsorship frontend
@@ -16,6 +16,7 @@ A static shell with a Preact island; it holds no sponsor data in the HTML. Sign-
 
 - **Start or finish:** billing details, plan, and the agreement (name, role), then card payment in Stripe Checkout. A sponsor with a contract on file skips signing.
 - **A change from the board** arrives as a link (`?change=builder-yearly`, `?change=end`) that fills the change in; nothing changes until a contact confirms it with one tick.
+- **Loading:** the loading line says after 10 s that it is slow, and after 20 s without an answer the page shows an error with Try again, never the sign-in form or an empty sponsorship (`READ_DEADLINE_MS`, `apps/web/src/components/islands/read-deadline.ts`). Only the site's own JSON 503 says sponsor accounts are not available yet; a platform 503 page is an error with Try again. When Stripe cannot be asked for a change scheduled for the renewal, or answers with a schedule the site cannot read (an id only, or no plan and first phase), the summary says so instead of showing none (`pendingChangeUnknown` from `/api/sponsorship/me`). Until a reload gets an answer, the change form, also when opened from a change link, offers Check again for every card plan change, including an immediate upgrade. Once the renewal is known, confirmation names the plan and date it will replace. The server compares that renewal with Stripe and checks the active target price before recording the agreement or releasing the schedule. The time limits use a timer, so they work without `AbortSignal.timeout`.
 - **Self-serve:** change tier or billing (a higher tier on the same billing applies now, anything else from the next renewal); end, and take it back until the end; Stripe's portal for the card and receipts; company and billing details (synced to Stripe); logo upload; colleagues (primary, billing, other). A colleague added by someone else must sign in and accept before they see or receive anything.
 
 ## `/partners/agreement` (noindex)
@@ -24,7 +25,7 @@ The sponsorship agreement, approved by the owner on 18th November 2026. Its vers
 
 ## `/admin/sponsors` (noindex)
 
-For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)). "Needs you" lists what needs the board.
+For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)), with the same handling when the site does not answer. "Needs you" lists what needs the board. The list shows the newest 500 and says so when more match, worded for the search or filter of the list it shows; the counts on the status filter cover every sponsorship.
 
 **Day to day:**
 

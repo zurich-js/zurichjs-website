@@ -65,6 +65,8 @@ export function bundleLabel(t: Tier, meetups: number, pricePerMeetup: number | n
 /** The Stripe Price lookup key: sponsor_builder_quarterly, sponsor_friend_once. */
 export const priceLookupKey = (t: Tier, c: Cycle) => `sponsor_${t}_${c}`;
 
+export const renewalReference = (change: { tier: Tier; cycle: Cycle; from: string } | null) => (change ? `${change.tier}-${change.cycle}@${change.from}` : null);
+
 export function fromLookupKey(key: string | null | undefined): { tier: Tier; cycle: Cycle } | null {
   const m = /^sponsor_(supporter|friend|builder|champion)_(monthly|quarterly|yearly|once)$/.exec(key ?? '');
   return m ? { tier: m[1] as Tier, cycle: m[2] as Cycle } : null;

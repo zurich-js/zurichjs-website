@@ -61,6 +61,15 @@ export interface StripeExpect {
   attempt?: string;
 }
 
+/** What the board's list shows next to a sponsor, read for many sponsors at once. */
+export interface SponsorSummary {
+  /** By date. */
+  meetups: SponsorMeetup[];
+  hasContract: boolean;
+  /** The newest logo. */
+  latestLogo: Logo | null;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
 export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
@@ -76,6 +85,8 @@ export interface SponsorStore {
   byStripeCustomer(id: string): Promise<Sponsor | null>;
   /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
+  /** How many sponsorships there are in each status, over every row (statuses with none are left out). */
+  statusCounts(): Promise<Partial<Record<Status, number>>>;
   /**
    * A sponsor with its first contact (and its meetups), all or nothing. Fails with DuplicateContact
    * when the email belongs to a sponsor already.
@@ -89,6 +100,8 @@ export interface SponsorStore {
 
   /** The meetups of a one-time sponsorship, by date. */
   meetups(sponsorId: string): Promise<SponsorMeetup[]>;
+  /** Meetups, contract on file and newest logo for each id (every id gets an entry). Postgres: at most three queries. */
+  summaries(sponsorIds: string[]): Promise<Map<string, SponsorSummary>>;
   /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
   setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
 
@@ -284,6 +297,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .slice(0, limit)
         .map((s) => ({ ...s }));
     },
+    statusCounts: async () => {
+      const counts: Partial<Record<Status, number>> = {};
+      for (const s of sponsors.values()) counts[s.status] = (counts[s.status] ?? 0) + 1;
+      return counts;
+    },
     async create(input, c, actor, opts = {}) {
       const email = normaliseEmail(c.email);
       const held = [...contacts.values()].find((x) => x.email === email);
@@ -347,6 +365,20 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
     },
     meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+    summaries: async (ids) =>
+      new Map(
+        ids.map((sid) => {
+          const latestLogo = [...logos.values()].findLast((l) => l.sponsorId === sid);
+          return [
+            sid,
+            {
+              meetups: [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+              hasContract: [...documents.values()].some((d) => d.sponsorId === sid),
+              latestLogo: latestLogo ? { ...latestLogo } : null,
+            },
+          ];
+        }),
+      ),
     async setMeetups(sid, list, actor) {
       must(sid);
       const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);

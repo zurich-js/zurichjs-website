@@ -54,6 +54,8 @@ export interface CreateOptions {
 export interface StripeExpect {
   paymentLinkId?: string | null;
   checkoutSessionId?: string | null;
+  /** The status it must still have (a payment link is kept only while the sponsorship is unpaid). */
+  status?: Status;
 }
 
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;

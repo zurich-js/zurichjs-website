@@ -75,13 +75,20 @@ export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorA
       // The form sends every field: save and log only the ones that changed.
       const changed = Object.fromEntries(Object.entries(patch).filter(([k, v]) => s[k as keyof SponsorPatch] !== v)) as SponsorPatch;
       const updated = await store.update(s.id, changed, BOARD);
-      // Stripe gets the billing details when they changed. A Stripe failure does not undo the save.
+      // Stripe gets the billing details when they changed, or when the last update to Stripe failed
+      // (logged as stripe_sync_failed until one succeeds). A Stripe failure does not undo the save.
       let warning: string | undefined;
-      if (updated.stripeCustomerId && STRIPE_FIELDS.some((k) => k in changed)) {
-        await ensureCustomer(updated, await store.contacts(s.id), store, lifecycle.stripe).catch((cause: unknown) => {
-          console.error(`[sponsorship-admin] Stripe customer ${updated.stripeCustomerId} not updated`, cause);
-          warning = 'Saved. Stripe could not be updated now; it gets the details again at the next save.';
-        });
+      const lastSync = (await store.events(s.id)).filter((e) => e.type === 'stripe_sync_failed' || e.type === 'stripe_synced').at(-1);
+      if (updated.stripeCustomerId && (STRIPE_FIELDS.some((k) => k in changed) || lastSync?.type === 'stripe_sync_failed')) {
+        const ok = await ensureCustomer(updated, await store.contacts(s.id), store, lifecycle.stripe).then(
+          () => true,
+          (cause: unknown) => {
+            console.error(`[sponsorship-admin] Stripe customer ${updated.stripeCustomerId} not updated`, cause);
+            return false;
+          },
+        );
+        if (!ok) warning = 'Saved. Stripe could not be updated now; it gets the details again at the next save.';
+        if (!ok || lastSync?.type === 'stripe_sync_failed') await store.log(s.id, ok ? 'stripe_synced' : 'stripe_sync_failed', BOARD);
       }
       return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id), (await store.documents(s.id)).length > 0), ...(warning ? { warning } : {}) });
     },

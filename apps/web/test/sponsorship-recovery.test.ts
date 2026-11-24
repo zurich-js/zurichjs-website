@@ -235,6 +235,29 @@ describe('sponsorship board actions that fail half-way', () => {
     expect((await handleRecordPayment(asAdmin('/x', body), sponsor.id, deps())).status).toBe(400);
   });
 
+  it('recording the date an imported sponsorship already has is refused, with no email', async () => {
+    const { sponsor } = await store.create(
+      newSponsor({ paymentMode: 'manual', source: 'imported', status: 'active', startedAt: '2026-06-01', paidUntil: '2027-06-01' }),
+      contact,
+      BOARD,
+    );
+    expect((await handleRecordPayment(asAdmin('/x', { paidUntil: '2027-06-01' }), sponsor.id, deps())).status).toBe(400);
+    expect(w.emails).toHaveLength(0);
+    expect((await store.events(sponsor.id)).some((e) => e.type === 'payment_recorded')).toBe(false);
+  });
+
+  it('a payment link is not kept when a bank transfer is recorded while Stripe creates it', async () => {
+    const id = await pendingBundle();
+    const f = w.f;
+    const transferMeanwhile = (async (url: string, init?: RequestInit) => {
+      if (new URL(url).pathname === '/v1/payment_links') await store.transition(id, { from: 'pending', to: 'active', actor: BOARD });
+      return f(url, init);
+    }) as typeof fetch;
+    expect((await handlePaymentLink(asAdmin('/x', {}), id, { ...deps(), fetch: transferMeanwhile })).status).toBe(409);
+    expect(w.activeLinks.size).toBe(0);
+    expect(await store.get(id)).toMatchObject({ paymentLinkId: null });
+  });
+
   it('saving details logs only what changed, and a Stripe failure is a warning, not an error', async () => {
     const id = await runningCard();
     const form = { companyName: 'Acme', legalName: '', billingAddress: '', vatId: '', website: '', notes: 'Met at JSConf', partnerId: '' };
@@ -247,6 +270,20 @@ describe('sponsorship board actions that fail half-way', () => {
       body: { warning: expect.stringContaining('Stripe') },
     });
     expect(await store.get(id)).toMatchObject({ legalName: 'Acme AG' });
+    // The next save, with nothing changed, sends the details to Stripe again; after that it stops.
+    expect(await answer(await handleUpdateSponsor(asAdmin('/x', { ...form, legalName: 'Acme AG' }), id, deps()))).toMatchObject({
+      status: 200,
+      body: { sponsor: { legalName: 'Acme AG' } },
+    });
+    expect(
+      w.calls
+        .filter((c) => c.path === 'customers/cus_acme')
+        .at(-1)!
+        .params.get('name'),
+    ).toBe('Acme AG');
+    const calls = w.calls.length;
+    await handleUpdateSponsor(asAdmin('/x', { ...form, legalName: 'Acme AG' }), id, deps());
+    expect(w.calls.length).toBe(calls);
     expect(await answer(await handleUpdateSponsor(asAdmin('/x', { ...form, partnerId: 'drafts.partner-acme' }), id, deps()))).toMatchObject({
       status: 400,
       body: { field: 'partnerId' },

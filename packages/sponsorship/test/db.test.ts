@@ -149,6 +149,12 @@ d('sponsorship database', () => {
     });
     expect(await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: 'plink_b', paymentLinkUrl: 'https://buy.stripe.com/b' }, stripe)).toBeNull();
     expect(await store.linkStripeIf(s.id, { paymentLinkId: 'plink_a' }, { paymentLinkId: null, paymentLinkUrl: null }, stripe)).toMatchObject({ paymentLinkId: null });
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'active' }, { paymentLinkId: 'plink_c', paymentLinkUrl: 'https://buy.stripe.com/c' }, stripe)).toBeNull();
+    expect(
+      await store.linkStripeIf(s.id, { paymentLinkId: null, status: s.status }, { paymentLinkId: 'plink_c', paymentLinkUrl: 'https://buy.stripe.com/c' }, stripe),
+    ).toMatchObject({
+      paymentLinkId: 'plink_c',
+    });
   });
 
   it('writes notices with a status change, once per key, and hands each to one sender at a time', async () => {

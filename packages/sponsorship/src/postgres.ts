@@ -141,10 +141,11 @@ export function postgresStore(db: Queryable): SponsorStore {
     if (!entries.length) return must(id);
     const checks = expect ? setters(STRIPE_COLUMNS, expect) : [];
     const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
-    const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${entries.length + 2 + i}`).join('');
+    const n = entries.length + 2;
+    const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${n + i}`).join('') + (expect?.status ? ` and status = $${n + checks.length}` : '');
     const rows = await audited(
       `update sponsors set ${sets} where id = $1${where} returning *, id as sponsor_ref`,
-      [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v)],
+      [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v), ...(expect?.status ? [expect.status] : [])],
       'stripe_linked',
       actor,
       Object.fromEntries(entries),

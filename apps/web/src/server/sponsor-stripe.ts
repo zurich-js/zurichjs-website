@@ -254,10 +254,14 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
       after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
     }),
   );
-  // Two requests at once (two tabs, two organisers): only the first link is kept; ours is switched off.
-  const saved = await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
+  // Kept only while no other link was saved (two tabs, two organisers) and nobody paid meanwhile (a
+  // bank transfer recorded): otherwise ours is switched off. If even that fails, it is logged for the board.
+  const saved = await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending' }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
   if (!saved) {
-    await deactivateLink(link.id, deps);
+    await deactivateLink(link.id, deps).catch(async (cause: Error) => {
+      await store.log(s.id, 'payment_link_left_open', { kind: 'stripe', id: link.id }, { paymentLinkId: link.id, error: cause.message.slice(0, 200) });
+      throw cause;
+    });
     throw new PaymentLinkRace();
   }
   return link.url;

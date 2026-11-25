@@ -3,256 +3,300 @@
     "file": "billing-failure-coverage-320.png",
     "caption": "Confirmed coverage while billing is unavailable (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "billing-failure-coverage-375.png",
     "caption": "Confirmed coverage while billing is unavailable (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "billing-failure-coverage-390.png",
     "caption": "Confirmed coverage while billing is unavailable (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "billing-failure-coverage-1280.png",
     "caption": "Confirmed coverage while billing is unavailable (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "billing-failure-coverage-1440.png",
     "caption": "Confirmed coverage while billing is unavailable (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-320.png",
     "caption": "Sponsor dashboard: covered meetups with state in words (past, cancelled, upcoming, postponed) (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-375.png",
     "caption": "Sponsor dashboard: covered meetups with state in words (past, cancelled, upcoming, postponed) (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-390.png",
     "caption": "Sponsor dashboard: covered meetups with state in words (past, cancelled, upcoming, postponed) (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-1280.png",
     "caption": "Sponsor dashboard: covered meetups with state in words (past, cancelled, upcoming, postponed) (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-1440.png",
     "caption": "Sponsor dashboard: covered meetups with state in words (past, cancelled, upcoming, postponed) (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-section-320.png",
     "caption": "The section alone (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-section-375.png",
     "caption": "The section alone (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-section-390.png",
     "caption": "The section alone (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-section-1280.png",
     "caption": "The section alone (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-section-1440.png",
     "caption": "The section alone (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-stale-320.png",
     "caption": "Sanity unreachable: stored meetups with a plain note (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-stale-375.png",
     "caption": "Sanity unreachable: stored meetups with a plain note (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-stale-390.png",
     "caption": "Sanity unreachable: stored meetups with a plain note (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-stale-1280.png",
     "caption": "Sanity unreachable: stored meetups with a plain note (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-stale-1440.png",
     "caption": "Sanity unreachable: stored meetups with a plain note (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-empty-320.png",
     "caption": "Recurring sponsorship with no confirmed meetups (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-empty-375.png",
     "caption": "Recurring sponsorship with no confirmed meetups (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-empty-390.png",
     "caption": "Recurring sponsorship with no confirmed meetups (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-empty-1280.png",
     "caption": "Recurring sponsorship with no confirmed meetups (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-empty-1440.png",
     "caption": "Recurring sponsorship with no confirmed meetups (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-error-320.png",
     "caption": "Coverage failed to load (502): error and Try again; the rest of the account still shows (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-error-375.png",
     "caption": "Coverage failed to load (502): error and Try again; the rest of the account still shows (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-error-390.png",
     "caption": "Coverage failed to load (502): error and Try again; the rest of the account still shows (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-error-1280.png",
     "caption": "Coverage failed to load (502): error and Try again; the rest of the account still shows (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-error-1440.png",
     "caption": "Coverage failed to load (502): error and Try again; the rest of the account still shows (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-loading-320.png",
     "caption": "Loading (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-loading-375.png",
     "caption": "Loading (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-loading-390.png",
     "caption": "Loading (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-loading-1280.png",
     "caption": "Loading (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-covered-loading-1440.png",
     "caption": "Loading (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-coverage-320.png",
     "caption": "Board: covered meetups of a recurring sponsorship, add from upcoming, take off, history kept (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-coverage-375.png",
     "caption": "Board: covered meetups of a recurring sponsorship, add from upcoming, take off, history kept (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-coverage-390.png",
     "caption": "Board: covered meetups of a recurring sponsorship, add from upcoming, take off, history kept (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-coverage-1280.png",
     "caption": "Board: covered meetups of a recurring sponsorship, add from upcoming, take off, history kept (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-coverage-1440.png",
     "caption": "Board: covered meetups of a recurring sponsorship, add from upcoming, take off, history kept (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-confirms-meetup.mp4",
-    "caption": "Board confirms a meetup, takes one off; history keeps it (MOCK API)"
+    "caption": "Board confirms a meetup, takes one off; history keeps it (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-confirms-meetup.gif",
-    "caption": "Board confirms a meetup, takes one off; history keeps it (MOCK API)"
+    "caption": "Board confirms a meetup, takes one off; history keeps it (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-sponsor-dashboard.mp4",
-    "caption": "Sponsor dashboard: meetups load apart from billing; an error retries (MOCK API)"
+    "caption": "Sponsor dashboard: meetups load apart from billing; an error retries (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-sponsor-dashboard.gif",
-    "caption": "Sponsor dashboard: meetups load apart from billing; an error retries (MOCK API)"
+    "caption": "Sponsor dashboard: meetups load apart from billing; an error retries (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   }
 ]

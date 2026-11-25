@@ -3,256 +3,300 @@
     "file": "entry-with-sharing-box-320.png",
     "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "entry-with-sharing-box-375.png",
     "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "entry-with-sharing-box-390.png",
     "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "entry-with-sharing-box-1280.png",
     "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "entry-with-sharing-box-1440.png",
     "caption": "Entry form with the optional, unticked box naming the sponsor, the purpose and both notices (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-shared-320.png",
     "caption": "Entrant’s link: permission given, withdraw without an account (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-shared-375.png",
     "caption": "Entrant’s link: permission given, withdraw without an account (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-shared-390.png",
     "caption": "Entrant’s link: permission given, withdraw without an account (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-shared-1280.png",
     "caption": "Entrant’s link: permission given, withdraw without an account (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-shared-1440.png",
     "caption": "Entrant’s link: permission given, withdraw without an account (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-not-shared-320.png",
     "caption": "Entrant’s link: no permission yet, optional opt-in (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-not-shared-375.png",
     "caption": "Entrant’s link: no permission yet, optional opt-in (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-not-shared-390.png",
     "caption": "Entrant’s link: no permission yet, optional opt-in (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-not-shared-1280.png",
     "caption": "Entrant’s link: no permission yet, optional opt-in (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "manage-not-shared-1440.png",
     "caption": "Entrant’s link: no permission yet, optional opt-in (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-contacts-320.png",
     "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-contacts-375.png",
     "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-contacts-390.png",
     "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-contacts-1280.png",
     "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-contacts-1440.png",
     "caption": "Sponsor: released contacts, narrowed to permissions that still count, with use and deletion duties (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-none-320.png",
     "caption": "Sponsor: everyone withdrew since the release (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-none-375.png",
     "caption": "Sponsor: everyone withdrew since the release (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-none-390.png",
     "caption": "Sponsor: everyone withdrew since the release (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-none-1280.png",
     "caption": "Sponsor: everyone withdrew since the release (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-shared-none-1440.png",
     "caption": "Sponsor: everyone withdrew since the release (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-release-320.png",
     "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-release-375.png",
     "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-release-390.png",
     "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-release-1280.png",
     "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-release-1440.png",
     "caption": "Board: preview of valid permissions, selection, recipient, fields, days and the confirming tick (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-gate-off-320.png",
     "caption": "Board: sharing gate off, nothing can be released (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-gate-off-375.png",
     "caption": "Board: sharing gate off, nothing can be released (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-gate-off-390.png",
     "caption": "Board: sharing gate off, nothing can be released (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-gate-off-1280.png",
     "caption": "Board: sharing gate off, nothing can be released (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-gate-off-1440.png",
     "caption": "Board: sharing gate off, nothing can be released (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-erase-320.png",
     "caption": "Board: a withdrawn release, and erasure after the retention period (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-erase-375.png",
     "caption": "Board: a withdrawn release, and erasure after the retention period (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-erase-390.png",
     "caption": "Board: a withdrawn release, and erasure after the retention period (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-erase-1280.png",
     "caption": "Board: a withdrawn release, and erasure after the retention period (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-sharing-erase-1440.png",
     "caption": "Board: a withdrawn release, and erasure after the retention period (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-entrant-withdraws.mp4",
-    "caption": "Entrant withdraws permission from their own link (MOCK API)"
+    "caption": "Entrant withdraws permission from their own link (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-entrant-withdraws.gif",
-    "caption": "Entrant withdraws permission from their own link (MOCK API)"
+    "caption": "Entrant withdraws permission from their own link (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-releases.mp4",
-    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)"
+    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-releases.gif",
-    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)"
+    "caption": "Board narrows, confirms and releases to one sponsor contact (MOCK API, mock names)",
+    "label": "Visible mock-data strip outside the page or video frame."
   }
 ]

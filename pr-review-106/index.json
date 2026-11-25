@@ -3,196 +3,435 @@
     "file": "account-pending-offer-320.png",
     "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-pending-offer-375.png",
     "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-pending-offer-390.png",
     "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-pending-offer-1280.png",
     "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-pending-offer-1440.png",
     "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-to-confirm-320.png",
     "caption": "Running sponsorship: fee to confirm from the next renewal (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-to-confirm-375.png",
     "caption": "Running sponsorship: fee to confirm from the next renewal (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-to-confirm-390.png",
     "caption": "Running sponsorship: fee to confirm from the next renewal (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-to-confirm-1280.png",
     "caption": "Running sponsorship: fee to confirm from the next renewal (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-to-confirm-1440.png",
     "caption": "Running sponsorship: fee to confirm from the next renewal (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-in-force-320.png",
     "caption": "Fee in force: its line on every renewal (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-in-force-375.png",
     "caption": "Fee in force: its line on every renewal (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-in-force-390.png",
     "caption": "Fee in force: its line on every renewal (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-in-force-1280.png",
     "caption": "Fee in force: its line on every renewal (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "account-fee-in-force-1440.png",
     "caption": "Fee in force: its line on every renewal (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-running-320.png",
     "caption": "Board: running sponsorship, choose who covers the fees (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-running-375.png",
     "caption": "Board: running sponsorship, choose who covers the fees (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-running-390.png",
     "caption": "Board: running sponsorship, choose who covers the fees (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-running-1280.png",
     "caption": "Board: running sponsorship, choose who covers the fees (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-running-1440.png",
     "caption": "Board: running sponsorship, choose who covers the fees (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-sent-320.png",
     "caption": "Board: sent to confirm, with the link to copy (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-sent-375.png",
     "caption": "Board: sent to confirm, with the link to copy (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-sent-390.png",
     "caption": "Board: sent to confirm, with the link to copy (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-sent-1280.png",
     "caption": "Board: sent to confirm, with the link to copy (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-sent-1440.png",
     "caption": "Board: sent to confirm, with the link to copy (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-bank-transfer-320.png",
     "caption": "Board: bank-transfer sponsorship, no card fees (320px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-bank-transfer-375.png",
     "caption": "Board: bank-transfer sponsorship, no card fees (375px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-bank-transfer-390.png",
     "caption": "Board: bank-transfer sponsorship, no card fees (390px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-bank-transfer-1280.png",
     "caption": "Board: bank-transfer sponsorship, no card fees (1280px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "admin-fees-bank-transfer-1440.png",
     "caption": "Board: bank-transfer sponsorship, no card fees (1440px, full page, original header, MOCK API)",
     "figtree": true,
-    "horizontalScroll": false
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-sponsor-confirms-fee.mp4",
-    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)"
+    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-sponsor-confirms-fee.gif",
-    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)"
+    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-sends-fee.mp4",
-    "caption": "Board sends a fee to confirm and gets the link (MOCK API)"
+    "caption": "Board sends a fee to confirm and gets the link (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   },
   {
     "file": "flow-board-sends-fee.gif",
-    "caption": "Board sends a fee to confirm and gets the link (MOCK API)"
+    "caption": "Board sends a fee to confirm and gets the link (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-renewal-320.png",
+    "caption": "Renewal change before agreement (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-renewal-375.png",
+    "caption": "Renewal change before agreement (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-renewal-390.png",
+    "caption": "Renewal change before agreement (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-renewal-1280.png",
+    "caption": "Renewal change before agreement (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-renewal-1440.png",
+    "caption": "Renewal change before agreement (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-upgrade-320.png",
+    "caption": "Immediate upgrade with mocked CHF invoice preview (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-upgrade-375.png",
+    "caption": "Immediate upgrade with mocked CHF invoice preview (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-upgrade-390.png",
+    "caption": "Immediate upgrade with mocked CHF invoice preview (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-upgrade-1280.png",
+    "caption": "Immediate upgrade with mocked CHF invoice preview (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "quoted-upgrade-1440.png",
+    "caption": "Immediate upgrade with mocked CHF invoice preview (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "preview-changed-320.png",
+    "caption": "Changed invoice requires a fresh offer (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "preview-changed-375.png",
+    "caption": "Changed invoice requires a fresh offer (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "preview-changed-390.png",
+    "caption": "Changed invoice requires a fresh offer (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "preview-changed-1280.png",
+    "caption": "Changed invoice requires a fresh offer (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "preview-changed-1440.png",
+    "caption": "Changed invoice requires a fresh offer (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "confirm-plan-now.mp4",
+    "caption": "Sponsor confirms a prorated upgrade with a processing fee (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "confirm-plan-now.gif",
+    "caption": "Sponsor confirms a prorated upgrade with a processing fee (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "confirm-plan-renewal.mp4",
+    "caption": "Sponsor confirms a renewal change with a processing fee (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "confirm-plan-renewal.gif",
+    "caption": "Sponsor confirms a renewal change with a processing fee (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "board-plan-invitation-320.png",
+    "caption": "Board saves the plan offer and queues its invitation (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "board-plan-invitation-375.png",
+    "caption": "Board saves the plan offer and queues its invitation (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "board-plan-invitation-390.png",
+    "caption": "Board saves the plan offer and queues its invitation (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "board-plan-invitation-1280.png",
+    "caption": "Board saves the plan offer and queues its invitation (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "board-plan-invitation-1440.png",
+    "caption": "Board saves the plan offer and queues its invitation (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "account-absorbed-offer-320.png",
+    "caption": "Pending recurring offer with ZurichJS covering the fee (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "account-absorbed-offer-375.png",
+    "caption": "Pending recurring offer with ZurichJS covering the fee (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "account-absorbed-offer-390.png",
+    "caption": "Pending recurring offer with ZurichJS covering the fee (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "account-absorbed-offer-1280.png",
+    "caption": "Pending recurring offer with ZurichJS covering the fee (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "account-absorbed-offer-1440.png",
+    "caption": "Pending recurring offer with ZurichJS covering the fee (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "send-plan-offer.mp4",
+    "caption": "Board sends a recurring plan change (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "send-plan-offer.gif",
+    "caption": "Board sends a recurring plan change (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   }
 ]

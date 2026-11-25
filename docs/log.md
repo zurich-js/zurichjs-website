@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-25
+
+- **Update**: Web Zurich is a current community partner again (owner, 25th November 2026); it had been removed from every list on 19th November ([Partners](/domains/partners/overview.md)).
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

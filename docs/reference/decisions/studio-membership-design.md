@@ -214,7 +214,7 @@ None.
 - Stripe stays a current Builder: it looks good for us, and its Zurich office is its own thing.
 - SAE Institute Zürich stays, and novu, GetYourGuide and Orbiz Josef are current hosts again. Smallpdf stays a past host.
 - CityJS stays in the past: they no longer recognise us.
-- iJS Munich and Web Zurich are removed from every list.
+- iJS Munich and Web Zurich are removed from every list. (Replaced on 25th November 2026 for Web Zurich: it is shown again.)
 - GYFF moves to a higher tier, and that is to come from the sponsorships database, which overrides the static list. Until that is built its record says Friend.
 
 ## Sponsorships override the partner list (owner, 19th November 2026)
@@ -222,3 +222,8 @@ None.
 - A running sponsorship in the database sets the partner's tier and current status on the site; the logo, hover colour and link stay the partner record's. The sponsor is linked by its partner id, never by name.
 - When a linked sponsorship has ended, the partner is shown as a past sponsor.
 - A running sponsor with no partner record is listed by company name, without a logo.
+
+## Web Zurich is shown again (owner, 25th November 2026)
+
+- Web Zurich is a community partner on the site again: nothing is lost by listing it. This replaces its removal of 19th November 2026.
+- Svelte Society Zurich stays where it is named, on `/about/why-zurichjs`.

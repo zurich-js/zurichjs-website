@@ -1,4 +1,4 @@
-import { checkTransition, TransitionError } from './state.ts';
+import { isRunning, checkTransition, TransitionError } from './state.ts';
 import type {
   Actor,
   Agreement,
@@ -103,6 +103,8 @@ export interface SponsorStore {
   meetups(sponsorId: string): Promise<SponsorMeetup[]>;
   /** Meetups, contract on file and newest logo for each id (every id gets an entry). Postgres: at most three queries. */
   summaries(sponsorIds: string[]): Promise<Map<string, SponsorSummary>>;
+  pendingMeetupRebuilds(): Promise<string[]>;
+  acknowledgeMeetupRebuilds(versions: string[]): Promise<void>;
   /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
   setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
 
@@ -375,6 +377,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         partnerId: null,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
+        meetupRebuildId: null,
         checkoutSessionId: null,
         paymentLinkId: null,
         paymentLinkUrl: null,
@@ -392,6 +395,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       if (movable) record(held!.sponsorId, 'contact_removed', actor, { payload: { contactId: held!.id, movedTo: s.id } });
       const list = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
       if (list.length) {
+        if (s.cycle === 'once' && isRunning(s.status)) s.meetupRebuildId = crypto.randomUUID();
         meetups.set(s.id, list);
         record(s.id, 'meetups_set', actor, { payload: { events: list.map((m) => m.eventId) } });
       }
@@ -440,9 +444,16 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
           ];
         }),
       ),
+    pendingMeetupRebuilds: async () => [...sponsors.values()].flatMap((s) => (s.meetupRebuildId ? [s.meetupRebuildId] : [])),
+    async acknowledgeMeetupRebuilds(versions) {
+      const pending = new Set(versions);
+      for (const s of sponsors.values()) if (s.meetupRebuildId && pending.has(s.meetupRebuildId)) s.meetupRebuildId = null;
+    },
     async setMeetups(sid, list, actor) {
-      must(sid);
+      const s = must(sid);
       const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
+      const old = new Set((meetups.get(sid) ?? []).map((m) => m.eventId));
+      if (s.cycle === 'once' && isRunning(s.status) && (unique.length !== old.size || unique.some((m) => !old.has(m.eventId)))) s.meetupRebuildId = crypto.randomUUID();
       meetups.set(sid, unique);
       record(sid, 'meetups_set', actor, { payload: { events: unique.map((m) => m.eventId) } });
       return unique.map((m) => ({ ...m }));

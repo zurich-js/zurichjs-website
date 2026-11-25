@@ -372,6 +372,11 @@ export function postgresStore(db: Queryable): SponsorStore {
       for (const r of logos) of(r.sponsor_id).latestLogo = camel<Logo>(r);
       return out;
     },
+    pendingMeetupRebuilds: async () =>
+      (await q<{ meetup_rebuild_id: string }>('select meetup_rebuild_id from sponsors where meetup_rebuild_id is not null')).map((r) => r.meetup_rebuild_id),
+    async acknowledgeMeetupRebuilds(versions) {
+      await q('update sponsors set meetup_rebuild_id = null where meetup_rebuild_id = any($1::uuid[])', [versions]);
+    },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];
       // One statement: upsert the new list, remove only meetups not in it (the two never touch the

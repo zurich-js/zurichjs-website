@@ -122,6 +122,8 @@ Submitting the same bank transfer again acknowledges the saved payment when the 
 
 Recurring Checkout includes the offer identifier in subscription metadata. An invoice can change the plan, bind the subscription and queue a welcome only after the store checks the offer and subscription under the sponsor row lock. For older subscriptions the audit history identifies IDs from previous offers. Termination confirmations wait for all recorded Stripe objects and outstanding link attempts to close.
 
+A running one-time sponsorship records a new rebuild ID in the same database transaction whenever its public meetup coverage changes. The request or daily check queues the debounced site build and acknowledges that ID. A later move has a different ID and keeps its own pending rebuild.
+
 ## The daily check
 
 `apps/web/netlify/functions/sponsorship-daily.mts`, at 07:15 UTC (`apps/web/src/server/sponsor-daily.ts`), in Zurich days:

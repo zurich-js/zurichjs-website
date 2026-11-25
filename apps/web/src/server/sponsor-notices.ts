@@ -32,7 +32,7 @@ export const slackNotice = (key: string, text: string, when: When = {}): NewNoti
 class NotYet extends Error {}
 
 /** How long one notice can take when Resend or Slack is slow (their own timeouts are 15 s). */
-const PER_NOTICE_MS = 16_000;
+export const PER_NOTICE_MS = 16_000;
 
 /** Throws when the notice was not delivered, so it stays queued. */
 async function send(n: SponsorNotice, deps: NotifyDeps): Promise<void> {

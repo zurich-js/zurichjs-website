@@ -25,7 +25,7 @@ export const handleBundle = (request: Request, id: string, deps: SponsorAdminDep
       if (!ids.length) return fail(400, 'Choose at least one meetup.', { field: 'eventIds' });
       const price = parsePrice('pricePerMeetup' in body ? body.pricePerMeetup : s.pricePerMeetup);
       if (!price.ok) return fail(400, price.error, { field: price.field });
-      const meetups = await resolveMeetups(ids, deps.meetups ?? (() => upcomingMeetups(env, deps.fetch)));
+      const meetups = await resolveMeetups(ids, deps.meetups ?? (() => upcomingMeetups(env, lifecycle.fetch)));
       const updated = await setBundle(s, meetups, price.value, BOARD, lifecycle);
       return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id), (await store.documents(s.id)).length > 0) });
     },

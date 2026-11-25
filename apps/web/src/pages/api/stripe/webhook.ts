@@ -8,11 +8,12 @@
  */
 import type { MemberStore } from '@zurichjs/membership';
 import type { SponsorStore } from '@zurichjs/sponsorship';
+import type { DonationEvents } from '../../../server/donation-events.ts';
 import type { APIRoute } from 'astro';
 import { methodNotAllowed, type Env } from '../../../server/http.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
 import { processSponsorEvent } from '../../../server/sponsor-webhook.ts';
-import { dispatchStripeEvent, readStripeEvent } from '../../../server/stripe-webhook.ts';
+import { dispatchStripeEvent, isDonationEvent, readStripeEvent } from '../../../server/stripe-webhook.ts';
 import { processDonationEvent } from '../donate/webhook.ts';
 import { processMembershipEvent } from '../membership/webhook.ts';
 
@@ -22,6 +23,7 @@ export interface StripeWebhookDeps {
   env?: Env;
   memberStore?: MemberStore;
   sponsorStore?: SponsorStore;
+  donationEvents?: DonationEvents | null;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
   now?: number;
@@ -34,10 +36,10 @@ export async function handleStripeWebhook(request: Request, deps: StripeWebhookD
   const read = await readStripeEvent(request, env, 'STRIPE_WEBHOOK_SECRET', 'stripe', deps);
   if ('response' in read) return read.response;
   const shared = { env, fetch: deps.fetch, slack: deps.slack, now: deps.now, log: deps.log };
+  if (isDonationEvent(read.event)) return processDonationEvent(read.event, { ...shared, events: deps.donationEvents });
   return dispatchStripeEvent(read.event, [
     (e) => processMembershipEvent(e, { ...shared, store: deps.memberStore, signature: deps.signature }),
     (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore }),
-    (e) => processDonationEvent(e, shared),
   ]);
 }
 

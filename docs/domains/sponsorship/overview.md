@@ -139,6 +139,8 @@ A running one-time sponsorship records a new rebuild ID in the same database tra
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
 
+Netlify stops scheduled functions after 30 seconds, so every outbound call shares a 25 s budget (`apps/web/src/server/deadline.ts`). The check first does what it can decide from the sponsorship alone (endings, reminders, Stripe an ended sponsorship left open), then reads the meetups of unpaid one-time sponsorships, starting at a different one each day so slow reads cannot hold back the same ones every day, then sends queued notices while at least 16 s is left. It starts no sponsorship's work once less than 8 s is left, also after a meetup read, and logs the ones it did not reach as deferred. The next run decides them again from the saved rows, so a deferred reminder is caught up by the rule above. When the budget or Stripe stops the close of a sponsorship it has ended, the ids are kept, the log line names it (`stripeOpen`) and the next run closes it again. The email and note of an end are queued with the end, so a run stopped after it still sends them later.
+
 ### Not verified
 
 The schedule is set only in the function's source (`export const config`). `apps/web/netlify.toml` repeats the other scheduled functions' schedules because Netlify may not read the config from a bundled file ([Web app](/systems/web.md)), but not this one. Whether the daily check runs on Netlify was not checked.

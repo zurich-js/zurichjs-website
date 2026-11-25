@@ -30,6 +30,7 @@ import {
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
+import { deadline, REQUEST_BUDGET_MS } from './deadline.ts';
 import { fail, isEmail, text, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
@@ -70,12 +71,19 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
     const store = deps.store ?? sponsorStore(env);
     const origin = siteOrigin(env);
     const now = deps.now === undefined ? undefined : () => new Date(deps.now!);
-    return await fn({ env, store, origin, lifecycle: lifecycleDeps(env, store, origin, { fetch: deps.fetch, slack: deps.slack, log: deps.log, now }) });
+    return await fn({
+      env,
+      store,
+      origin,
+      lifecycle: lifecycleDeps(env, store, origin, { fetch: deadline(REQUEST_BUDGET_MS).fetch(deps.fetch), slack: deps.slack, log: deps.log, now }),
+    });
   } catch (cause) {
     const known = knownFailure(cause);
     if (known) return known;
     if (cause instanceof MembershipUnavailable || cause instanceof StripeUnavailable) return fail(503, `Not configured: ${(cause as Error).message}`);
     console.error(`[sponsorship-admin] ${what} failed`, cause);
+    if (request.method !== 'GET')
+      return fail(502, 'The site could not confirm whether it saved this change. Reload the page and check before trying again.', { outcome: 'unknown' });
     return fail(502, `Could not ${what}. Try again; details are in the function log.`);
   }
 }

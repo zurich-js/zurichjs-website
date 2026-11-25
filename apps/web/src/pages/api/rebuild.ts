@@ -4,17 +4,9 @@
  * once publishing has paused. Env: SANITY_WEBHOOK_SECRET. See docs/systems/operations/netlify.md.
  */
 import type { APIRoute } from 'astro';
-import { getStore } from '@netlify/blobs';
-import { acceptPublish, type RebuildState, type StateStore } from '../../server/rebuild.ts';
+import { acceptPublish } from '../../server/rebuild.ts';
+import { rebuildStore } from '../../server/rebuild-store.ts';
 
 export const prerender = false;
 
-const blobStore = (): StateStore => {
-  const store = getStore('rebuild');
-  return {
-    read: async () => (await store.get('state', { type: 'json' })) as RebuildState | null,
-    write: (s) => store.setJSON('state', s).then(() => undefined),
-  };
-};
-
-export const ALL: APIRoute = ({ request }) => acceptPublish(request, process.env.SANITY_WEBHOOK_SECRET, blobStore());
+export const ALL: APIRoute = ({ request }) => acceptPublish(request, process.env.SANITY_WEBHOOK_SECRET, rebuildStore());

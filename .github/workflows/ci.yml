@@ -57,9 +57,16 @@ jobs:
             exit 1
           }
 
-  site:
-    name: Build, e2e, visual, SEO parity, Lighthouse
+  # The site checks run side by side: each builds the site itself (about 25 s), which is cheaper than
+  # passing the build between jobs. One after the other they took 8 minutes; the e2e suite alone 3.7.
+  e2e:
+    name: Build, e2e, visual (${{ matrix.project }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The two Playwright projects (playwright.config.ts): 390 px and 1440 px.
+        project: [mobile, desktop]
     env:
       # Deterministic input for e2e and visual regression (docs/design-system.md).
       # Real builds on Netlify read Sanity instead (apps/web/netlify.toml).
@@ -76,26 +83,54 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end, accessibility and visual regression
-        run: pnpm e2e
+        run: pnpm e2e --project=${{ matrix.project }}
       - name: Visual diff summary
         if: failure()
         run: |
           python3 -m pip install --quiet pillow==11.3.0
           python3 tools/ci/visual-diff-summary.py test-results --crops
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-e2e-${{ matrix.project }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+          if-no-files-found: ignore
+
+  site:
+    name: Build, SEO parity, Lighthouse on main
+    runs-on: ubuntu-latest
+    env:
+      # Deterministic input for e2e and visual regression (docs/design-system.md).
+      # Real builds on Netlify read Sanity instead (apps/web/netlify.toml).
+      CONTENT_SOURCE: sample
+      BUILD_NOW: '2026-11-01T12:00:00+01:00'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - name: SEO and LLM parity
         run: |
           node tools/serve-dist.mjs 4321 &
           npx --yes wait-on@8.0.3 --timeout 30000 http://localhost:4321
           node tools/seo/compare.mjs --base http://localhost:4321 --report seo-report.json
+      # Only once a change is on main (owner, 25th November 2026): it is the slowest step and its score
+      # varies between runners, so it does not hold up a pull request.
       - name: Lighthouse (mobile)
+        if: github.event_name == 'push'
         run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.json
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: reports
+          name: reports-site
           path: |
-            playwright-report
-            test-results
             seo-report.json
             .lighthouseci
           retention-days: 14

@@ -10,8 +10,6 @@
  * can tell "the budget stopped it" from an answer or an error of the service.
  */
 
-/** Synchronous functions: Netlify's 60 s, less time for the database writes after the last call. */
-export const REQUEST_BUDGET_MS = 50_000;
 /** Scheduled functions: inside Netlify's 30 s, with time left to log the result. */
 export const SCHEDULED_BUDGET_MS = 25_000;
 

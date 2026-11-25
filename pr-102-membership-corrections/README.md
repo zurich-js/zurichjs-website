@@ -3,7 +3,7 @@
 All views and recordings use local fixtures and simulated payment, email and Slack responses. No production transactions are shown.
 
 - Tested source: `05362f98ab191577ef6df81e91bb912846db77ea`.
-- Published application: `35fa43222e0049ee5ef2d0d7b3f2870fe886212b`.
+- First published application: `35fa43222e0049ee5ef2d0d7b3f2870fe886212b`.
 - Original signed media source: `4ba698964d3d6c5b55c35ede11150aebee3cdb62`.
 - Worker verification: 689 repository tests and 28 selected membership browser checks passed. Lint, UI lint, format, Knip, typecheck, deterministic sample build and SEO parity passed.
 - Screenshots cover 320, 375, 390, 1280 and 1440 px. Recordings are provided as MP4 and GIF with MOCK labels.
@@ -109,3 +109,9 @@ The published merge preserves the colleague’s account merge. Compared with the
 - [sign-in-sent-390.png](sign-in-sent-390.png)
 
 [SHA-256 manifest](manifest.json)
+
+## Current-main integration
+
+The follow-up application `21f1aa9d4215f3a78b4d816d573f06a456d7ea7b` integrates main `7a0ad93809b7aa025d0860f566fee34cf08cdf27`. Its full repository suite passed 806 tests with disposable PostgreSQL. The top of the stack passed 32 selected browser checks and ten additional mocked flow replays. Merge commits ran signing, formatting, lint and repository typecheck hooks.
+
+[Fresh captures from the merged build](current-main/README.md). These supplement the original candidate captures above.

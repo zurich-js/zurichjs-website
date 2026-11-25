@@ -1,0 +1,98 @@
+[
+  {
+    "file": "admin-focus-1280.png",
+    "sha256": "08265e257b1175479b46dc36d5b7145cdcb5cfdf1a48cd1e7734fe22c4d48430"
+  },
+  {
+    "file": "admin-focus-375.png",
+    "sha256": "1a8cd9de23be991282c0590cacd4d2389aca659d9a1562e1b8fb1564e77ecfa6"
+  },
+  {
+    "file": "email-conflict-1280.png",
+    "sha256": "a8ca25202ed9c2d91da80c978dcf50b4df6e13e3f916c8ae9e8ea46aca1a2d23"
+  },
+  {
+    "file": "email-conflict-375.png",
+    "sha256": "bd94f7a6e7f820a647554ff3210b028281f07eeaed172cd89398946fb347575c"
+  },
+  {
+    "file": "email-delivery-1280.png",
+    "sha256": "e24a71ea22b2269e6579ebd03543e5c27f11b3980c1a803804a3242b7e7aea55"
+  },
+  {
+    "file": "email-delivery-375.png",
+    "sha256": "8ba33daa7205b6f8627236668f505ae5a78c850fad17687fd680fa5cd100b1c7"
+  },
+  {
+    "file": "manual-immediate-confirmed-1280.png",
+    "sha256": "b0780e5b7985863be0367dde57f8730a94369d89721dab537cb55d48f486fbc5"
+  },
+  {
+    "file": "manual-immediate-confirmed-375.png",
+    "sha256": "705611552db9660993a5a81d01b9d5d18ec88e5a6a512470c6bfc5f595f8d163"
+  },
+  {
+    "file": "manual-immediate-waiting-1280.png",
+    "sha256": "dac77670457a2ce9dfb91e5b51db04d648cbf0e2d3e1461cd7087053d264ab5c"
+  },
+  {
+    "file": "manual-immediate-waiting-375.png",
+    "sha256": "ce62df12d00c38f5a5adb4d0a7e0603c29760ccde089d2cccec6a9a9a6a9c115"
+  },
+  {
+    "file": "manual-trial-confirmed-1280.png",
+    "sha256": "335ee266da2c8bf042daae2b2ae0abe2a539747c3b8492d01ca85e1011b0da6a"
+  },
+  {
+    "file": "manual-trial-confirmed-375.png",
+    "sha256": "390a7c62a9def6d228a4619703832cd20cd5a59b2be4ff230cc826667d234bae"
+  },
+  {
+    "file": "manual-trial-waiting-1280.png",
+    "sha256": "0591344107a90316fffd283133dc911aee709bc61e30daf33561a8ca1ffcf7b2"
+  },
+  {
+    "file": "manual-trial-waiting-375.png",
+    "sha256": "cb345a612b16d89c03422db6af5d3b855d5c142758fd97e87887d522ae78dd5a"
+  },
+  {
+    "file": "pending-after-reload-1280.png",
+    "sha256": "d2cbeac2b1eaab8515a5dfe584e2ddd202dc003f97c4da097856d19e5b070454"
+  },
+  {
+    "file": "pending-after-reload-375.png",
+    "sha256": "67fcf0c6066bfe7d6fa0e1a31bed549d736cb9f9326017bf4ef2cd9e867f99b0"
+  },
+  {
+    "file": "pending-before-reload-1280.png",
+    "sha256": "b75e3b8e5e87c834074393f70d0d438adff5eb65cd69ed9863a822814f2c1853"
+  },
+  {
+    "file": "pending-before-reload-375.png",
+    "sha256": "e267b8d5971b9e4eee42710ef6a056eeaf7770526da913207ec5551abaf5cd0e"
+  },
+  {
+    "file": "sign-in-choice-1280.png",
+    "sha256": "ce1541fa62bc249612a169c7543996edfa5c5942dcb859b41504a6b15ab4a206"
+  },
+  {
+    "file": "sign-in-choice-375.png",
+    "sha256": "a89227253a12c1eba3c94d9281daebf6207741e900445b66ce6a482fd7e9ca0d"
+  },
+  {
+    "file": "sign-in-request-1280.png",
+    "sha256": "2c2365149092234ae9e5e960bb4ca0f2fbbefee0d00ca06f0ba8a6f50df77f65"
+  },
+  {
+    "file": "sign-in-request-375.png",
+    "sha256": "af56fc98c2e76cae59f35379cd432d8143e2fa9827d2c6991166041cb1a39cce"
+  },
+  {
+    "file": "sign-in-sent-1280.png",
+    "sha256": "06398c456e2f3305de0085e1595cb3a999457d68947aad64eb77430e75248687"
+  },
+  {
+    "file": "sign-in-sent-375.png",
+    "sha256": "7a3ee4c883f6baeb0786c99eef1cc5aa3ef3adbe3f3661219c44fd681bdf0eb1"
+  }
+]

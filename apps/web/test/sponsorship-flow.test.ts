@@ -528,6 +528,8 @@ describe('sponsorship flow', () => {
       stripeClosed: 0,
       linksClosed: 0,
       notices: { sent: 4, failed: 0, waiting: 0, unrecorded: 0 },
+      deferred: [],
+      stripeOpen: [],
     });
     expect(await store.get(unpaid.sponsor.id)).toMatchObject({ status: 'ended', endedReason: 'withdrawn' });
     expect(await store.get(done.sponsor.id)).toMatchObject({ status: 'ended', endedReason: 'completed' });
@@ -541,6 +543,8 @@ describe('sponsorship flow', () => {
       stripeClosed: 0,
       linksClosed: 0,
       notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 },
+      deferred: [],
+      stripeOpen: [],
     });
   });
 

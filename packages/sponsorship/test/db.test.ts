@@ -212,7 +212,7 @@ d('sponsorship database', () => {
     // Whichever takes the row first, the other sees it: paid first, the failure changes nothing;
     // failed first, the payment clears "payment overdue".
     await Promise.all([
-      store.paidInvoice(sponsor.id, { invoice: 'in_x' }, stripe, { clearOverdue: true }),
+      store.paidInvoice(sponsor.id, { offerId: sponsor.id, subscriptionId: 'sub_crossed', invoice: 'in_x' }, stripe, { clearOverdue: true }),
       store.overdueInvoice(sponsor.id, { invoice: 'in_x', subscriptionId: 'sub_crossed', payload: {} }, stripe, notice),
     ]);
     expect((await store.get(sponsor.id))?.status).toBe('active');
@@ -226,7 +226,26 @@ d('sponsorship database', () => {
     expect(r).toMatchObject({ outcome: 'overdue', sponsor: { status: 'past_due' } });
     expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'overdue:in_z'`)).toBe('1');
     expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_z', subscriptionId: 'sub_crossed', payload: {} }, stripe, [])).outcome).toBe('overdue');
-    expect(await store.paidInvoice(sponsor.id, { invoice: 'in_z', created: 1 }, stripe, { clearOverdue: true })).toMatchObject({ status: 'active' });
+    expect(await store.paidInvoice(sponsor.id, { offerId: sponsor.id, subscriptionId: 'sub_crossed', invoice: 'in_z', created: 1 }, stripe, { clearOverdue: true })).toMatchObject({
+      status: 'active',
+    });
+  });
+
+  it('rejects both a retired subscription and an invoice for a previous offer before recording payment', async () => {
+    const { sponsor } = await store.create({ ...acme, status: 'active' }, { email: 'restart@example.test', name: 'Owner', role: 'primary' }, board);
+    await store.linkStripe(sponsor.id, { subscriptionId: 'sub_prior' }, stripe);
+    await store.transition(sponsor.id, { from: 'active', to: 'ended', reason: 'cancelled', actor: board });
+    await store.linkStripe(sponsor.id, { subscriptionId: null }, stripe);
+    await store.transition(sponsor.id, { from: 'ended', to: 'pending', actor: sponsorActor });
+    const offer = (await store.events(sponsor.id)).at(-1)!.id;
+    for (const [subscriptionId, offerId] of [
+      ['sub_prior', offer],
+      ['sub_unknown', sponsor.id],
+    ] as const) {
+      await store.paidInvoice(sponsor.id, { invoice: 'in_old_offer', subscriptionId, offerId }, stripe, { clearOverdue: true });
+    }
+    expect((await store.events(sponsor.id)).some((e) => e.type === 'invoice_paid')).toBe(false);
+    expect(await store.get(sponsor.id)).toMatchObject({ status: 'pending', stripeSubscriptionId: null });
   });
 
   it('keeps a payment link attempt or switches it off, never both, even at the same time', async () => {

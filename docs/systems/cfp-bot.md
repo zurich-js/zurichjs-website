@@ -62,7 +62,7 @@ Without `SLACK_CFP_*` the functions answer Slack with 401 and do nothing; the re
 
 ## Try it locally
 
-Like the organiser bot ([Slack content agent](/systems/slack-agent.md)): create a dev app from `slack/manifest.cfp.dev.yml`, add an app-level token with `connections:write`, invite **@ZurichJS CFP (dev)** to a test channel, and set `SLACK_CFP_APP_TOKEN`, `SLACK_CFP_BOT_TOKEN`, `SLACK_CFP_SIGNING_SECRET`, `SLACK_CFP_CHANNEL_ID` (the test channel), `LLM_PROVIDER`, `LLM_API_KEY`, `SANITY_DATASET=v2-preview` and a `SANITY_WRITE_TOKEN` in `.env`. Submit writes to that dataset; never production from a laptop. `pnpm local` starts `tools/slack-dev.mjs`, which bridges either app or both. Drafts go to the Docker Postgres.
+Like the organiser bot ([Slack content agent](/systems/slack-agent.md)): create a dev app from `slack/manifest.cfp.dev.yml`, add an app-level token with `connections:write`, invite **@ZurichJS CFP (dev)** to a test channel, and set `SLACK_CFP_APP_TOKEN`, `SLACK_CFP_BOT_TOKEN`, `SLACK_CFP_SIGNING_SECRET`, `SLACK_CFP_CHANNEL_ID` (the test channel), `LLM_PROVIDER`, `LLM_API_KEY`, `SANITY_DATASET=v2-preview` and a `SANITY_WRITE_TOKEN` in `.env`. Submit writes to that dataset; never production from a laptop. `just up` starts `tools/slack-dev.mjs`, which bridges either app or both. Drafts go to the Docker Postgres.
 
 ## Tests
 

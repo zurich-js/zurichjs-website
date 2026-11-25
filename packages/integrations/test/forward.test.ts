@@ -214,12 +214,40 @@ describe('Slack (webhook or the production bot token)', () => {
     await postSlack({}, 'x', log);
     expect(log).toHaveBeenCalledWith(expect.stringContaining('missing'));
   });
+  it('marks where a message comes from outside production, and never in production', async () => {
+    const sent = async (env: Record<string, string>) => {
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ ok: true }));
+      await postSlack({ SLACK_BOT_TOKEN: 'xoxb-1', SLACK_DEFAULT_CHANNEL: 'C1', ...env }, 'New talk proposal');
+      const text = JSON.parse(String(fetchMock.mock.calls[0]![1]!.body)).text as string;
+      fetchMock.mockRestore();
+      return text;
+    };
+    expect(await sent({ SLACK_ENV_LABEL: 'local' })).toBe('`[local]` New talk proposal');
+    expect(await sent({ SLACK_ENV_LABEL: 'preview', CONTEXT: 'deploy-preview' })).toBe('`[preview]` New talk proposal');
+    expect(await sent({ SLACK_ENV_LABEL: 'local', CONTEXT: 'production' })).toBe('New talk proposal');
+    expect(await sent({})).toBe('New talk proposal');
+  });
 });
 
 describe('Sanity write token', () => {
+  const production = { SANITY_ALLOW_PRODUCTION_WRITES: '1' };
   it('accepts the production SANITY_TOKEN when SANITY_WRITE_TOKEN is not set', () => {
-    expect(sanityWriteClient({})).toBeNull();
-    expect(sanityWriteClient({ SANITY_TOKEN: 'sk' })).not.toBeNull();
+    expect(sanityWriteClient(production)).toBeNull();
+    expect(sanityWriteClient({ ...production, SANITY_TOKEN: 'sk' })).not.toBeNull();
+  });
+  it('writes to the production dataset only where SANITY_ALLOW_PRODUCTION_WRITES is 1', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Unset means production: a token alone must not be enough, whatever the deploy context says.
+    expect(sanityWriteClient({ SANITY_TOKEN: 'sk' })).toBeNull();
+    expect(sanityWriteClient({ SANITY_TOKEN: 'sk', SANITY_DATASET: 'production' })).toBeNull();
+    expect(sanityWriteClient({ SANITY_WRITE_TOKEN: 'sk', SANITY_DATASET: 'production', CONTEXT: 'deploy-preview' })).toBeNull();
+    expect(sanityWriteClient({ SANITY_TOKEN: 'sk', SANITY_ALLOW_PRODUCTION_WRITES: 'true' })).toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('SANITY_ALLOW_PRODUCTION_WRITES'));
+    warn.mockRestore();
+    expect(sanityWriteClient({ SANITY_TOKEN: 'sk', SANITY_DATASET: 'production', ...production })?.config().dataset).toBe('production');
+  });
+  it('writes to any other dataset without the switch', () => {
+    expect(sanityWriteClient({ SANITY_TOKEN: 'sk', SANITY_DATASET: 'staging' })?.config().dataset).toBe('staging');
   });
 });
 

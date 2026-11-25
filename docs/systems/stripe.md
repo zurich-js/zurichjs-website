@@ -14,7 +14,7 @@ Three parts of the site take payments through one Stripe account: [donations](/d
 
 - **Plain `fetch`, no SDK:** `apps/web/src/server/stripe.ts` (form encoding, the `stripe()` helper, `verifyStripeSignature`). Each part has its own module on top: `apps/web/src/server/membership-stripe.ts`, `apps/web/src/server/sponsor-stripe.ts`, and the donation endpoints.
 - **Every Checkout session and subscription carries a `source` in its metadata** (for example `zurichjs.com/donate`, `zurichjs.com/membership`), which is how events find their part.
-- **`STRIPE_API_BASE`** points the calls at `tools/mock-stripe.mjs` for tests and e2e; it is ignored in production, so the secret key only goes to `api.stripe.com`. `pnpm local` uses Stripe's real test mode instead ([Local development](/systems/local-development.md)).
+- **`STRIPE_API_BASE`** points the calls at `tools/mock-stripe.mjs` for tests and e2e; it is ignored in production, so the secret key only goes to `api.stripe.com`. `just up` uses Stripe's real test mode instead ([Local development](/systems/local-development.md)).
 
 ## The one webhook
 
@@ -25,7 +25,7 @@ Three parts of the site take payments through one Stripe account: [donations](/d
 - **Answers:** 200; 400 for a bad signature or JSON; 503 when not configured; 500 to make Stripe retry (for up to three days).
 - **API versions:** events arrive in the endpoint's API version; invoices are read in both the older and the 2025-03-31.basil shape, so an older endpoint or `stripe listen` still works.
 - **On Netlify** it is an Astro route (`prerender = false`) in the site's server function; nothing else is deployed. Netlify stops synchronous functions after about 10 seconds; membership `invoice.paid` does the most work (certificate and emails), so watch its duration in the function logs, and move that work to a background function if it gets close.
-- **Creating it:** `pnpm membership:stripe-setup --webhook-url https://zurichjs.com/api/stripe/webhook` (dry run; `--apply` creates it) prints the signing secret once. Sponsorship events use the same endpoint; there is no separate one. Locally, `pnpm local` forwards to it with `stripe listen`.
+- **Creating it:** `pnpm membership:stripe-setup --webhook-url https://zurichjs.com/api/stripe/webhook` (dry run; `--apply` creates it) prints the signing secret once. Sponsorship events use the same endpoint; there is no separate one. Locally, `just up` forwards to it with `stripe listen`.
 
 ## Moving production to the one webhook (owner, production change)
 
@@ -55,4 +55,4 @@ Whether the switch has happened in production.
 
 # Related specs
 
-None.
+- [Sponsor dashboard, raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md)

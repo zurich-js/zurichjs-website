@@ -1,11 +1,11 @@
 /**
  * The membership database: Postgres on Neon (owner, 11th November 2026; it was Netlify Database,
  * which the Netlify plan does not include). The schema is in apps/web/database/migrations, applied
- * before every Netlify build by tools/db-migrate.mjs.
+ * before every Netlify build by scripts/db-migrate.mjs.
  *
  *   production     DATABASE_URL: the Neon production branch (pooled connection)
  *   deploy preview DATABASE_URL: the Neon preview branch; each PR uses its own database on it,
- *                  pr_<number>, created empty by tools/db-migrate.mjs, which writes its name into
+ *                  pr_<number>, created empty by scripts/db-migrate.mjs, which writes its name into
  *                  db-target.json (bundled with the functions; a name, not a secret)
  *   local          MEMBERSHIP_DB_URL: the Docker Postgres (docker-compose.yml); it wins over DATABASE_URL
  *

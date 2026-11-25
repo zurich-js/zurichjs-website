@@ -130,16 +130,28 @@ function reviewNotes(p: TalkProposal, matched: boolean): string | undefined {
 /** Write token. SANITY_TOKEN is the production site's existing variable (one token for reads and writes). */
 const sanityWriteToken = (env: Env) => env.SANITY_WRITE_TOKEN || env.SANITY_TOKEN || undefined;
 
-export const sanityWriteClient = (env: Env): SanityClient | null =>
-  sanityWriteToken(env)
-    ? createClient({
-        projectId: env.SANITY_PROJECT_ID ?? 'viqjrovw',
-        dataset: env.SANITY_DATASET ?? 'production',
-        apiVersion: '2026-10-01',
-        token: sanityWriteToken(env),
-        useCdn: false,
-      })
-    : null;
+/**
+ * Writing to the `production` dataset is refused unless SANITY_ALLOW_PRODUCTION_WRITES=1, which is set
+ * by hand for the production deploy only (Netlify, production context). A laptop, a deploy preview or
+ * a branch deploy that holds a write token therefore cannot change production content. Any other
+ * dataset is always writable. The same rule is in packages/agent/src/store.ts for the Slack agent.
+ */
+export const sanityWritesAllowed = (env: Env): boolean => (env.SANITY_DATASET ?? 'production') !== 'production' || env.SANITY_ALLOW_PRODUCTION_WRITES === '1';
+
+export const sanityWriteClient = (env: Env): SanityClient | null => {
+  if (!sanityWriteToken(env)) return null;
+  if (!sanityWritesAllowed(env)) {
+    console.warn('[sanity] writes to the production dataset are off here (SANITY_ALLOW_PRODUCTION_WRITES is not 1): nothing is stored in Sanity');
+    return null;
+  }
+  return createClient({
+    projectId: env.SANITY_PROJECT_ID ?? 'viqjrovw',
+    dataset: env.SANITY_DATASET ?? 'production',
+    apiVersion: '2026-10-01',
+    token: sanityWriteToken(env),
+    useCdn: false,
+  });
+};
 
 /**
  * Same documents as the production /api/submit-talk: a speaker (matched by
@@ -344,10 +356,26 @@ export async function sendMemberEmail(
 }
 
 /**
+ * Where a Slack message comes from when it is not production: SLACK_ENV_LABEL, which the local Docker
+ * stack sets to `local`. For deploy previews and branch deploys it is a Netlify variable scoped to
+ * those contexts (netlify.toml values do not reach functions). Never set it for production; it is
+ * also ignored when CONTEXT=production, where that is known.
+ */
+export const slackEnvLabel = (env: Env): string | undefined => (env.CONTEXT === 'production' ? undefined : env.SLACK_ENV_LABEL?.trim() || undefined);
+
+/** `text` with the label in front (`[local] …`), or unchanged in production. */
+export const withSlackEnvLabel = (env: Env, text: string): string => {
+  const label = slackEnvLabel(env);
+  return label ? `\`[${label}]\` ${text}` : text;
+};
+
+/**
  * Posts to Slack through an incoming webhook (SLACK_WEBHOOK_URL) or, as the production site
  * already does, through the bot API (SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL).
+ * Outside production the message starts with its origin (withSlackEnvLabel).
  */
-export async function postSlack(env: Env, text: string, log: Log = console.log): Promise<void> {
+export async function postSlack(env: Env, message: string, log: Log = console.log): Promise<void> {
+  const text = withSlackEnvLabel(env, message);
   if (env.SLACK_WEBHOOK_URL) {
     const res = await fetch(env.SLACK_WEBHOOK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
     if (!res.ok) throw new Error(`Slack ${res.status}`);

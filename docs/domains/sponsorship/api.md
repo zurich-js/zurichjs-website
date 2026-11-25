@@ -66,4 +66,4 @@ Whether the live Stripe objects exist.
 
 # Related specs
 
-None.
+- [Sponsor dashboard, raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md)

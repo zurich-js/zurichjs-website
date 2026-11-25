@@ -2,6 +2,7 @@
 
 ## 2026-11-25
 
+- **Update**: CI runs the site checks in parallel: the Playwright suite once per project (`mobile`, `desktop`) and the SEO gate with Lighthouse as their own job, each with its own build. Lighthouse runs only on pushes to `main` (owner, 25th November 2026). A pull request's run takes about 4 minutes instead of 8 ([CI](/systems/operations/ci.md)).
 - **Update**: Web Zurich is a current community partner again (owner, 25th November 2026); it had been removed from every list on 19th November ([Partners](/domains/partners/overview.md)).
 
 ## 2026-11-24

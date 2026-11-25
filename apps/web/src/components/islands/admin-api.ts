@@ -9,27 +9,15 @@
  * for a read, so callers fall back to their own message. A write that got no JSON answer from a
  * 5xx page gets UNKNOWN_WRITE. A 2xx write needs an explicit ok:true acknowledgement or the helper returns 502 with UNKNOWN_WRITE.
  */
+import { READ_DEADLINE_MS, timeoutSignal } from './read-deadline.ts';
+
 export type ApiBody<T> = T & { ok?: boolean; error?: string; field?: string };
 
-export const READ_DEADLINE_MS = 20_000;
 export const WRITE_DEADLINE_MS = 65_000;
 
 export const UNREACHABLE = 'We couldn’t reach the site. Check your connection and try again.';
 const UNREACHABLE_WRITE = 'We couldn’t reach the site, so we don’t know whether this was saved. Reload the page to check before you try again.';
 export const UNKNOWN_WRITE = 'The site did not confirm this, so we don’t know whether it was saved. Reload the page to check before you try again.';
-
-/**
- * Aborts after `ms`, or when `own` aborts. Built on AbortController and a timer, so it works in
- * browsers without AbortSignal.timeout or AbortSignal.any.
- */
-export function timeoutSignal(ms: number, own?: AbortSignal | null): AbortSignal {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  controller.signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
-  if (own?.aborted) controller.abort();
-  else own?.addEventListener('abort', () => controller.abort(), { once: true });
-  return controller.signal;
-}
 
 export async function api<T>(path: string, init?: RequestInit): Promise<{ status: number; body: ApiBody<T> }> {
   const json = !(init?.body instanceof FormData);

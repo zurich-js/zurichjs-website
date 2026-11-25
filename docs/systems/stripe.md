@@ -55,4 +55,4 @@ Whether the switch has happened in production.
 
 # Related specs
 
-None.
+- [Sponsor dashboard, raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md)

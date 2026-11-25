@@ -4,6 +4,10 @@
 
 - **Update**: Web Zurich is a current community partner again (owner, 25th November 2026); it had been removed from every list on 19th November ([Partners](/domains/partners/overview.md)).
 
+## 2026-11-24
+
+- **Added**: a Spec for [the sponsor dashboard, the raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md): covered meetups for every billing cycle, a separately paid raffle for existing sponsors only, a per-offer choice of who covers payment-processing fees, and the configuration gates that keep surcharges and entrant sharing off until the owner sets them.
+
 ## 2026-11-19
 
 - **Update**: the local Docker stack migrates its Postgres with `apps/web/scripts/db-migrate.mjs`, the script every Netlify build runs, when the site starts; `tools/docker/migrate.sh` and the `migrate` service are gone ([Local development](/systems/local-development.md)).

@@ -43,3 +43,4 @@ For the board, behind the same `ADMIN_PASSWORD` and protection as the membership
 # Related specs
 
 - [Online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md)
+- [Sponsor dashboard, raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md)

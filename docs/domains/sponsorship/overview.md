@@ -87,7 +87,7 @@ The sponsorships database overrides the partner list for who is a current sponso
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Production                                               | the production database's sponsorships                                                         |
 | Deploy preview                                           | its own database `pr_<number>`, which starts empty: the partner list alone                     |
-| Local with `MEMBERSHIP_DB_URL` (`pnpm local`)            | the local database's sponsorships, when content comes from Sanity                              |
+| Local with `MEMBERSHIP_DB_URL` (`just up`)               | the local database's sponsorships, when content comes from Sanity                              |
 | No database URL                                          | the partner list alone                                                                         |
 | The database is unreachable or silent for 15 seconds     | the partner list alone, with a warning in the build log                                        |
 | Sample content (`CONTENT_SOURCE=sample`: tests, e2e, CI) | the partner list alone; the database is never read, so the visual baselines never depend on it |

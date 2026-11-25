@@ -20,7 +20,7 @@ Source: `apps/studio` (`@zurichjs/studio`), Sanity 6 with React 19, project `viq
 ## Commands
 
 ```bash
-pnpm --filter @zurichjs/studio dev                      # http://localhost:3333 (or pnpm local:studio, in Docker)
+pnpm --filter @zurichjs/studio dev                      # http://localhost:3333 (or just studio, in Docker)
 pnpm --filter @zurichjs/studio exec sanity build --yes  # the build CI runs
 pnpm --filter @zurichjs/studio schema                   # schema.json, offline (scripts/extract-schema.ts)
 pnpm --filter @zurichjs/studio typegen                  # schema.json and packages/content/src/sanity.types.ts

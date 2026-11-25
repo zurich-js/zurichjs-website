@@ -14,6 +14,7 @@
  * the member cards under the agent's replies (membership-agent.ts; their values start
  * with `agent:`, and the outcome is posted in the thread instead of rewriting the reply).
  */
+import { slackEnvLabel, withSlackEnvLabel } from '@zurichjs/integrations';
 import { levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
 import { resignReasonLabels, type ResignReason } from '../lib/membership.ts';
 import { lastDay, longDate } from './dates.ts';
@@ -66,10 +67,16 @@ export function membershipSlack(env: Env, fetchImpl: Fetch = fetch): MembershipS
     if (!json.ok) throw new Error(`Slack ${method}: ${json.error}`);
     return json;
   };
+  // Outside production every message says where it comes from (SLACK_ENV_LABEL: `local`, `preview`).
+  const label = slackEnvLabel(env);
+  const mark = (text: string) => withSlackEnvLabel(env, text);
+  const markBlocks = (blocks: SlackBlock[]): SlackBlock[] =>
+    label ? [{ type: 'context', elements: [{ type: 'mrkdwn', text: `\`[${label}]\` not production` }] }, ...blocks] : blocks;
   return {
-    post: async (text, blocks) => (await call<{ ts: string }>('chat.postMessage', { channel, text, ...(blocks ? { blocks } : {}), unfurl_links: false })).ts,
-    update: async (ch, ts, text, blocks) => void (await call('chat.update', { channel: ch, ts, text, blocks })),
-    reply: async (ch, threadTs, text) => void (await call('chat.postMessage', { channel: ch, thread_ts: threadTs, text, unfurl_links: false })),
+    post: async (text, blocks) =>
+      (await call<{ ts: string }>('chat.postMessage', { channel, text: mark(text), ...(blocks ? { blocks: markBlocks(blocks) } : {}), unfurl_links: false })).ts,
+    update: async (ch, ts, text, blocks) => void (await call('chat.update', { channel: ch, ts, text: mark(text), blocks: markBlocks(blocks) })),
+    reply: async (ch, threadTs, text) => void (await call('chat.postMessage', { channel: ch, thread_ts: threadTs, text: mark(text), unfurl_links: false })),
     ephemeral: async (ch, user, text) => void (await call('chat.postEphemeral', { channel: ch, user, text })),
   };
 }

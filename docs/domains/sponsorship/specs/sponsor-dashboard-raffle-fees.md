@@ -139,7 +139,7 @@ Relative sizes, not dates. Each step is its own PR, in this order, because later
 ## Requirements and acceptance
 
 - The dashboard lists confirmed meetups with title, Zurich date, state from the event (upcoming, past, cancelled) and its raffle. Billing failing to load never hides the meetups. Every status has text, not only colour.
-- No raffle can be created, offered, linked or paid for a sponsor outside the eligibility rule, enforced on the server. Tests cover each sponsorship status.
+- A raffle can be created, offered or given a payment link only while its sponsor meets the eligibility rule, enforced on the server. A payment arriving after eligibility ends is recorded and flagged for the board. Tests cover each sponsorship status and this late-payment case.
 - A raffle payment never changes a sponsorship's status, tier, meetups or payment link. A test sends a raffle `checkout.session.completed` through `dispatchStripeEvent` and checks the sponsor row is unchanged.
 - Quotes: tests cover both fee choices, rounding at minor units, a tampered client total, a stale link after a new quote, a duplicate webhook, a renewal and a prorated upgrade. Totals on the offer, the payment page and the Stripe line items match.
 - "Sponsor covers the fees" is refused without a configured tariff and an approved policy. Sharing is refused without its gate.

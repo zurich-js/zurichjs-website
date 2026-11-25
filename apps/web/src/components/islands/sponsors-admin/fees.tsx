@@ -3,6 +3,7 @@
  * gate and the card tariffs). The server computes every amount; these only show it.
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { Loading, LoadFailed } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { FEE_CHOICE_LABEL, type FeeChoice } from '@zurichjs/sponsorship';
@@ -70,19 +71,14 @@ export function usePreview(id: string, feeChoice: FeeChoice, onSignedOut: () => 
 /** What the sponsor will be asked to pay, and what the card payment should cost and leave, before the link is made. */
 export function OfferPreview({ preview: p, error }: { preview: PaymentLinkPreview | null; error: string }) {
   if (error) return <Notice kind="error">{error}</Notice>;
-  if (!p) return <p class="m-0 text-compact text-ink-2">Working out the amounts…</p>;
+  if (!p) return <Loading size="compact">Working out the amounts…</Loading>;
   const rows: [string, string][] = [
     ['For', p.purpose],
     ['Amount', p.base],
-    ...(p.surcharge ? ([['Processing fee the sponsor pays', p.surcharge]] as [string, string][]) : []),
-    ['Total the sponsor pays', p.total],
-    ...(p.estimate
-      ? ([
-          [`Card fee, estimated from tariff ${p.estimate.tariffVersion}`, p.estimate.fee],
-          ['ZurichJS receives, estimated', p.estimate.net],
-        ] as [string, string][])
-      : []),
   ];
+  if (p.surcharge) rows.push(['Processing fee the sponsor pays', p.surcharge]);
+  rows.push(['Total the sponsor pays', p.total]);
+  if (p.estimate) rows.push([`Card fee, estimated from tariff ${p.estimate.tariffVersion}`, p.estimate.fee], ['ZurichJS receives, estimated', p.estimate.net]);
   return (
     <div class="flex flex-col gap-2">
       <dl class="m-0 grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
@@ -129,6 +125,7 @@ export function FeeChoiceField({ gate, value, onChange }: { gate: Gate | null; v
 export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
   const [data, setData] = useState<{ gate: Gate; tariffs: TariffView[] } | null>(null);
   const [loadError, setLoadError] = useState('');
+  const [attempt, setAttempt] = useState(0);
   const [adding, setAdding] = useState(false);
   const [f, setF] = useState({ version: '', ratePercent: '', fixedChf: '', note: '' });
   const [busy, setBusy] = useState(false);
@@ -139,6 +136,7 @@ export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
   const signedOut = useLatest(onSignedOut);
   useEffect(() => {
     let current = true;
+    setLoadError('');
     void api<{ gate: Gate; tariffs: TariffView[] }>(FEES).then(({ status, body }) => {
       if (!current) return;
       if (status === 401) return signedOut.current();
@@ -148,7 +146,7 @@ export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
     return () => {
       current = false;
     };
-  }, [signedOut]);
+  }, [signedOut, attempt]);
 
   const save = async (e: Event) => {
     e.preventDefault();
@@ -171,8 +169,8 @@ export function FeeSettings({ onSignedOut }: { onSignedOut: () => void }) {
       title="Processing fees"
       intro="ZurichJS covers card processing fees unless an offer says the sponsor covers them. That choice needs a card tariff here and a surcharge policy the owner approved."
     >
-      {!data && !loadError && <p class="m-0 text-compact text-ink-2">Loading the fee settings…</p>}
-      {loadError && <Notice kind="error">{loadError}</Notice>}
+      {!data && !loadError && <Loading size="compact">Loading the fee settings…</Loading>}
+      {loadError && <LoadFailed title={loadError} onRetry={() => setAttempt((n) => n + 1)} />}
       {data && (
         <>
           <p class="m-0 text-body">
@@ -297,12 +295,12 @@ export function SponsorPayments({ id, onSignedOut, onChanged }: { id: string; on
           </Button>
         </>
       )}
-      {!payments && !error && <p>Loading payments…</p>}
+      {!payments && !error && <Loading size="compact">Loading payments…</Loading>}
       {payments?.length === 0 && <p>No payments recorded.</p>}
       {payments?.map((p) => (
         <div key={p.sessionId} class="flex flex-col gap-2">
           <strong>{p.amount}</strong>
-          <span>{p.sessionId}</span>
+          <span class="break-all">{p.sessionId}</span>
           <span>
             {p.reason ?? 'Payment received.'} {p.resolution && `Board decision: ${p.resolution}.`}
           </span>

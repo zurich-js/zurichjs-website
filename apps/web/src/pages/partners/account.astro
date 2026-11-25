@@ -1,5 +1,6 @@
 ---
 /** The sponsorship page: sign in by email link, start or manage a company's sponsorship (docs/domains/sponsorship/frontend.md). Private, not indexed. */
+import Button from '@zurichjs/design/components/Button.astro';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import SponsorAccount from '~/components/islands/SponsorAccount';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -7,8 +8,10 @@ import { SITE } from '~/lib/content';
 ---
 
 <BaseLayout title="Your sponsorship" description="Start or manage your company's sponsorship of ZurichJS." noindex>
-  <PageOpening slot="opening" title="Your sponsorship" sub="Start your company's sponsorship of ZurichJS, or manage it with your colleagues: the plan, payment, details and logo." />
-  <div class="px-gut py-section">
+  <PageOpening slot="opening" title="Your sponsorship" sub="Manage your company’s plan, payments and contacts, or start a sponsorship." compact>
+    <div><Button href="#sponsor-account" inverse variant="secondary">Go to your account</Button></div>
+  </PageOpening>
+  <div id="sponsor-account" tabindex="-1" class="scroll-mt-header px-gut pt-12 pb-page-end">
     <SponsorAccount client:load contactEmail={SITE.email} />
   </div>
 </BaseLayout>

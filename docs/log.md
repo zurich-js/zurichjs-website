@@ -2,6 +2,8 @@
 
 ## 2026-11-25
 
+- Sponsors can review the current plan, recurring total and amount due today, and check a replacement offer after an unconfirmed change. [Sponsorship frontend](/domains/sponsorship/frontend.md)
+
 - Sponsors can confirm a [plan change with a processing fee](/domains/sponsorship/fees.md). Immediate upgrades require an approved proration policy and a matching CHF invoice preview.
 - The recurring coverage panel refreshes the sponsor history after a change and reloads its controls when the sponsorship ends. The past-meetup removal rule applies to [recurring coverage](/domains/sponsorship/overview.md).
 - **Update**: CI runs the site checks in parallel: the Playwright suite once per project (`mobile`, `desktop`) and the SEO gate with Lighthouse as their own job, each with its own build. Lighthouse runs only on pushes to `main` (owner, 25th November 2026). A pull request's run takes about 4 minutes instead of 8 ([CI](/systems/operations/ci.md)).

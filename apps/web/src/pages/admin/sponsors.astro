@@ -4,6 +4,7 @@
  * first (ADMIN_PASSWORD, enforced by the API on every deploy), then the sections.
  * This page holds no data itself. Not indexed.
  */
+import Button from '@zurichjs/design/components/Button.astro';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import MembershipAdmin from '~/components/islands/MembershipAdmin';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -12,8 +13,10 @@ import { SITE } from '~/lib/content';
 ---
 
 <BaseLayout title="Sponsors · Admin" description={`The ${SITE.association}'s admin area.`} noindex>
-  <PageOpening slot="opening" title="Admin" compact />
-  <div class="px-gut pt-12 pb-24">
+  <PageOpening slot="opening" title="Admin" compact>
+    <div><Button href="#sponsor-admin" inverse variant="secondary">Go to sponsor admin</Button></div>
+  </PageOpening>
+  <div id="sponsor-admin" tabindex="-1" class="scroll-mt-header px-gut pt-12 pb-page-end">
     <MembershipAdmin client:load section="sponsors" />
   </div>
 </BaseLayout>

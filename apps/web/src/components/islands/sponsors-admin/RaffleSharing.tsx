@@ -40,8 +40,10 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
   const path = `/api/membership/admin/raffles/${encodeURIComponent(raffleId)}/sharing`;
 
   const load = async () => {
+    setBusy(true);
     setError('');
     const { status, body } = await api<Data>(path);
+    setBusy(false);
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not load the sharing.');
     setData(body);
@@ -66,8 +68,8 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
       <div class="flex flex-col gap-2">
         <p class="m-0 text-compact">{summary.offered ? 'Sharing with the sponsor: ' + summary.purpose : 'Entrant records and retention'}</p>
         <div>
-          <Button variant="secondary" onClick={() => void load()}>
-            Sharing
+          <Button variant="secondary" disabled={busy} onClick={() => void load()}>
+            {busy ? 'Loading sharing…' : 'Sharing'}
           </Button>
         </div>
         {error && <Notice kind="error">{error}</Notice>}
@@ -90,8 +92,8 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
   return (
     <div class="flex flex-col gap-4">
       <p class="m-0 text-compact">
-        {data.counts.valid} {data.counts.valid === 1 ? 'entrant’s' : 'entrants’'} permission counts now ({data.counts.given} given, {data.counts.withdrawn} withdrawn). Purpose:{' '}
-        {data.purpose}.
+        {data.counts.valid} {data.counts.valid === 1 ? 'entrant’s' : 'entrants’'} permission counts now ({data.counts.given} given, {data.counts.withdrawn} withdrawn).{' '}
+        {data.purpose && `Purpose: ${data.purpose}.`}
       </p>
       {!data.gate.open && <p class="m-0 text-compact text-ink-2">{data.gate.reason}</p>}
       {data.gate.open && data.preview.length > 0 && (
@@ -129,7 +131,7 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
             />
           ))}
           <SelectField
-            label="To"
+            label="Recipient"
             value={recipient}
             onChange={(e) => {
               setConfirmation('');
@@ -181,7 +183,7 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
           <div>
             <Button
               variant="primary"
-              disabled={busy || !sure || !chosen.length || !who}
+              disabled={busy || !sure || !chosen.length || !who || !fields.length || !Number.isInteger(Number(days)) || Number(days) < 1 || Number(days) > 30}
               onClick={() =>
                 void send(
                   { action: 'release', entryIds: picked, recipientContactId: recipient, fields, days: Number(days), preview: confirmation, confirm: true },
@@ -225,7 +227,7 @@ export function RaffleSharing({ raffleId, summary, onSignedOut }: { raffleId: st
           </p>
           {erasable && (
             <>
-              <Checkbox label="I erase every entrant’s name and email for this raffle." checked={erase} onChange={(e) => setErase((e.target as HTMLInputElement).checked)} />
+              <Checkbox label="I erase every entrant’s name and email for this raffle." checked={erase} onChange={(e) => setErase(e.currentTarget.checked)} />
               <div>
                 <Button variant="secondary" disabled={busy || !erase} onClick={() => void send({ action: 'erase', confirm: true }, 'Entries erased.')}>
                   Erase entries

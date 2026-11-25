@@ -5,6 +5,7 @@
  * /api/membership/admin/raffles/[id].
  */
 import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
+import { Loading, LoadFailed } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -36,7 +37,7 @@ const SETTLEMENT: Record<AdminRaffleView['settlement']['state'], (s: AdminRaffle
   balanced: (s) => `Spent ${s.spentLabel}, as offered.`,
 };
 
-type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 'refunded' | 'open' | 'draw' | 'redraw' | 'fulfil' | null;
+type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 'refunded' | 'open' | 'draw' | 'redraw' | 'fulfil';
 
 export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => void }) {
   const [data, setData] = useState<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate } | null>(null);
@@ -46,11 +47,11 @@ export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => vo
   const revision = useRef({ value: 0 });
   const load = useCallback(async () => {
     const at = ++revision.current.value;
+    setError('');
     const { status, body } = await api<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate }>(`/api/membership/admin/raffles?sponsorId=${encodeURIComponent(id)}`);
     if (at !== revision.current.value) return;
     if (status === 401) return signedOut.current();
     if (status !== 200) return setError(body.error ?? 'Could not load the raffles.');
-    setError('');
     setData(body);
   }, [id]);
   useEffect(() => {
@@ -67,8 +68,8 @@ export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => vo
       title="Raffle add-ons"
       intro="Paid apart from the sponsorship. ZurichJS runs the raffle. Entrant names and emails show here only where the board needs them (the winner, a release), never in Slack."
     >
-      {!data && !error && <p class="m-0 text-compact text-ink-2">Loading the raffles…</p>}
-      {error && <Notice kind="error">{error}</Notice>}
+      {!data && !error && <Loading size="compact">Loading the raffles…</Loading>}
+      {error && <LoadFailed title={error} onRetry={() => void load()} />}
       {data && !data.terms.open && <p class="m-0 text-compact text-ink-2">{data.terms.reason}</p>}
       {data && data.raffles.length === 0 && <p class="m-0 text-compact text-ink-2">No raffle proposed yet.</p>}
       {data?.raffles.map((r) => (
@@ -93,7 +94,7 @@ function RaffleCard({
   onSignedOut: () => void;
   onChanged: () => Promise<void>;
 }) {
-  const [form, setForm] = useState<Form>(null);
+  const [form, setForm] = useState<Form | null>(null);
   const [f, setF] = useState<Record<string, string>>({});
   const [feeChoice, setFeeChoice] = useState<FeeChoice>('absorb');
   const [busy, setBusy] = useState(false);
@@ -119,29 +120,28 @@ function RaffleCard({
   const open = (which: Form) => {
     setDone('');
     setError('');
+    setF({});
+    setFeeChoice('absorb');
     setForm(form === which ? null : which);
   };
   const s = r.stage;
   const money = r.funding === 'paid' || r.funding === 'refund_pending';
-  const actions: [Form | 'ready' | 'refund' | 'resume' | 'close', string][] = [
-    ...(s === 'ready' && rules.open ? [['open', 'Open entries'] as [Form, string]] : []),
-    ...(s === 'open' ? [['close', 'Close entries'] as ['close', string]] : []),
-    ...(s === 'closed' ? [['draw', 'Draw the winner'] as [Form, string]] : []),
-    ...(s === 'drawn' && r.claimDecision === 'expired' ? [['redraw', 'Draw again'] as [Form, string]] : []),
-    ...(s === 'drawn' && r.claimDecision === 'claimed' ? [['fulfil', 'Prize delivered'] as [Form, string]] : []),
-    ...((s === 'proposed' || (s === 'on_hold' && r.funding === 'unpaid')) && terms.open
-      ? [['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer'] as [Form, string]]
-      : []),
-    ...(s === 'proposed' ? [['decline', 'Decline'] as [Form, string]] : []),
-    ...(r.fulfilment === 'in_kind' && r.funding === 'unpaid' && s === 'offered' ? [['in_kind', 'Prize arrived'] as [Form, string]] : []),
-    ...(r.fulfilment === 'zurichjs' && money ? [['ledger', 'Record a cost'] as [Form, string]] : []),
-    ...(s === 'offered' ? [['ready', 'Mark ready'] as ['ready', string]] : []),
-    ...(s === 'on_hold' ? [['resume', 'Go ahead'] as ['resume', string]] : []),
-    ...(['offered', 'ready', 'open', 'closed', 'drawn'].includes(s) ? [['hold', 'Put on hold'] as [Form, string]] : []),
-    ...(['proposed', 'offered', 'ready', 'on_hold'].includes(s) ? [['cancel', 'Cancel'] as [Form, string]] : []),
-    ...(r.funding === 'paid' && r.flags.includes('refund_review') ? [['refund', 'Decide: refund'] as ['refund', string]] : []),
-    ...(r.funding === 'refund_pending' ? [['refunded', 'Record the refund'] as [Form, string]] : []),
-  ];
+  const actions: [Form | 'ready' | 'refund' | 'resume' | 'close', string][] = [];
+  if (s === 'ready' && rules.open) actions.push(['open', 'Open entries']);
+  if (s === 'open') actions.push(['close', 'Close entries']);
+  if (s === 'closed') actions.push(['draw', 'Draw the winner']);
+  if (s === 'drawn' && r.claimDecision === 'expired') actions.push(['redraw', 'Draw again']);
+  if (s === 'drawn' && r.claimDecision === 'claimed') actions.push(['fulfil', 'Prize delivered']);
+  if ((s === 'proposed' || (s === 'on_hold' && r.funding === 'unpaid')) && terms.open) actions.push(['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer']);
+  if (s === 'proposed') actions.push(['decline', 'Decline']);
+  if (r.fulfilment === 'in_kind' && r.funding === 'unpaid' && s === 'offered') actions.push(['in_kind', 'Prize arrived']);
+  if (r.fulfilment === 'zurichjs' && money) actions.push(['ledger', 'Record a cost']);
+  if (s === 'offered') actions.push(['ready', 'Mark ready']);
+  if (s === 'on_hold') actions.push(['resume', 'Go ahead']);
+  if (['offered', 'ready', 'open', 'closed', 'drawn'].includes(s)) actions.push(['hold', 'Put on hold']);
+  if (['proposed', 'offered', 'ready', 'on_hold'].includes(s)) actions.push(['cancel', 'Cancel raffle']);
+  if (r.funding === 'paid' && r.flags.includes('refund_review')) actions.push(['refund', 'Decide: refund']);
+  if (r.funding === 'refund_pending') actions.push(['refunded', 'Record the refund']);
 
   return (
     <article aria-label={`${r.prize}, ${r.eventTitle}`} class={cardClass('outline', 'md')}>
@@ -232,7 +232,6 @@ function RaffleCard({
           ))}
         </ol>
       )}
-      {r.sharing && r.entries !== null && <RaffleSharing raffleId={r.id} summary={r.sharing} onSignedOut={onSignedOut} />}
       {r.reason && <p class="m-0 text-compact text-ink-2">Note to the sponsor: {r.reason}</p>}
       {actions.length > 0 && (
         <div class="flex flex-wrap gap-3">
@@ -259,7 +258,13 @@ function RaffleCard({
                 {label}
               </Button>
             ) : (
-              <Button key={key} variant={form === key ? 'primary' : 'secondary'} aria-expanded={form === key} disabled={busy} onClick={() => open(key)}>
+              <Button
+                key={key}
+                variant={form === key ? 'primary' : key === 'cancel' || key === 'decline' ? 'plain' : 'secondary'}
+                aria-expanded={form === key}
+                disabled={busy}
+                onClick={() => open(key)}
+              >
                 {label}
               </Button>
             ),
@@ -378,7 +383,7 @@ function RaffleCard({
           )}
           <div class="flex flex-wrap gap-3">
             <Button type="submit" variant="primary" disabled={busy}>
-              {busy ? 'Saving…' : form === 'draw' ? 'Draw now' : 'Save'}
+              {busy ? 'Saving…' : form === 'draw' ? 'Draw now' : form === 'offer' ? 'Send offer' : form === 'cancel' ? 'Confirm cancellation' : 'Save'}
             </Button>
             <Button variant="secondary" onClick={() => setForm(null)}>
               Cancel
@@ -388,6 +393,7 @@ function RaffleCard({
       )}
       {error && <Notice kind="error">{error}</Notice>}
       {done && <Notice kind="done">{done}</Notice>}
+      {r.sharing && r.entries !== null && <RaffleSharing raffleId={r.id} summary={r.sharing} onSignedOut={onSignedOut} />}
     </article>
   );
 }

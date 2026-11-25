@@ -4,6 +4,7 @@
  * a meetup that has happened (on its current date in Sanity, as the sponsor sees it) cannot be taken off.
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { Loading } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { SelectField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -78,7 +79,7 @@ export function Coverage({ id, sponsor: s, onChanged, onSignedOut }: { id: strin
       title="Covered meetups"
       intro={`Being a sponsor does not cover every meetup. Confirm each meetup ${s.companyName} sponsors; only those show on their sponsorship page.`}
     >
-      {!rows && !error && <p class="m-0 text-compact text-ink-2">Loading the covered meetups…</p>}
+      {!rows && !error && <Loading size="compact">Loading the covered meetups…</Loading>}
       {rows && covered.length === 0 && <p class="m-0 text-compact text-ink-2">No meetup is confirmed yet.</p>}
       {rows && covered.length > 0 && !checked && (
         <p class="m-0 text-compact text-ink-2">Sanity could not be reached, so dates are as last saved. Taking a meetup off waits until its current date can be checked.</p>
@@ -109,7 +110,10 @@ export function Coverage({ id, sponsor: s, onChanged, onSignedOut }: { id: strin
         <div class="flex flex-col gap-3 md:flex-row md:items-end">
           <SelectField
             label="Add a meetup"
-            hint={meetupsError || (meetups && !choices.length ? 'Every upcoming published meetup is covered already.' : undefined)}
+            hint={
+              meetupsError ||
+              (meetups?.length === 0 ? 'No upcoming meetup is published yet.' : meetups && !choices.length ? 'Every upcoming published meetup is covered already.' : undefined)
+            }
             value={pick}
             onChange={(e) => setPick(inputValue(e))}
             disabled={!meetups || !choices.length}

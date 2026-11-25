@@ -110,7 +110,7 @@ export function AddSponsor({
     <section aria-labelledby="h-add" class="flex flex-col gap-6">
       <div class="flex flex-col items-start gap-4">
         <TextButton onClick={onBack}>Back to sponsors</TextButton>
-        <Heading id="h-add" size="subsection" focus={heading} class="scroll-mt-6">
+        <Heading id="h-add" size="subsection" focus={heading} class="scroll-mt-header">
           {imported ? 'Import a running sponsorship' : 'Invite a sponsor'}
         </Heading>
         <p class="m-0 max-w-reading text-compact text-ink-2">

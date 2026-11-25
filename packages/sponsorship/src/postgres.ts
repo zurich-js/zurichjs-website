@@ -7,7 +7,17 @@
  * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { settleInvoice, DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
+import {
+  settleInvoice,
+  DuplicateContact,
+  NotFound,
+  contactRequired,
+  normaliseEmail,
+  type SponsorStore,
+  type SponsorSummary,
+  type StripeExpect,
+  type StripeLinks,
+} from './store.ts';
 import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
@@ -334,6 +344,22 @@ export function postgresStore(db: Queryable): SponsorStore {
       (await q<{ meetup_rebuild_id: string }>('select meetup_rebuild_id from sponsors where meetup_rebuild_id is not null')).map((r) => r.meetup_rebuild_id),
     async acknowledgeMeetupRebuilds(versions) {
       await q('update sponsors set meetup_rebuild_id = null where meetup_rebuild_id = any($1::uuid[])', [versions]);
+    },
+    async summaries(sponsorIds) {
+      const byId = new Map<string, SponsorSummary>(sponsorIds.map((id) => [id.toLowerCase(), { meetups: [], hasContract: false, latestLogo: null }]));
+      const out = new Map(sponsorIds.map((id) => [id, byId.get(id.toLowerCase())!]));
+      const ids = [...byId.keys()].filter((id) => UUID.test(id));
+      if (!ids.length) return out;
+      const [meetups, contracts, logos] = await Promise.all([
+        q('select sponsor_id, event_id, title, date from sponsor_meetups where sponsor_id = any($1::uuid[]) order by date, event_id', [ids]),
+        q('select distinct sponsor_id from sponsor_documents where sponsor_id = any($1::uuid[])', [ids]),
+        q('select distinct on (sponsor_id) * from sponsor_logos where sponsor_id = any($1::uuid[]) order by sponsor_id, uploaded_at desc', [ids]),
+      ]);
+      const of = (sponsorId: unknown) => byId.get(String(sponsorId).toLowerCase())!;
+      for (const { sponsor_id, ...m } of meetups) of(sponsor_id).meetups.push(camel<SponsorMeetup>(m));
+      for (const r of contracts) of(r.sponsor_id).hasContract = true;
+      for (const r of logos) of(r.sponsor_id).latestLogo = camel<Logo>(r);
+      return out;
     },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];

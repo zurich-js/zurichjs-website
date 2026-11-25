@@ -289,7 +289,7 @@ d('sponsorship database', () => {
   });
 
   it('records agreements, logos and contracts', async () => {
-    const s = (await store.search({ q: 'acme' }))[0]!;
+    const s = (await store.get((await store.contactByEmail('ada@acme.ch'))!.sponsorId))!;
     const ag = await store.acceptAgreement(
       s.id,
       { version: '2026-11-18', signerName: 'Ada', signerTitle: 'CTO', signerEmail: 'ada@acme.ch', context: 'start', summary: 'Community Friend, quarterly' },
@@ -310,6 +310,24 @@ d('sponsorship database', () => {
     expect(pgdb.fails(`insert into sponsor_logos (sponsor_id, blob_key, content_type, bytes, filename, uploaded_by) values ('${s.id}', 'x', 'text/html', 10, 'x', 'x')`)).toMatch(
       /check/,
     );
+  });
+
+  it('summarises many sponsors in three queries, as their own reads do', async () => {
+    const acmeId = (await store.contactByEmail('ada@acme.ch'))!.sponsorId;
+    const { sponsor: bare } = await store.create({ ...acme, companyName: 'Bare' }, { email: 'b@bare.ch', name: 'B', role: 'primary' }, board);
+    let queries = 0;
+    const counted = postgresStore({ query: (text, params) => (queries++, pool.query(text, params)) });
+    const summaries = await counted.summaries([acmeId, bare.id, 'not-a-uuid']);
+    expect(queries).toBe(3);
+    for (const id of [acmeId, bare.id])
+      expect(summaries.get(id)).toEqual({ meetups: await store.meetups(id), hasContract: (await store.documents(id)).length > 0, latestLogo: (await store.logos(id))[0] ?? null });
+    expect(summaries.get(acmeId)).toMatchObject({ hasContract: true, latestLogo: { filename: 'acme.svg' } });
+    expect(summaries.get(acmeId)?.meetups.map((m) => m.eventId)).toEqual(['e2', 'e3']);
+    expect(summaries.get('not-a-uuid')).toEqual({ meetups: [], hasContract: false, latestLogo: null });
+    const mixedCase = await counted.summaries([acmeId, acmeId.toUpperCase(), bare.id]);
+    expect(mixedCase.get(acmeId.toUpperCase())).toEqual(summaries.get(acmeId));
+    expect(mixedCase.get(acmeId)).toEqual(summaries.get(acmeId));
+    expect(mixedCase.get(bare.id)).toEqual(summaries.get(bare.id));
   });
 
   it('handles each Stripe event once, separately from memberships', async () => {

@@ -27,12 +27,11 @@ export const handleAdminSponsors = (request: Request, deps: SponsorAdminDeps = {
       const status = STATUSES.find((s) => s === url.searchParams.get('status'));
       const sponsors = await store.search({ q, status, limit: 500 });
       const today = zurichDay(deps.now ? new Date(deps.now) : new Date());
-      const rows = await Promise.all(
-        sponsors.map(async (s) => {
-          const [meetups, documents, needs] = await Promise.all([store.meetups(s.id), store.documents(s.id), attention(s, store, today)]);
-          return { ...adminSponsorView(s, meetups, documents.length > 0), attention: needs };
-        }),
-      );
+      const summaries = await store.summaries(sponsors.map((s) => s.id));
+      const rows = sponsors.map((s) => {
+        const summary = summaries.get(s.id)!;
+        return { ...adminSponsorView(s, summary.meetups, summary.hasContract), attention: attention(s, summary, today) };
+      });
       const counts = q || status ? null : Object.fromEntries(STATUSES.map((s) => [s, sponsors.filter((x) => x.status === s).length]));
       return json(200, { ok: true, sponsors: rows, counts, attentionLabels: ATTENTION_LABEL });
     },

@@ -6,7 +6,7 @@
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
 import { eventCardAlt } from '~/lib/og';
-import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
+import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventSpeakerIds, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Heading from '@zurichjs/design/components/Heading.astro';
@@ -39,8 +39,7 @@ const state = resolveState(ev, BUILD_TIME);
 const p = presentEvent(ev, { now: BUILD_TIME, ticketing });
 const url = canonicalUrl(eventHref(ev));
 const byId = new Map(c.speakers.map((s) => [s.id, s]));
-const speakerIds = [...new Set([...eventTalks(ev).flatMap((t) => t.speakerIds), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
-const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
+const speakers = eventSpeakerIds(ev).map((id) => byId.get(id)).filter((s) => !!s);
 const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 48) : undefined }));
 const gallery = mediaForEvent(c.media.items, ev.slug);
 // Honest about missing photos: "unavailable" when this build could not read the archive, never "coming soon".

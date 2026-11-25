@@ -2,6 +2,8 @@
 
 ## 2026-11-25
 
+- **Update**: [Event structured data](/systems/seo.md) includes recap speakers and uses the published closing time when the event has no explicit end.
+
 - **Update**: Web Zurich is a current community partner again (owner, 25th November 2026); it had been removed from every list on 19th November ([Partners](/domains/partners/overview.md)).
 
 ## 2026-11-24

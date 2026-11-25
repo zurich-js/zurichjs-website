@@ -3,7 +3,7 @@ type: System
 title: SEO and LLM surface
 description: What search engines and LLM crawlers get, the SEO parity gate and its rules, the production baseline it compares against, and what happens to every old URL.
 tags: [seo, llms, ci]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-25T00:00:00Z'
 ---
 
 # SEO and LLM surface
@@ -15,10 +15,12 @@ SEO and LLM parity with the old production site is non-negotiable (owner, 2026-1
 Builders live in `packages/seo/src/index.ts`; pages call them.
 
 - **Meta:** title, description, canonical (absolute, on `https://zurichjs.com`), Open Graph and Twitter tags with a generated 1200×630 share image ([Web app](/systems/web.md)), `index,follow` or `noindex,nofollow`.
-- **JSON-LD:** Organization, WebSite and LocalBusiness on the home page; Event on every event page (the offer is always free: `price: 0`, `CHF`, the Meetup URL; `endDate` only from `endsAt`); Person on speaker pages; BreadcrumbList on detail pages; FAQPage on `/contact` and the landing pages.
+- **JSON-LD:** Organization, WebSite and LocalBusiness on the home page; Event on dated event pages; Person on speaker pages; BreadcrumbList on detail pages; FAQPage on `/contact` and the landing pages.
 - **`/sitemap.xml`:** every indexable route, every event and speaker, with `lastmod` from Sanity `_updatedAt`. Noindex and redirected routes are left out.
 - **`/robots.txt`:** allows all, disallows the private areas, explicitly allows the AI crawlers, and points to the sitemap. A draft preview build disallows everything.
 - **LLM files:** `/llms.txt` and `/llms-full.txt`, linked from `/ai-context` and the footer; `/ai-context` is in the sitemap.
+
+Event performers come from public speaker profiles referenced by programme or recap talks. The end comes from `endsAt` or a timed closing item in the Zurich programme. The free CHF offer links to Meetup when available. Its registration opening time is unknown, so the offer omits `validFrom`.
 
 ## The parity gate
 

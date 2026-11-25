@@ -109,12 +109,23 @@ export function follow(e: MouseEvent, go: () => void) {
 }
 
 /**
- * The result of an admin action: an error (an alert) or what was done (a status). Long emails and links wrap.
+ * The result of an admin action: an error (an alert), what was done (a status), or a note when it
+ * was done with a caveat (saved, but Stripe was not updated). Long emails and links wrap.
  * `detail` goes under the sentence (a link to copy); `focusRef` lets the caller move focus to it.
  */
-export function Notice({ kind, focusRef, detail, children }: { kind: 'error' | 'done'; focusRef?: Ref<HTMLDivElement>; detail?: ComponentChildren; children: ComponentChildren }) {
+export function Notice({
+  kind,
+  focusRef,
+  detail,
+  children,
+}: {
+  kind: 'error' | 'done' | 'note';
+  focusRef?: Ref<HTMLDivElement>;
+  detail?: ComponentChildren;
+  children: ComponentChildren;
+}) {
   return (
-    <Result tone={kind === 'error' ? 'danger' : 'success'} live focusRef={focusRef} title={children} class="break-words">
+    <Result tone={kind === 'error' ? 'danger' : kind === 'done' ? 'success' : 'note'} live focusRef={focusRef} title={children} class="break-words">
       {detail}
     </Result>
   );

@@ -259,7 +259,13 @@ export async function undoEnd(s: Sponsor, actor: Actor, deps: LifecycleDeps): Pr
   return back;
 }
 
-/** After any end: Stripe stops and nothing points at it any more (a later restart starts clean). */
+/** Stripe pages or a subscription an ended sponsorship still points at: a close that failed half-way. */
+export const leftInStripe = (s: Sponsor) => !!(s.stripeSubscriptionId || s.checkoutSessionId || s.paymentLinkId);
+
+/**
+ * After any end: Stripe stops and nothing points at it any more (a later restart starts clean).
+ * Each id is forgotten only once Stripe confirms, so after a failure it is safe to run again.
+ */
 export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void> {
   if (s.stripeSubscriptionId) await cancelNow(s.stripeSubscriptionId, deps.stripe);
   await closeCheckout(s, deps.store, deps.stripe);
@@ -269,14 +275,20 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
 
 /**
  * The board ends a sponsorship outright (or withdraws an invitation). Our record changes first,
- * so Stripe's own "deleted" event finds it ended and does not call it unpaid.
+ * so Stripe's own "deleted" event finds it ended and does not call it unpaid. If Stripe fails
+ * after that, the same request again finishes the job: it closes what is left in Stripe, then
+ * emails and posts as the first attempt would have.
  */
 export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'terminated' | 'withdrawn'>, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
-  if (s.status === 'ended') return s;
-  if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
-  if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
-  const ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason });
-  await closeStripe(s, deps);
+  let ended = s;
+  if (s.status === 'ended') {
+    if (s.endedReason !== reason || !leftInStripe(s)) return s;
+  } else {
+    if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
+    if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
+    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason });
+  }
+  await closeStripe(ended, deps);
   if (reason === 'terminated') await emailSponsor(ended, 'sponsor-ended', (base) => ({ ...base, reason }), { ...deps, key: `sponsor-ended:${s.id}:${reason}` });
   await note(
     reason === 'withdrawn'
@@ -353,13 +365,24 @@ export interface RecordedPayment {
 export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
-  if (s.paidUntil && p.paidUntil <= s.paidUntil) throw new SponsorshipError(`It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.`, 400, 'paidUntil');
-  if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
+  // The same payment again after a failure half-way: an earlier attempt started recording this date
+  // (`payment_recording`) and did not finish (`payment_recorded`). Only that is resumed; any other
+  // request for the current date is refused as before (an imported sponsorship's own date included).
+  const events = await deps.store.events(s.id);
+  const started = (type: string) => events.some((e) => e.type === type && e.payload.paidUntil === p.paidUntil);
+  const resume = s.paidUntil === p.paidUntil && started('payment_recording') && !started('payment_recorded');
+  if (!resume) {
+    if (s.paidUntil && p.paidUntil <= s.paidUntil) throw new SponsorshipError(`It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.`, 400, 'paidUntil');
+    if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
+  }
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
-  let updated = await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
+  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { paidUntil: p.paidUntil });
+  let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
+  await closeCheckout(updated, deps.store, deps.stripe);
+  await closePaymentLink(updated, deps.store, deps.stripe);
   await deps.store.log(s.id, 'payment_recorded', actor, { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) });
   const paidThrough = longDate(lastDay(p.paidUntil));
   await emailSponsor(updated, 'sponsor-payment-recorded', (base) => ({ ...base, amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }), {
@@ -385,15 +408,18 @@ export async function setBundle(s: Sponsor, meetups: SponsorMeetup[], pricePerMe
   const before = await deps.store.meetups(s.id);
   const priceChanged = pricePerMeetup !== s.pricePerMeetup || before.length !== meetups.length;
   if (priceChanged && s.status !== 'pending') throw new SponsorshipError('It is paid already: only the meetups can move, not the price or the number of meetups.', 409, 'eventIds');
-  await deps.store.setMeetups(s.id, meetups, actor);
-  let updated = s;
+  // Not started yet: the open payment pages close first, so a failure saves nothing and never leaves
+  // a page payable at the old total.
   if (s.status === 'pending') {
-    if (pricePerMeetup !== s.pricePerMeetup) updated = await deps.store.update(s.id, { pricePerMeetup }, actor);
     await closeCheckout(s, deps.store, deps.stripe);
-    if (s.paymentLinkId) await closePaymentLink(s, deps.store, deps.stripe);
-  } else {
-    updated = await deps.store.update(s.id, { paidUntil: afterLastMeetup(meetups) }, actor);
+    await closePaymentLink(s, deps.store, deps.stripe);
   }
+  await deps.store.setMeetups(s.id, meetups, actor);
+  const updated = await deps.store.update(
+    s.id,
+    s.status === 'pending' ? (pricePerMeetup !== s.pricePerMeetup ? { pricePerMeetup } : {}) : { paidUntil: afterLastMeetup(meetups) },
+    actor,
+  );
   await note(
     `:calendar: ${who(s)} now covers ${meetups.map((m) => slackText(meetupLabel(m))).join('; ')}${s.status === 'pending' ? ` at ${bundleLabel(s.tier, meetups.length, pricePerMeetup)}` : ''}.`,
     deps,

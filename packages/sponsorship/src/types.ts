@@ -197,3 +197,16 @@ export interface SponsorEvent {
   payload: Record<string, unknown>;
   at: string;
 }
+
+/** A closing attempt with no link ID remains unresolved until the provider identifies its link. */
+export interface LinkAttempt {
+  key: string;
+  sponsorId: string;
+  /** Exact form body used within the provider replay window. */
+  request: string;
+  linkId: string | null;
+  state: 'open' | 'kept' | 'closing' | 'closed';
+  /** Elapsed time on the store's clock when the attempt was read. */
+  ageMs: number;
+  createdAt: string;
+}

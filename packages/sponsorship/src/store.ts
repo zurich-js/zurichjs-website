@@ -1,5 +1,20 @@
 import { checkTransition, TransitionError } from './state.ts';
-import type { Actor, Agreement, Contact, EndedReason, Logo, NewContact, NewSponsor, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch, Status } from './types.ts';
+import type {
+  Actor,
+  Agreement,
+  Contact,
+  EndedReason,
+  LinkAttempt,
+  Logo,
+  NewContact,
+  NewSponsor,
+  Sponsor,
+  SponsorDocument,
+  SponsorEvent,
+  SponsorMeetup,
+  SponsorPatch,
+  Status,
+} from './types.ts';
 
 export interface TransitionInput {
   /** The status the caller saw: a different one now is a `conflict` (double click, retried webhook). */
@@ -21,6 +36,27 @@ export interface StripeLinks {
   paymentLinkUrl?: string | null;
 }
 
+/** What `create` writes with the sponsor, in the same statement. */
+export interface CreateOptions {
+  /** One-time sponsorships: the meetups it covers. */
+  meetups?: SponsorMeetup[];
+  /**
+   * The email belongs to a contact a colleague added elsewhere and nobody accepted: move that
+   * contact here instead of refusing (the board inviting someone). Any other holder is a DuplicateContact.
+   */
+  claimUnconfirmed?: boolean;
+}
+
+/** Compare-and-set for `linkStripe`: the value the caller expects in the column now. */
+export interface StripeExpect {
+  paymentLinkId?: string | null;
+  checkoutSessionId?: string | null;
+  /** The status it must still have (a payment link is kept only while the sponsorship is unpaid). */
+  status?: Status;
+  /** A payment link attempt that must still be open; the same write marks it kept (beginLinkAttempt). */
+  attempt?: string;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
 export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
@@ -35,10 +71,15 @@ export interface SponsorStore {
   byPaymentLink(id: string): Promise<Sponsor | null>;
   /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
-  /** A sponsor with its first contact. Fails with DuplicateContact when the email belongs to a sponsor already. */
-  create(s: NewSponsor, contact: NewContact, actor: Actor): Promise<{ sponsor: Sponsor; contact: Contact }>;
+  /**
+   * A sponsor with its first contact (and its meetups), all or nothing. Fails with DuplicateContact
+   * when the email belongs to a sponsor already.
+   */
+  create(s: NewSponsor, contact: NewContact, actor: Actor, opts?: CreateOptions): Promise<{ sponsor: Sponsor; contact: Contact }>;
   update(id: string, patch: SponsorPatch, actor: Actor): Promise<Sponsor>;
   linkStripe(id: string, links: StripeLinks, actor: Actor): Promise<Sponsor>;
+  /** `linkStripe` only while the `expect` columns still hold those values (two requests at once): null otherwise. */
+  linkStripeIf(id: string, expect: StripeExpect, links: StripeLinks, actor: Actor): Promise<Sponsor | null>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
 
   /** The meetups of a one-time sponsorship, by date. */
@@ -67,6 +108,17 @@ export interface SponsorStore {
   getDocument(id: string): Promise<SponsorDocument | null>;
   /** Newest first. */
   documents(sponsorId: string): Promise<SponsorDocument[]>;
+
+  /** Persist the request before its first POST. */
+  beginLinkAttempt(sponsorId: string, request: string, key?: string): Promise<LinkAttempt>;
+  /** Stripe answered with this link. It becomes the sponsor's with `linkStripeIf(…, { attempt: key }, …)`. */
+  linkAttemptCreated(key: string, linkId: string): Promise<void>;
+  /** Marks a link that was not kept for switching off (`closing`). False once it is kept or closed. */
+  claimLinkCleanup(key: string, linkId?: string): Promise<boolean>;
+  /** Stripe confirmed the link is off. */
+  linkAttemptClosed(key: string): Promise<void>;
+  /** Attempts still open or closing, least recently attempted first. */
+  unsettledLinkAttempts(filter: { sponsorId?: string; limit: number }): Promise<LinkAttempt[]>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
   markStripeEvent(eventId: string, type: string): Promise<void>;
@@ -104,6 +156,14 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
   };
 }
 
+const STRIPE_FIELD = {
+  customerId: 'stripeCustomerId',
+  subscriptionId: 'stripeSubscriptionId',
+  checkoutSessionId: 'checkoutSessionId',
+  paymentLinkId: 'paymentLinkId',
+  paymentLinkUrl: 'paymentLinkUrl',
+} as const satisfies Record<keyof StripeLinks, keyof Sponsor>;
+
 const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
 
 /** In-memory store with the same rules as the database. */
@@ -119,6 +179,12 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
   const documents = new Map<string, SponsorDocument>();
   const log: SponsorEvent[] = [];
   const stripeEvents = new Set<string>();
+  const linkAttempts: LinkAttempt[] = [];
+  const attempt = (key: string) => {
+    const a = linkAttempts.find((x) => x.key === key);
+    if (!a) throw new NotFound('payment link attempt');
+    return a;
+  };
 
   const record = (sponsorId: string, type: string, actor: Actor, extra: Partial<SponsorEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, sponsorId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now(), ...extra });
@@ -131,6 +197,15 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     const saved = { ...s, updatedAt: now() };
     sponsors.set(s.id, saved);
     return { ...saved };
+  };
+  const linkStripe = (s: Sponsor, links: StripeLinks, actor: Actor) => {
+    record(s.id, 'stripe_linked', actor, { payload: { ...links } });
+    const set = Object.fromEntries(
+      Object.entries(links)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [STRIPE_FIELD[k as keyof StripeLinks], v]),
+    );
+    return save({ ...s, ...set });
   };
   const emailTaken = (email: string) => [...contacts.values()].some((c) => c.email === email);
   const findBy = async (pred: (s: Sponsor) => boolean) => {
@@ -151,9 +226,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .slice(0, limit)
         .map((s) => ({ ...s }));
     },
-    async create(input, c, actor) {
+    async create(input, c, actor, opts = {}) {
       const email = normaliseEmail(c.email);
-      if (emailTaken(email)) throw new DuplicateContact(email);
+      const held = [...contacts.values()].find((x) => x.email === email);
+      const movable = !!opts.claimUnconfirmed && !!held && held.addedBy === 'sponsor' && !held.userId;
+      if (held && !movable) throw new DuplicateContact(email);
       const at = now();
       const s: Sponsor = {
         ...input,
@@ -171,32 +248,33 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         updatedAt: at,
       };
       sponsors.set(s.id, s);
-      const contact: Contact = { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: at };
+      const contact: Contact = movable
+        ? { ...held!, sponsorId: s.id, name: c.name, role: c.role, addedBy: c.addedBy ?? 'board' }
+        : { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: at };
       contacts.set(contact.id, contact);
       record(s.id, 'created', actor, { toStatus: s.status, payload: { source: s.source } });
+      if (movable) record(held!.sponsorId, 'contact_removed', actor, { payload: { contactId: held!.id, movedTo: s.id } });
+      const list = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
+      if (list.length) {
+        meetups.set(s.id, list);
+        record(s.id, 'meetups_set', actor, { payload: { events: list.map((m) => m.eventId) } });
+      }
       return { sponsor: { ...s }, contact: { ...contact } };
     },
     async update(sid, patch, actor) {
       const s = must(sid);
+      if (!Object.keys(patch).length) return { ...s };
       record(sid, 'updated', actor, { payload: { fields: Object.keys(patch) } });
       return save({ ...s, ...patch });
     },
-    async linkStripe(sid, links, actor) {
+    linkStripe: async (sid, links, actor) => linkStripe(must(sid), links, actor),
+    async linkStripeIf(sid, { attempt: key, ...expect }, links, actor) {
       const s = must(sid);
-      record(sid, 'stripe_linked', actor, { payload: { ...links } });
-      const column = {
-        customerId: 'stripeCustomerId',
-        subscriptionId: 'stripeSubscriptionId',
-        checkoutSessionId: 'checkoutSessionId',
-        paymentLinkId: 'paymentLinkId',
-        paymentLinkUrl: 'paymentLinkUrl',
-      } as const;
-      const set = Object.fromEntries(
-        Object.entries(links)
-          .filter(([, v]) => v !== undefined)
-          .map(([k, v]) => [column[k as keyof StripeLinks], v]),
-      );
-      return save({ ...s, ...set });
+      if ((Object.keys(expect) as (keyof typeof expect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      const a = key === undefined ? null : attempt(key);
+      if (a && (a.state !== 'open' || a.sponsorId !== sid)) return null;
+      if (a) Object.assign(a, { state: 'kept', linkId: links.paymentLinkId ?? a.linkId });
+      return linkStripe(s, links, actor);
     },
     async transition(sid, input) {
       const s = must(sid);
@@ -286,6 +364,30 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .filter((d) => d.sponsorId === sid)
         .reverse()
         .map((d) => ({ ...d })),
+    async beginLinkAttempt(sid, request, key = crypto.randomUUID()) {
+      if (must(sid).status === 'ended') throw conflict();
+      const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', ageMs: 0, createdAt: now() };
+      linkAttempts.push(a);
+      return { ...a };
+    },
+    linkAttemptCreated: async (key, linkId) => void (attempt(key).linkId = linkId),
+    async claimLinkCleanup(key, linkId) {
+      const a = attempt(key);
+      if (a.state !== 'open' && a.state !== 'closing') return false;
+      Object.assign(a, { state: 'closing', linkId: linkId ?? a.linkId });
+      linkAttempts.splice(linkAttempts.indexOf(a), 1);
+      linkAttempts.push(a);
+      return true;
+    },
+    async linkAttemptClosed(key) {
+      const a = attempt(key);
+      if (a.state === 'closing') a.state = 'closed';
+    },
+    unsettledLinkAttempts: async ({ sponsorId, limit }) =>
+      linkAttempts
+        .filter((a) => (a.state === 'open' || a.state === 'closing') && (!sponsorId || a.sponsorId === sponsorId))
+        .slice(0, limit)
+        .map((a) => ({ ...a, ageMs: Date.parse(now()) - Date.parse(a.createdAt) })),
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),

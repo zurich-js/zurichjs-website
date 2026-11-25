@@ -32,6 +32,12 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
   };
   return {
     ...store,
+    async create(input, contact, actor, opts) {
+      const created = await store.create(input, contact, actor, opts);
+      // An imported sponsorship starts running.
+      if (isRunning(created.sponsor.status)) await safely('sponsorship added as running');
+      return created;
+    },
     async transition(id, input) {
       // Without an expected status the store takes the current one, so read it first.
       const from = input.from ?? (await store.get(id))?.status;

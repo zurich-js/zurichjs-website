@@ -151,27 +151,34 @@ export async function resolveMeetups(eventIds: string[], meetups: () => Promise<
 }
 
 /** Emails the invitation (new) or the "now online" note (imported) to these contacts. */
-export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps): Promise<number> {
+export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps, meetups?: SponsorMeetup[]): Promise<number> {
   const day = zurichDay(deps.now?.() ?? new Date());
   const existing = s.source === 'imported' && s.paidUntil && s.cycle !== 'once' ? longDate(lastDay(s.paidUntil)) : null;
   const contractOnFile = (await deps.store.documents(s.id)).length > 0;
   return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile }), {
     ...deps,
     contacts,
+    meetups,
     key: `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}`,
   });
 }
 
+/**
+ * Invites or imports a sponsor. The sponsor, its contact, its meetups and its starting status are
+ * one store write, so a failure leaves nothing behind and the same form can be sent again. The
+ * email and the Slack note come after it and never turn a saved sponsor into an error.
+ */
 export async function createSponsor(
   input: NewSponsorInput,
-  deps: LifecycleDeps & { meetups: () => Promise<Meetup[]> },
+  deps: LifecycleDeps,
+  upcoming: () => Promise<Meetup[]>,
 ): Promise<{ result: 'created'; sponsor: Sponsor; contact: Contact; emailed: number } | { result: 'exists'; contact: Contact }> {
   const { store } = deps;
   const existing = await store.contactByEmail(input.contact.email);
-  // A colleague-added contact nobody accepted does not block the board: it is removed and re-added here.
-  if (existing && !(existing.addedBy === 'sponsor' && !existing.userId)) return { result: 'exists', contact: existing };
-  const meetups = input.cycle === 'once' ? await resolveMeetups(input.eventIds, deps.meetups) : [];
-  if (existing) await store.removeContact(existing.id, BOARD);
+  // A colleague-added contact nobody accepted does not block the board: it moves to the new sponsor.
+  const claimable = !!existing && existing.addedBy === 'sponsor' && !existing.userId;
+  if (existing && !claimable) return { result: 'exists', contact: existing };
+  const meetups = input.cycle === 'once' ? await resolveMeetups(input.eventIds, upcoming) : [];
   const imported = input.mode === 'import';
   let created: { sponsor: Sponsor; contact: Contact };
   try {
@@ -181,7 +188,7 @@ export async function createSponsor(
         tier: input.tier,
         cycle: input.cycle,
         paymentMode: imported ? 'manual' : 'card',
-        status: 'pending',
+        status: imported ? 'active' : 'pending',
         source: imported ? 'imported' : 'invited',
         startedAt: imported ? input.startedAt : null,
         paidUntil: imported ? (input.cycle === 'once' ? afterLastMeetup(meetups) : input.paidUntil) : null,
@@ -190,22 +197,26 @@ export async function createSponsor(
       },
       { email: input.contact.email, name: input.contact.name, role: 'primary', addedBy: 'board' },
       BOARD,
+      { meetups, claimUnconfirmed: claimable },
     );
   } catch (cause) {
     if (cause instanceof DuplicateContact) return { result: 'exists', contact: (await store.contactByEmail(input.contact.email))! };
     throw cause;
   }
-  let sponsor = created.sponsor;
-  if (meetups.length) await store.setMeetups(sponsor.id, meetups, BOARD);
-  if (imported) sponsor = await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: BOARD, payload: { imported: true } });
-  const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, deps) : 0;
+  const { sponsor, contact } = created;
+  let emailed = 0;
+  try {
+    if (input.sendEmail) emailed = await sendInvitation(sponsor, [contact], input.message, deps, meetups);
+  } catch (cause) {
+    console.error(`[sponsorship-admin] invitation for ${sponsor.id} not sent`, cause);
+  }
   await note(
     `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${sponsorFee(sponsor, meetups)}${
       meetups.length ? ` (${meetups.map((m) => slackText(meetupLabel(m))).join('; ')})` : ''
     }${imported && sponsor.paidUntil && sponsor.cycle !== 'once' ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${slackText(input.contact.name)} was emailed.` : 'No email sent.'}`,
     deps,
   );
-  return { result: 'created', sponsor, contact: created.contact, emailed };
+  return { result: 'created', sponsor, contact, emailed };
 }
 
 /** The plan of an invitation nobody has paid yet, changed directly (no confirmation needed: they confirm by paying). */

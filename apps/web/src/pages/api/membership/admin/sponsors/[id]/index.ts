@@ -3,6 +3,7 @@
  *   GET → { ok, sponsor, attention, contacts, agreements, logos, contracts, events, pendingChange }
  *   POST { companyName?, legalName?, billingAddress?, vatId?, website?, notes?, partnerId? } → { ok, sponsor } (details; synced to Stripe)
  */
+import type { SponsorPatch } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../../../../server/http.ts';
 import { adminSponsorView, agreementView, contactView, documentView, logoView, zurichDay } from '../../../../../../server/sponsor.ts';
@@ -11,6 +12,9 @@ import { parseDetails } from '../../../../../../server/sponsor-input.ts';
 import { ensureCustomer, pendingChange } from '../../../../../../server/sponsor-stripe.ts';
 
 export const prerender = false;
+
+/** What Stripe's customer holds (sponsor-stripe.ts, ensureCustomer). */
+const STRIPE_FIELDS: (keyof SponsorPatch)[] = ['companyName', 'legalName', 'billingAddress', 'vatId'];
 
 export const handleAdminSponsor = (request: Request, id: string, deps: SponsorAdminDeps = {}) =>
   sponsorAdminRoute(
@@ -65,11 +69,28 @@ export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorA
       if ('partnerId' in body) {
         const pid = typeof body.partnerId === 'string' && /^[\w.-]{1,128}$/.test(body.partnerId) ? body.partnerId : body.partnerId ? false : null;
         if (pid === false) return fail(400, 'Use the id of the partner record: letters, numbers, dots and hyphens.', { field: 'partnerId' });
+        if (pid?.startsWith('drafts.')) return fail(400, 'Use the published partner’s id, without drafts.', { field: 'partnerId' });
         patch.partnerId = pid;
       }
-      const updated = await store.update(s.id, patch, BOARD);
-      if (updated.stripeCustomerId && Object.keys(parsed.value).length) await ensureCustomer(updated, await store.contacts(s.id), store, lifecycle.stripe);
-      return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id), (await store.documents(s.id)).length > 0) });
+      // The form sends every field: save and log only the ones that changed.
+      const changed = Object.fromEntries(Object.entries(patch).filter(([k, v]) => s[k as keyof SponsorPatch] !== v)) as SponsorPatch;
+      const updated = await store.update(s.id, changed, BOARD);
+      // Stripe gets the billing details when they changed, or when the last update to Stripe failed
+      // (logged as stripe_sync_failed until one succeeds). A Stripe failure does not undo the save.
+      let warning: string | undefined;
+      const lastSync = (await store.events(s.id)).filter((e) => e.type === 'stripe_sync_failed' || e.type === 'stripe_synced').at(-1);
+      if (updated.stripeCustomerId && (STRIPE_FIELDS.some((k) => k in changed) || lastSync?.type === 'stripe_sync_failed')) {
+        const ok = await ensureCustomer(updated, await store.contacts(s.id), store, lifecycle.stripe).then(
+          () => true,
+          (cause: unknown) => {
+            console.error(`[sponsorship-admin] Stripe customer ${updated.stripeCustomerId} not updated`, cause);
+            return false;
+          },
+        );
+        if (!ok) warning = 'Saved. Stripe could not be updated now; it gets the details again at the next save.';
+        if (!ok || lastSync?.type === 'stripe_sync_failed') await store.log(s.id, ok ? 'stripe_synced' : 'stripe_sync_failed', BOARD);
+      }
+      return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id), (await store.documents(s.id)).length > 0), ...(warning ? { warning } : {}) });
     },
     'save the sponsor',
   );

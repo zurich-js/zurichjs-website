@@ -2,14 +2,18 @@
  * The sponsor store on Postgres (Neon in production; a throwaway local Postgres in tests).
  * Server-side only. Each write is one statement: a data-modifying CTE changes the row and
  * appends the audit row, so both happen or neither does, without holding a client for a
- * transaction (it works on a pg.Pool). Status changes are compare-and-set.
+ * transaction (it works on a pg.Pool). Status changes are compare-and-set. The few steps that must
+ * read before they write (a payment link kept against one being switched off) run in a transaction
+ * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeLinks } from './store.ts';
-import type { Actor, Agreement, Contact, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
+import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
+import type { Actor, Agreement, Contact, LinkAttempt, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
+  /** A pool (pg.Pool) lends one connection for a transaction; without it the queryable is used as it is (a single client). */
+  connect?(): Promise<Queryable & { release(err?: Error): void }>;
 }
 
 type Row = Record<string, unknown>;
@@ -95,20 +99,26 @@ const AUDIT = (from = 'null', to = 'null') =>
   `e as (insert into sponsor_events (sponsor_id, type, from_status, to_status, actor_kind, actor_id, payload)
          select s.sponsor_ref, $type, ${from}, ${to}, $actor_kind, $actor_id, $payload::jsonb from s)`;
 
-export function postgresStore(db: Queryable): SponsorStore {
-  const q = async <R = Row>(text: string, params: unknown[] = []): Promise<R[]> => {
+type Run = <R = Row>(text: string, params?: unknown[]) => Promise<R[]>;
+
+const runner =
+  (db: Queryable): Run =>
+  async <R = Row>(text: string, params: unknown[] = []) => {
     try {
       return (await db.query<R>(text, params)).rows;
     } catch (err) {
       throw mapError(err);
     }
   };
-  /**
-   * Runs `cte` (a data-modifying statement aliased `s`, exposing `sponsor_ref`) and its
-   * audit insert as one statement. `$type`, `$actor_kind`, `$actor_id`, `$payload` are
-   * appended after the caller's parameters.
-   */
-  const audited = async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string) => {
+
+/**
+ * Runs `cte` (a data-modifying statement aliased `s`, exposing `sponsor_ref`) and its
+ * audit insert as one statement. `$type`, `$actor_kind`, `$actor_id`, `$payload` are
+ * appended after the caller's parameters.
+ */
+const auditedOn =
+  (q: Run) =>
+  async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string) => {
     const n = params.length;
     const sql = `with s as (${cte}), ${AUDIT(from, to)} select * from s`
       .replaceAll('$type', `$${n + 1}`)
@@ -116,6 +126,36 @@ export function postgresStore(db: Queryable): SponsorStore {
       .replaceAll('$actor_id', `$${n + 3}`)
       .replaceAll('$payload', `$${n + 4}`);
     return q(sql, [...params, type, actor.kind, actor.id, JSON.stringify(payload)]);
+  };
+
+const attemptOf = (r: Row): LinkAttempt => ({
+  key: String(r.key),
+  sponsorId: r.sponsor_id as string,
+  request: r.request as string,
+  linkId: (r.link_id as string | null) ?? null,
+  state: r.state as LinkAttempt['state'],
+  createdAt: iso(r.created_at)!,
+  ageMs: Number(r.age_ms),
+});
+
+export function postgresStore(db: Queryable): SponsorStore {
+  const q = runner(db);
+  const audited = auditedOn(q);
+  /** `fn` in one transaction on one connection; rolled back when it throws or answers `rollback`. */
+  const tx = async <T>(fn: (q: Run) => Promise<T>): Promise<T> => {
+    const client = db.connect ? await db.connect() : undefined;
+    const c = client ?? db;
+    try {
+      await c.query('begin');
+      const out = await fn(runner(c));
+      await c.query('commit');
+      return out;
+    } catch (err) {
+      await c.query('rollback').catch(() => undefined);
+      throw mapError(err);
+    } finally {
+      client?.release();
+    }
   };
   const one = async (where: string, value: unknown) => {
     if (where === 'id' && !UUID.test(String(value))) return null;
@@ -127,6 +167,42 @@ export function postgresStore(db: Queryable): SponsorStore {
     if (!s) throw new NotFound('sponsor');
     return s;
   };
+
+  /**
+   * With `expect`: only while those columns hold those values (null matches null); undefined
+   * otherwise. With `expect.attempt`, in a transaction that locks that payment link attempt first
+   * and marks it kept: a cleanup claiming it at the same time waits, then finds it kept.
+   */
+  async function linkStripe(id: string, links: StripeLinks, actor: Actor, expect?: StripeExpect, run: Run = q): Promise<Sponsor | undefined> {
+    if (expect?.attempt !== undefined && run === q)
+      return tx(async (t) => {
+        const open = await t("select 1 from sponsor_payment_link_attempts where key = $1 and sponsor_id = $2 and state = 'open' for update", [expect.attempt, id]);
+        if (!open.length) return undefined;
+        const s = await linkStripe(id, links, actor, expect, t);
+        if (s)
+          await t("update sponsor_payment_link_attempts set state = 'kept', link_id = coalesce($2, link_id), updated_at = now() where key = $1", [
+            expect.attempt,
+            links.paymentLinkId ?? null,
+          ]);
+        return s;
+      });
+    const entries = setters(STRIPE_COLUMNS, links);
+    if (!entries.length) return must(id);
+    const checks = expect ? setters(STRIPE_COLUMNS, expect) : [];
+    const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
+    const n = entries.length + 2;
+    const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${n + i}`).join('') + (expect?.status ? ` and status = $${n + checks.length}` : '');
+    const rows = await auditedOn(run)(
+      `update sponsors set ${sets} where id = $1${where} returning *, id as sponsor_ref`,
+      [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v), ...(expect?.status ? [expect.status] : [])],
+      'stripe_linked',
+      actor,
+      Object.fromEntries(entries),
+    );
+    if (rows[0]) return sponsorOf(rows[0]);
+    if (expect) return undefined;
+    throw new NotFound('sponsor');
+  }
 
   return {
     get: (id) => one('id', id),
@@ -143,16 +219,28 @@ export function postgresStore(db: Queryable): SponsorStore {
       );
       return rows.map(sponsorOf);
     },
-    async create(s, c, actor) {
+    async create(s, c, actor, opts = {}) {
+      const meetups = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, m])).values()];
+      // One statement: the sponsor, its contact (moved from a colleague's unaccepted invitation, or
+      // new), its meetups and the audit rows. `ins` reads `moved`, so it runs after it.
       const rows = await q(
         `with s as (
            insert into sponsors (company_name, legal_name, billing_address, vat_id, website, tier, cycle, payment_mode, status, source,
                                  started_at, paid_until, price_per_meetup, notes)
            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *),
-         c as (insert into sponsor_contacts (sponsor_id, email, name, role, added_by) select id, $15, $16, $17, $18 from s
-               returning id as contact_id, email as contact_email, added_by as contact_added_by, created_at as contact_created_at),
+         moved as (update sponsor_contacts c set sponsor_id = (select id from s), name = $16, role = $17, added_by = $18
+                   from sponsor_contacts old
+                   where $21::boolean and old.id = c.id and c.email = $15 and c.added_by = 'sponsor' and c.user_id is null
+                   returning c.id as contact_id, c.email as contact_email, c.added_by as contact_added_by, c.created_at as contact_created_at, old.sponsor_id as moved_from),
+         ins as (insert into sponsor_contacts (sponsor_id, email, name, role, added_by) select id, $15, $16, $17, $18 from s where not exists (select 1 from moved)
+                 returning id as contact_id, email as contact_email, added_by as contact_added_by, created_at as contact_created_at),
+         c as (select contact_id, contact_email, contact_added_by, contact_created_at from moved union all select * from ins),
+         m as (insert into sponsor_meetups (sponsor_id, event_id, title, date)
+               select s.id, x.event_id, x.title, x.date::date from s, jsonb_to_recordset($22::jsonb) as x(event_id text, title text, date text)),
          e as (insert into sponsor_events (sponsor_id, type, to_status, actor_kind, actor_id, payload)
-               select id, 'created', status, $19, $20, jsonb_build_object('source', source) from s)
+               select id, 'created', status, $19, $20, jsonb_build_object('source', source) from s
+               union all select id, 'meetups_set', null, $19, $20, jsonb_build_object('events', $23::jsonb) from s where jsonb_array_length($22::jsonb) > 0
+               union all select moved_from, 'contact_removed', null, $19, $20, jsonb_build_object('contactId', contact_id, 'movedTo', (select id from s)) from moved)
          select * from s, c`,
         [
           s.companyName,
@@ -175,6 +263,9 @@ export function postgresStore(db: Queryable): SponsorStore {
           c.addedBy ?? 'board',
           actor.kind,
           actor.id,
+          !!opts.claimUnconfirmed,
+          JSON.stringify(meetups.map((m) => ({ event_id: m.eventId, title: m.title, date: m.date }))),
+          JSON.stringify(meetups.map((m) => m.eventId)),
         ],
       );
       const r = rows[0]!;
@@ -203,20 +294,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!rows[0]) throw new NotFound('sponsor');
       return sponsorOf(rows[0]);
     },
-    async linkStripe(id, links, actor) {
-      const entries = setters(STRIPE_COLUMNS, links);
-      if (!entries.length) return must(id);
-      const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
-      const rows = await audited(
-        `update sponsors set ${sets} where id = $1 returning *, id as sponsor_ref`,
-        [id, ...entries.map(([, v]) => v)],
-        'stripe_linked',
-        actor,
-        Object.fromEntries(entries),
-      );
-      if (!rows[0]) throw new NotFound('sponsor');
-      return sponsorOf(rows[0]);
-    },
+    linkStripe: async (id, links, actor) => (await linkStripe(id, links, actor))!,
+    linkStripeIf: async (id, expect, links, actor) => (await linkStripe(id, links, actor, expect)) ?? null,
     async transition(id, input) {
       const current = await must(id);
       if (input.from && current.status !== input.from) throw new TransitionError('The sponsorship changed in the meantime. Look again.', 'conflict');
@@ -342,6 +421,41 @@ export function postgresStore(db: Queryable): SponsorStore {
     },
     documents: async (sponsorId) =>
       UUID.test(sponsorId) ? (await q('select * from sponsor_documents where sponsor_id = $1 order by uploaded_at desc', [sponsorId])).map((r) => camel<SponsorDocument>(r)) : [],
+
+    async beginLinkAttempt(sponsorId, request, key = crypto.randomUUID()) {
+      if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
+      const [r] = await q(
+        `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
+        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms`,
+        [sponsorId, request, key],
+      );
+      if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
+      return attemptOf(r);
+    },
+    async linkAttemptCreated(key, linkId) {
+      await q('update sponsor_payment_link_attempts set link_id = $2, updated_at = now() where key = $1', [key, linkId]);
+    },
+    async claimLinkCleanup(key, linkId) {
+      const rows = await q(
+        `update sponsor_payment_link_attempts set state = 'closing', link_id = coalesce($2, link_id), updated_at = now()
+         where key = $1 and state in ('open', 'closing') returning key`,
+        [key, linkId ?? null],
+      );
+      return rows.length > 0;
+    },
+    async linkAttemptClosed(key) {
+      await q("update sponsor_payment_link_attempts set state = 'closed', updated_at = now() where key = $1 and state = 'closing'", [key]);
+    },
+    unsettledLinkAttempts: async ({ sponsorId, limit }) =>
+      sponsorId !== undefined && !UUID.test(sponsorId)
+        ? []
+        : (
+            await q(
+              `select *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
+           order by updated_at, created_at, key limit $2`,
+              [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
+            )
+          ).map(attemptOf),
 
     stripeEventSeen: async (id) => (await q('select 1 from sponsor_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into sponsor_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),

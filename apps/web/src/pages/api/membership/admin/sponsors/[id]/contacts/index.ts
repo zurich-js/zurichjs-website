@@ -15,6 +15,7 @@ export const handleAdminAddContact = (request: Request, id: string, deps: Sponso
     async ({ store }) => {
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
+      if (s.status === 'ended') return fail(409, 'This sponsorship has ended.');
       const parsed = parseContact((await readJsonObject(request)) ?? {});
       if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
       try {

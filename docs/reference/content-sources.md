@@ -3,7 +3,7 @@ type: Reference
 title: Content sources
 description: Where the community timeline, team, partner list, membership and donation facts come from, and the items organisers still have to confirm.
 tags: [content, sources, confirm-list]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-25T00:00:00Z'
 ---
 
 # Content sources
@@ -111,7 +111,7 @@ Real builds use `packages/content/src/partners.ts` until Sanity has partner docu
 | Supporters of `sep-2026` (GetYourGuide venue, GYFF, FIN) and `pro-zurichjs-meetup-9` (Dynatrace)                                   | "Thanks to" on those event pages                         | old-today, old-about                                                               |                                                           |
 | Reach figures (900 members, 50–100 RSVPs, 15'000+ views, 525+ LinkedIn followers, 35% repeat, 114 RSVPs for one meetup, countries) | Shown as "published on zurichjs.com in October 2025"     | old-stats                                                                          | **confirm** or replace with current numbers               |
 
-Owner's answers, 19th November 2026: Stripe stays a current Builder. SAE Institute Zürich, novu, GetYourGuide and Orbiz Josef are current hosts; Smallpdf is a past host. CityJS stays a past partner. iJS Munich and Web Zurich are no longer partners and are not shown. GYFF is moving to a higher tier, which is to come from the sponsorships database. What is still open is in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
+Owner's answers, 19th November 2026: Stripe stays a current Builder. SAE Institute Zürich, novu, GetYourGuide and Orbiz Josef are current hosts; Smallpdf is a past host. CityJS stays a past partner. iJS Munich is no longer a partner and is not shown. Web Zurich was removed too, and is shown again as a community partner since 25th November 2026. GYFF is moving to a higher tier, which is to come from the sponsorships database. What is still open is in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
 | Tier prices and benefits | As production, with one thousands separator and no em dashes | old-tiers | **confirm** still valid for 2027 |
 
 Changes of 2nd November 2026:

@@ -257,9 +257,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://webzurich.ch/',
     ...logo('webzurich.webp'),
     kinds: ['community'],
-    current: false,
-    // No longer a partner: removed from every list (owner, 19th November 2026).
-    delisted: true,
+    // Removed from every list on 19th November 2026, and shown again as a community partner (owner, 25th November 2026).
+    current: true,
     description: 'Regional web development community partner',
     source: 'old-partners',
   },
@@ -328,10 +327,10 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
 
 /**
  * Partners the owner withdrew from all promotion (2nd, 3rd and 19th November 2026), by id or
- * name. Applied to Sanity partners too, so a seeded or re-imported document
+ * name. Web Zurich was among them until 25th November 2026. Applied to Sanity partners too, so a seeded or re-imported document
  * cannot bring them back onto partner lists, logo walls or upcoming event pages.
  */
-export const DELISTED_PARTNERS: readonly string[] = ['ginetta', 'code-blossom', 'dotjs', 'react-paris', 'ijs-munich', 'web-zurich'];
+export const DELISTED_PARTNERS: readonly string[] = ['ginetta', 'code-blossom', 'dotjs', 'react-paris', 'ijs-munich'];
 const norm = (s: string) =>
   s
     .toLowerCase()

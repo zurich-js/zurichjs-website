@@ -4,7 +4,7 @@ The decision record of zurichjs.com: what was decided, why, and by whom, in date
 
 - [Building the platform](/reference/decisions/platform-build.md): 31st October to 1st November 2026, scope, phases A to 5, CI, the switchover
 - [Launch restoration](/reference/decisions/launch-restoration.md): 1st and 2nd November 2026, the audit against the old production site
-- [Studio, membership and design system](/reference/decisions/studio-membership-design.md): 3rd to 19th November 2026
+- [Studio, membership and design system](/reference/decisions/studio-membership-design.md): 3rd to 25th November 2026
 
 ## How this record is kept
 

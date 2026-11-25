@@ -3,7 +3,7 @@ type: Spec
 title: Review every partner, then move the list into Sanity
 description: A checklist of what the owner must confirm for each partner (tier, current, logo files, hover colour) and what has to be built before partners can be edited in the Studio.
 tags: [partners, sponsorship, logos, sanity]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-25T00:00:00Z'
 status: planned
 domain: partners
 systems: [content, studio, design-system]
@@ -35,7 +35,8 @@ Where each partner appears on the home page: **Sponsors** are the framed colour 
 | Vercel                                                                                                                        | sponsor    | none      | no      | Past                                | `vercel-black.webp`                              | none         | The seed script still has it as a current Champion.                                                                                                                                          |
 | Smallpdf                                                                                                                      | venue      | none      | no      | Past                                | `smallpdf.webp`                                  | none         | Confirmed past (owner, 19th November 2026).                                                                                                                                                  |
 | Dynatrace, AWS, Gatling, Supabase, Remotion, Sentry, Cloudflare, ImageKit, Storyblok, OnlyDust, Platformatic, Digitec Galaxus | sponsor    | none      | no      | Past                                | one file each                                    | none         | Each was a sponsor at some point: confirm, and add the years (`since`, `until`) where known.                                                                                                 |
-| Ginetta, Code Blossom, DotJS, React Paris, iJS Munich, Web Zurich                                                             | various    | none      | no      | not shown                           | kept                                             | none         | No longer promoted (owner, 2nd, 3rd and 19th November 2026). With Web Zurich gone, `/partners` says "None listed right now." under Community partners.                                       |
+| Web Zurich                                                                                                                    | community  | none      | yes     | Partners                            | `webzurich.webp` (solid background)              | none         | Shown again as a community partner (owner, 25th November 2026). Needs a one-colour logo file: its solid background reads badly in the moving row.                                            |
+| Ginetta, Code Blossom, DotJS, React Paris, iJS Munich                                                                         | various    | none      | no      | not shown                           | kept                                             | none         | No longer promoted (owner, 2nd, 3rd and 19th November 2026).                                                                                                                                 |
 
 Nobody has a `logoBlack` file. Where logos are black (the moving rows, the wall on `/partners`), a filter draws the colour file in black, which turns a logo with a solid background or several colours into a block.
 
@@ -46,7 +47,7 @@ Nobody has a `logoBlack` file. Where logos are black (the moving rows, the wall 
 - For each row above, the kind, tier and current flag are confirmed or corrected, with `since` and `until` where known. The open "confirm" items are also in [Content sources](/reference/content-sources.md).
 - Sponsors and current hosts: the logo is the file the company wants shown, and a hover colour is chosen or left empty. A hover colour suits a logo that is one shape (the logo turns white on a dark colour, black on a light one).
 - A black logo file for Grusp and Swiss Dev Jobs, and for any other logo that reads badly in the moving rows.
-- Hover colours for the three hosts added back, and whether the Community partners group on `/partners` stays while it is empty.
+- Hover colours for the three hosts added back.
 
 **Moving the list into Sanity (code):**
 

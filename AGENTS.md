@@ -32,7 +32,7 @@ The bundle follows the `okf-documentation` skill in novu's skills repository on 
 | When you change                                             | Update                                                                           |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Packages, apps, integrations, who owns a contract           | `docs/systems/overview.md`                                                       |
-| Commands, `pnpm local`, mocks                               | `docs/systems/local-development.md`                                              |
+| Commands, `just up`, mocks                                  | `docs/systems/local-development.md`                                              |
 | Rendering, routes, redirects, headers, share images         | `docs/systems/web.md` (and `docs/systems/seo.md` for any URL)                    |
 | The Sanity schema, typegen, Studio scripts, the webhook     | `docs/systems/studio.md` and the domain's content model                          |
 | Tokens, components, motion                                  | `docs/systems/design-system/` (brand rules need the owner)                       |

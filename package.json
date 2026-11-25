@@ -23,17 +23,14 @@
     "membership:import": "tsx tools/membership-import.ts",
     "membership:stripe-setup": "tsx tools/membership-stripe-setup.ts",
     "membership:signature": "tsx tools/membership-signature.ts",
-    "sponsorship:stripe-setup": "tsx tools/sponsorship-stripe-setup.ts",
-    "local": "sh tools/local.sh",
-    "local:studio": "COMPOSE_PROFILES=studio sh tools/local.sh",
-    "local:down": "docker compose down",
-    "local:reset": "docker compose down -v"
+    "sponsorship:stripe-setup": "tsx tools/sponsorship-stripe-setup.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@netlify/blobs": "11.1.7",
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
+    "@varlock/1password-plugin": "2.0.7",
     "@zurichjs/agent": "workspace:*",
     "@zurichjs/membership": "workspace:*",
     "@zurichjs/sponsorship": "workspace:*",
@@ -49,6 +46,7 @@
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1",
+    "varlock": "1.25.0",
     "vitest": "4.1.12"
   },
   "lint-staged": {

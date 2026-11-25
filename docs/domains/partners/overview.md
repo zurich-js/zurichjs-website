@@ -3,7 +3,7 @@ type: Domain
 title: Partners and sponsorship
 description: Hosts, sponsors and community partners: where the list comes from, who counts as current, where they are thanked, the sponsorship offering on /partners and the enquiry form.
 tags: [partners, sponsorship, frontend]
-timestamp: "2026-11-19T00:00:00Z"
+timestamp: "2026-11-25T00:00:00Z"
 ---
 
 # Partners and sponsorship
@@ -23,7 +23,8 @@ Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisti
 ## Who counts as current
 
 - **Only partners an organiser marks `current`, or with a running sponsorship in the database, are called current sponsors.** Venue hosts are listed as hosts ("have hosted"), never as current sponsors. The current hosts are SAE Institute Zürich, novu, GetYourGuide and Orbiz Josef (owner, 19th November 2026); Smallpdf is a past host.
-- **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026; iJS Munich and Web Zurich; owner, 19th November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
+- **Web Zurich is a current community partner** again (owner, 25th November 2026). It was removed from every list on 19th November 2026.
+- **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026; iJS Munich; owner, 19th November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
 - Vercel is listed as a past sponsor, not current (owner, 4th November 2026).
 
 ## Where partners are thanked

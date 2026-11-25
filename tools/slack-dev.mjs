@@ -10,7 +10,7 @@
 // The CFP bot's dev app (slack/manifest.cfp.dev.yml) works the same way, to the slack-cfp-*
 // functions, when SLACK_CFP_APP_TOKEN and SLACK_CFP_SIGNING_SECRET are set. Either app, or both.
 //
-// pnpm local starts it by itself when SLACK_APP_TOKEN or SLACK_CFP_APP_TOKEN is in .env or .env.local.
+// just up runs it as the `slack` service when SLACK_APP_TOKEN or SLACK_CFP_APP_TOKEN is in .env or .env.local.
 import { createHmac } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 

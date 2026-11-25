@@ -6,18 +6,19 @@
  * resignations, inviting people who asked to join, adding members who paid manually
  * (cash/bank), and CSV export.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass, chipClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Heading } from '@zurichjs/design/islands/Heading';
+import { LoadFailed, Loading } from '@zurichjs/design/islands/Loading';
 import type { AdminMember } from '../../server/admin-views.ts';
 import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
-import { api } from './admin-api.ts';
+import { UNREACHABLE, api } from './admin-api.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
 import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
@@ -55,18 +56,35 @@ const SECTIONS: { key: AdminSection; label: string; href: string }[] = [
 ];
 
 export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
-  const [state, setState] = useState<'loading' | 'signed-out' | 'ready'>('loading');
+  const [state, setState] = useState<'loading' | 'signed-out' | 'ready' | 'unreachable' | 'sign-out-failed'>('loading');
 
-  useEffect(() => {
-    void api<{ signedIn: boolean }>('/api/membership/admin/session').then(({ body }) => setState(body.signedIn ? 'ready' : 'signed-out'));
-  }, []);
+  // Signed in or out only on the session route's own answer.
+  const checkSession = () => {
+    setState('loading');
+    void api<{ signedIn?: boolean }>('/api/membership/admin/session').then(({ status, body }) =>
+      setState(status === 200 && typeof body.signedIn === 'boolean' ? (body.signedIn ? 'ready' : 'signed-out') : 'unreachable'),
+    );
+  };
+  useEffect(checkSession, []);
 
-  if (state === 'loading') return <p class="m-0 text-body text-ink-2">Loading…</p>;
+  if (state === 'loading') return <Loading>Loading the admin area…</Loading>;
+  if (state === 'unreachable')
+    return (
+      <LoadFailed onRetry={checkSession} title="We couldn’t reach the admin area.">
+        The site did not answer, so we can’t tell whether you are signed in. Try again in a moment.
+      </LoadFailed>
+    );
   if (state === 'signed-out') return <SignIn onSignedIn={() => setState('ready')} />;
   const signOut = async () => {
-    await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
-    setState('signed-out');
+    const { status, body } = await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
+    setState(status === 200 && body.ok === true ? 'signed-out' : 'sign-out-failed');
   };
+  if (state === 'sign-out-failed')
+    return (
+      <LoadFailed onRetry={() => void signOut()} title="We couldn’t sign you out.">
+        The site did not confirm it. This browser may still be signed in. Try again before you leave it.
+      </LoadFailed>
+    );
   return (
     <div class="flex flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -100,8 +118,8 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         setError('');
         const { status, body } = await api('/api/membership/admin/login', { method: 'POST', body: JSON.stringify({ password }) });
         setBusy(false);
-        if (status === 200) return onSignedIn();
-        setError(body.error ?? 'Sign-in failed.');
+        if (status === 200 && body.ok === true) return onSignedIn();
+        setError(status === 0 ? UNREACHABLE : (status < 500 && body.error) || 'We couldn’t complete sign-in. Try again in a moment.');
       }}
     >
       <Heading size="subsection">Sign in</Heading>
@@ -127,17 +145,23 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   const [status, setStatus] = useState<'' | Status>('');
   const [members, setMembers] = useState<AdminMember[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
+  const [truncated, setTruncated] = useState<{ total: number | null } | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [panel, setPanel] = useState<'invite' | 'add' | null>(null);
+  const seq = useRef(0);
 
   const load = async (query = q, filter = status) => {
+    const n = ++seq.current;
     const params = new URLSearchParams({ ...(query ? { q: query } : {}), ...(filter ? { status: filter } : {}) });
-    const { status: code, body } = await api<{ members: AdminMember[]; counts: Record<string, number> | null }>(`/api/membership/admin/members?${params}`);
+    const { status: code, body } = await api<{ members: AdminMember[]; truncated?: boolean; counts: Record<string, number> | null }>(`/api/membership/admin/members?${params}`);
+    if (n !== seq.current) return;
     if (code === 401) return onSignedOut();
     if (code !== 200) return setError(body.error ?? 'Could not load the members.');
     setError('');
     setMembers(body.members);
+    const total = body.counts ? Object.keys(STATUS_LABEL).reduce((n, s) => n + (body.counts![s] ?? 0), 0) : null;
+    setTruncated(body.truncated ? { total } : null);
     if (body.counts) setCounts(body.counts);
   };
 
@@ -233,7 +257,21 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
         <SubmitButton>Search</SubmitButton>
       </form>
 
-      {error && <Notice tone="danger" live title={error} />}
+      {error && (
+        <LoadFailed
+          title={error}
+          onRetry={() => {
+            setError('');
+            void load();
+          }}
+        />
+      )}
+      {!members && !error && <Loading>Loading the members…</Loading>}
+      {members && truncated && (
+        <Notice title={truncated.total === null ? `Showing the newest ${members.length} that match.` : `Showing the newest ${members.length} of ${truncated.total} members.`}>
+          <p class="m-0">Search or filter to find the others.</p>
+        </Notice>
+      )}
 
       {members && (
         // Phones: one card per member (a six-column table does not fit).
@@ -310,7 +348,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
         </div>
       )}
 
-      {selected && <MemberDetail id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
+      {selected && <MemberDetail key={selected} id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
     </div>
   );
 }
@@ -320,9 +358,12 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const seq = useRef(0);
 
   const load = async () => {
+    const n = ++seq.current;
     const { status, body } = await api<Detail>(`/api/membership/admin/members/${id}`);
+    if (n !== seq.current) return;
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not load the member.');
     setD(body);
@@ -332,10 +373,24 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
     setNotice('');
     setError('');
     void load();
+    // An answer that arrives after this member's panel closed reaches neither it nor the parent.
+    const answers = seq;
+    return () => void answers.current++;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the member changes
   }, [id]);
 
-  if (!d) return <p class="m-0 text-ink-2">{error || 'Loading the member…'}</p>;
+  if (!d)
+    return error ? (
+      <LoadFailed
+        title={error}
+        onRetry={() => {
+          setError('');
+          void load();
+        }}
+      />
+    ) : (
+      <Loading>Loading the member…</Loading>
+    );
   const m = d.member;
   const rows: [string, string][] = [
     ['Email', m.email],

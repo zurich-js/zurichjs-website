@@ -18,7 +18,21 @@ import {
   type StripeExpect,
   type StripeLinks,
 } from './store.ts';
-import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
+import type {
+  Actor,
+  Agreement,
+  Contact,
+  LinkAttempt,
+  Logo,
+  NewNotice,
+  Sponsor,
+  SponsorDocument,
+  SponsorEvent,
+  SponsorMeetup,
+  SponsorNotice,
+  SponsorPatch,
+  Status,
+} from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -237,6 +251,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       );
       return rows.map(sponsorOf);
     },
+    statusCounts: async () =>
+      Object.fromEntries((await q<{ status: Status; n: number }>('select status, count(*)::int as n from sponsors group by status')).map((r) => [r.status, r.n])),
     async create(s, c, actor, opts = {}) {
       const meetups = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, m])).values()];
       // One statement: the sponsor, its contact (moved from a colleague's unaccepted invitation, or

@@ -28,6 +28,8 @@ export interface MemberStore {
   byStatus(status: Status): Promise<Member[]>;
   /** For the admin area: newest first; `q` matches name, email or organisation (case-insensitive). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Member[]>;
+  /** How many members there are in each status, over every row (statuses with none are left out). */
+  statusCounts(): Promise<Partial<Record<Status, number>>>;
   /** Fails with `DuplicateEmail` if the email exists. */
   create(m: NewMember, actor: Actor): Promise<Member>;
   update(id: string, patch: MemberPatch, actor: Actor): Promise<Member>;
@@ -120,6 +122,11 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
           .slice(0, limit)
           .map((m) => ({ ...m })),
       );
+    },
+    statusCounts: async () => {
+      const counts: Partial<Record<Status, number>> = {};
+      for (const m of members.values()) counts[m.status] = (counts[m.status] ?? 0) + 1;
+      return counts;
     },
     async create(input, actor) {
       const email = normaliseEmail(input.email);

@@ -54,6 +54,7 @@ export interface CreateOptions {
 /** Compare-and-set for `linkStripe`: the value the caller expects in the column now. */
 export interface StripeExpect {
   paymentLinkId?: string | null;
+  subscriptionId?: string | null;
   checkoutSessionId?: string | null;
   /** The status it must still have (a payment link is kept only while the sponsorship is unpaid). */
   status?: Status;
@@ -128,18 +129,15 @@ export interface SponsorStore {
   claimNotices(filter: { sponsorId?: string; limit: number }): Promise<SponsorNotice[]>;
   /** Sent; or, with an error, released for a later try. */
   noticeDone(id: string, error?: string): Promise<void>;
-  /**
-   * Payment links (sponsor_payment_link_attempts): recorded before Stripe is asked, so a link
-   * Stripe made is switched off even when its answer or the next write was lost.
-   */
-  beginLinkAttempt(sponsorId: string, request: string): Promise<LinkAttempt>;
+  /** Persist the request before its first POST. */
+  beginLinkAttempt(sponsorId: string, request: string, key?: string): Promise<LinkAttempt>;
   /** Stripe answered with this link. It becomes the sponsor's with `linkStripeIf(…, { attempt: key }, …)`. */
   linkAttemptCreated(key: string, linkId: string): Promise<void>;
   /** Marks a link that was not kept for switching off (`closing`). False once it is kept or closed. */
   claimLinkCleanup(key: string, linkId?: string): Promise<boolean>;
   /** Stripe confirmed the link is off. */
   linkAttemptClosed(key: string): Promise<void>;
-  /** Attempts still open or closing (of one sponsor, or all), oldest first. */
+  /** Attempts still open or closing, least recently attempted first. */
   unsettledLinkAttempts(filter: { sponsorId?: string; limit: number }): Promise<LinkAttempt[]>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
@@ -148,12 +146,8 @@ export interface SponsorStore {
   events(sponsorId: string): Promise<SponsorEvent[]>;
   /** Appends a note to the audit log (e.g. a payment the board recorded, a change link sent). */
   log(sponsorId: string, type: string, actor: Actor, payload?: Record<string, unknown>): Promise<void>;
-  /**
-   * A paid invoice: `invoice_paid`, and with `clearOverdue` an overdue payment (past_due) made
-   * active again, in one step. A failure for the same invoice (`overdueInvoice`) is decided
-   * wholly before or wholly after it.
-   */
-  paidInvoice(sponsorId: string, p: { invoice: string; created?: number }, actor: Actor, opts: { clearOverdue: boolean }): Promise<Sponsor>;
+  /** Accept and apply a payment against the locked current offer, including its notices. */
+  paidInvoice(sponsorId: string, p: PaidInvoice, actor: Actor, opts: { clearOverdue: boolean }): Promise<Sponsor>;
   /**
    * A failed or unconfirmed payment for `invoice` of `subscriptionId`, in one step: nothing when
    * the invoice was paid (`paymentEvidence`), the subscription is not the sponsorship's, or it is
@@ -170,6 +164,48 @@ export interface SponsorStore {
 /** A payment for this invoice was recorded: the event is the payment itself, or the activation it made. Never the overdue mark. */
 export const paymentEvidence = (e: Pick<SponsorEvent, 'type' | 'toStatus' | 'payload'>, invoice: string) =>
   (e.type === 'invoice_paid' || (e.type === 'status_changed' && e.toStatus === 'active')) && e.payload.invoice === invoice;
+
+export interface PaidInvoice {
+  invoice: string;
+  subscriptionId: string;
+  offerId: string;
+  created?: number;
+  term?: {
+    start: string;
+    end: string;
+    plan: Pick<Sponsor, 'tier' | 'cycle'> | null;
+    welcome: NewNotice[];
+    renewal: NewNotice;
+  };
+}
+
+export const currentOfferId = (id: string, events: SponsorEvent[]) =>
+  events.findLast((e) => e.type === 'status_changed' && e.fromStatus === 'ended' && e.toStatus === 'pending')?.id ?? id;
+
+export function settleInvoice(s: Sponsor, events: SponsorEvent[], p: PaidInvoice, clearOverdue: boolean) {
+  if (s.status === 'ended' || s.cycle === 'once' || p.offerId !== currentOfferId(s.id, events)) return null;
+  if (s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return null;
+  const restarted = events.findLastIndex((e) => e.fromStatus === 'ended' && e.toStatus === 'pending');
+  if (events.some((e, index) => e.payload.subscriptionId === p.subscriptionId && (e.type === 'stripe_linked' || e.type === 'invoice_paid') && index < restarted)) return null;
+  const term = p.term;
+  const activate = s.status === 'pending' && !!term;
+  const status = activate || (s.status === 'past_due' && clearOverdue) ? 'active' : s.status;
+  const sponsor: Sponsor = {
+    ...s,
+    status,
+    ...(term && {
+      ...term.plan,
+      paymentMode: 'card',
+      stripeSubscriptionId: p.subscriptionId,
+      checkoutSessionId: s.stripeSubscriptionId ? s.checkoutSessionId : null,
+      startedAt: s.startedAt ?? term.start,
+      paidUntil: s.paidUntil && s.paidUntil > term.end ? s.paidUntil : term.end,
+    }),
+  };
+  const wasActivation = events.some((e) => e.type === 'status_changed' && e.fromStatus === 'pending' && e.toStatus === 'active' && e.payload.invoice === p.invoice);
+  const notices = !term ? [] : activate ? term.welcome : wasActivation ? [] : [term.renewal];
+  return { sponsor, notices };
+}
 
 /** Statuses in which a failed card payment marks the sponsorship overdue or adds a notice. */
 const RUNNING_FOR_INVOICES: Status[] = ['active', 'past_due', 'ending'];
@@ -328,7 +364,8 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     linkStripe: async (sid, links, actor) => linkStripe(must(sid), links, actor),
     async linkStripeIf(sid, { attempt: key, ...expect }, links, actor) {
       const s = must(sid);
-      if ((Object.keys(expect) as (keyof typeof expect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      if ((Object.keys(expect) as (keyof typeof expect)[]).some((k) => expect[k] !== undefined && s[k === 'subscriptionId' ? 'stripeSubscriptionId' : k] !== expect[k]))
+        return null;
       const a = key === undefined ? null : attempt(key);
       if (a && (a.state !== 'open' || a.sponsorId !== sid)) return null;
       if (a) Object.assign(a, { state: 'kept', linkId: links.paymentLinkId ?? a.linkId });
@@ -441,9 +478,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       const x = notices.find((y) => y.id === nid);
       if (x) Object.assign(x, error ? { claimedAt: null, lastError: error.slice(0, 500) } : { claimedAt: null, sentAt: now(), lastError: null });
     },
-    async beginLinkAttempt(sid, request) {
-      must(sid);
-      const a: LinkAttempt = { key: crypto.randomUUID(), sponsorId: sid, request, linkId: null, state: 'open', createdAt: now() };
+    async beginLinkAttempt(sid, request, key = crypto.randomUUID()) {
+      if (must(sid).status === 'ended') throw conflict();
+      const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', ageMs: 0, createdAt: now() };
       linkAttempts.push(a);
       return { ...a };
     },
@@ -452,6 +489,8 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       const a = attempt(key);
       if (a.state !== 'open' && a.state !== 'closing') return false;
       Object.assign(a, { state: 'closing', linkId: linkId ?? a.linkId });
+      linkAttempts.splice(linkAttempts.indexOf(a), 1);
+      linkAttempts.push(a);
       return true;
     },
     async linkAttemptClosed(key) {
@@ -462,7 +501,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       linkAttempts
         .filter((a) => (a.state === 'open' || a.state === 'closing') && (!sponsorId || a.sponsorId === sponsorId))
         .slice(0, limit)
-        .map((a) => ({ ...a })),
+        .map((a) => ({ ...a, ageMs: Date.parse(now()) - Date.parse(a.createdAt) })),
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),
@@ -472,15 +511,23 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     },
     async paidInvoice(sid, p, actor, { clearOverdue }) {
       const s = must(sid);
-      record(sid, 'invoice_paid', actor, { payload: { invoice: p.invoice, ...(p.created ? { created: p.created } : {}) } });
-      if (!clearOverdue || s.status !== 'past_due') return { ...s };
-      record(sid, 'status_changed', actor, { fromStatus: 'past_due', toStatus: 'active', payload: { invoice: p.invoice } });
-      return save({ ...s, ...transitionFields(s, 'active', null, null, now()) });
+      const settled = settleInvoice(
+        s,
+        log.filter((e) => e.sponsorId === sid),
+        p,
+        clearOverdue,
+      );
+      if (!settled) return { ...s };
+      const payload = { invoice: p.invoice, subscriptionId: p.subscriptionId, ...(p.created ? { created: p.created } : {}) };
+      record(sid, 'invoice_paid', actor, { payload });
+      if (settled.sponsor.status !== s.status) record(sid, 'status_changed', actor, { fromStatus: s.status, toStatus: settled.sponsor.status, payload });
+      queue(sid, settled.notices);
+      return save(settled.sponsor);
     },
     async overdueInvoice(sid, p, actor, notices) {
       const s = must(sid);
       if (log.some((e) => e.sponsorId === sid && paymentEvidence(e, p.invoice))) return { sponsor: { ...s }, outcome: 'paid' };
-      if (p.subscriptionId && s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: { ...s }, outcome: 'stale' };
+      if (!p.subscriptionId || s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: { ...s }, outcome: 'stale' };
       if (!RUNNING_FOR_INVOICES.includes(s.status)) return { sponsor: { ...s }, outcome: 'not_running' };
       queue(sid, notices);
       if (s.status !== 'active') return { sponsor: { ...s }, outcome: 'overdue' };

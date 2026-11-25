@@ -1,8 +1,5 @@
 -- Payment links the board asked Stripe for (docs/domains/sponsorship/overview.md, "Payment links").
--- A row is written before Stripe is called, with the exact request and the idempotency key (`key`)
--- it is sent with. So a link Stripe made is never lost: when Stripe's answer or the next write fails,
--- the board's retry or the daily check sends the same request again, gets the same link back and
--- switches it off. Stripe keeps idempotency keys for at least 24 hours; the daily check runs inside that.
+-- An unresolved create retains its original request and key until the link is reconciled.
 --
 --   open     asked for; it may exist in Stripe (`link_id` once Stripe answered)
 --   kept     the sponsor's payment link (sponsors.payment_link_id)

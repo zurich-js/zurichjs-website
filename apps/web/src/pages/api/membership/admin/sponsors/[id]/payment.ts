@@ -25,8 +25,8 @@ export const handleRecordPayment = (request: Request, id: string, deps: SponsorA
       if (!amount.ok) return fail(400, 'Give the amount in whole francs, or leave it empty.', { field: 'amount' });
       const reference = text(body.reference, 100);
       if (reference === false) return fail(400, 'Keep the reference under 100 characters.', { field: 'reference' });
-      const updated = await recordPayment(s, { paidUntil: body.paidUntil, amount: amount.value, reference: reference ?? null }, BOARD, lifecycle);
-      return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id)) });
+      const result = await recordPayment(s, { paidUntil: body.paidUntil, amount: amount.value, reference: reference ?? null }, BOARD, lifecycle);
+      return json(200, { ok: true, alreadyRecorded: result.alreadyRecorded, sponsor: adminSponsorView(result.sponsor, await store.meetups(s.id)) });
     },
     'record the payment',
   );

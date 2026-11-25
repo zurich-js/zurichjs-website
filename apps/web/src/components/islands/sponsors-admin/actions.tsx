@@ -417,8 +417,6 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
 
   const check = (): FieldError => {
     if (!DATE.test(paidUntil)) return { field: 'paidUntil', message: 'Give the first day not paid for.' };
-    if (paidUntil !== s.paidUntil && paidUntil <= today()) return { field: 'paidUntil', message: 'Give a date after today: the first day not paid for.' };
-    if (s.paidUntil && paidUntil < s.paidUntil) return { field: 'paidUntil', message: `It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.` };
     if (received !== null && !(Number.isInteger(received) && received >= 1)) return { field: 'amount', message: 'Give the amount in whole francs, or leave it empty.' };
     return null;
   };
@@ -427,7 +425,11 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
     if (busy) return;
     setBusy(true);
     setError(null);
-    const { status, body } = await post<{ outcome?: 'unknown' }>(`${BASE}/${id}/payment`, { paidUntil, amount: received ?? undefined, reference: reference.trim() || undefined });
+    const { status, body } = await post<{ alreadyRecorded?: boolean; outcome?: 'unknown' }>(`${BASE}/${id}/payment`, {
+      paidUntil,
+      amount: received ?? undefined,
+      reference: reference.trim() || undefined,
+    });
     setBusy(false);
     if (status === 401) return onSignedOut();
     if (status !== 200) {
@@ -440,6 +442,7 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
             : (body.error ?? 'Could not record the payment.'),
       });
     }
+    if (body.alreadyRecorded) return onDone({ text: `This bank transfer was already recorded for the period through ${through}.` });
     onDone({ text: `Bank transfer recorded: paid through ${through}.` });
   };
 

@@ -31,6 +31,12 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
   };
   return {
     ...store,
+    async paidInvoice(id, payment, actor, opts) {
+      const before = await store.get(id);
+      const saved = await store.paidInvoice(id, payment, actor, opts);
+      if (before && (before.tier !== saved.tier || statusChangeIsPublic(before.status, saved.status))) await safely('sponsorship payment applied');
+      return saved;
+    },
     async create(input, contact, actor, opts) {
       const created = await store.create(input, contact, actor, opts);
       // An imported sponsorship starts running.

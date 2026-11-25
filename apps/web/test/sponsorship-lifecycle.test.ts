@@ -284,7 +284,7 @@ describe('sponsorship lifecycle', () => {
       await expect(pay()).rejects.toThrow();
       expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(0);
       await pay();
-      await expect(pay()).rejects.toThrow(/already paid through/);
+      await expect(pay()).resolves.toBeDefined();
       expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
       expect(subjects().filter((t) => /Payment received/.test(t))).toHaveLength(1);
       expect(notes(/Payment recorded/)).toHaveLength(1);

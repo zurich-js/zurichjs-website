@@ -1,0 +1,338 @@
+{
+  "invoice": {
+    "due": 12346,
+    "decline": false
+  },
+  "responses": [
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_1"
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "price_sponsor_builder_quarterly",
+            "product": "prod_builder",
+            "currency": "chf",
+            "unit_amount": 140000
+          }
+        ]
+      }
+    },
+    {
+      "path": "/v1/invoices/create_preview",
+      "status": 200,
+      "body": {
+        "currency": "chf",
+        "amount_due": 12345
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_2"
+      }
+    },
+    {
+      "path": "/v1/invoices/create_preview",
+      "status": 200,
+      "body": {
+        "currency": "chf",
+        "amount_due": 12346
+      }
+    },
+    {
+      "path": "/v1/invoices/create_preview",
+      "status": 200,
+      "body": {
+        "currency": "chf",
+        "amount_due": 12346
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_3"
+      }
+    },
+    {
+      "path": "/v1/invoices/create_preview",
+      "status": 200,
+      "body": {
+        "currency": "chf",
+        "amount_due": 12346
+      }
+    },
+    {
+      "path": "/v1/subscriptions/sub_acme",
+      "status": 402,
+      "body": {
+        "error": {
+          "code": "card_declined",
+          "message": "Your card was declined."
+        }
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_3"
+      }
+    },
+    {
+      "path": "/v1/invoices/create_preview",
+      "status": 200,
+      "body": {
+        "currency": "chf",
+        "amount_due": 12346
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "2540",
+        "recurring[interval]": "month",
+        "recurring[interval_count]": "3",
+        "product_data[name]": "Payment processing fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {
+        "items[0][price]": "price_fee_q_1",
+        "items[0][quantity]": "1",
+        "proration_behavior": "none"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/create_preview",
+      "form": {
+        "subscription": "sub_acme",
+        "subscription_details[items][0][id]": "si_1",
+        "subscription_details[items][0][price]": "price_sponsor_builder_quarterly",
+        "subscription_details[items][1][id]": "si_fee_1",
+        "subscription_details[items][1][price_data][currency]": "chf",
+        "subscription_details[items][1][price_data][product]": "prod_fee",
+        "subscription_details[items][1][price_data][unit_amount]": "4213",
+        "subscription_details[items][1][price_data][recurring][interval]": "month",
+        "subscription_details[items][1][price_data][recurring][interval_count]": "3",
+        "subscription_details[proration_behavior]": "always_invoice",
+        "subscription_details[proration_date]": "1794996000"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "4213",
+        "recurring[interval]": "month",
+        "recurring[interval_count]": "3",
+        "product": "prod_fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_2"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/create_preview",
+      "form": {
+        "subscription": "sub_acme",
+        "subscription_details[items][0][id]": "si_1",
+        "subscription_details[items][0][price]": "price_sponsor_builder_quarterly",
+        "subscription_details[items][1][id]": "si_fee_1",
+        "subscription_details[items][1][price]": "price_fee_q_2",
+        "subscription_details[proration_behavior]": "always_invoice",
+        "subscription_details[proration_date]": "1794996000"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/create_preview",
+      "form": {
+        "subscription": "sub_acme",
+        "subscription_details[items][0][id]": "si_1",
+        "subscription_details[items][0][price]": "price_sponsor_builder_quarterly",
+        "subscription_details[items][1][id]": "si_fee_1",
+        "subscription_details[items][1][price_data][currency]": "chf",
+        "subscription_details[items][1][price_data][product]": "prod_fee",
+        "subscription_details[items][1][price_data][unit_amount]": "4213",
+        "subscription_details[items][1][price_data][recurring][interval]": "month",
+        "subscription_details[items][1][price_data][recurring][interval_count]": "3",
+        "subscription_details[proration_behavior]": "always_invoice",
+        "subscription_details[proration_date]": "1794996000"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "4213",
+        "recurring[interval]": "month",
+        "recurring[interval_count]": "3",
+        "product": "prod_fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_3"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/create_preview",
+      "form": {
+        "subscription": "sub_acme",
+        "subscription_details[items][0][id]": "si_1",
+        "subscription_details[items][0][price]": "price_sponsor_builder_quarterly",
+        "subscription_details[items][1][id]": "si_fee_1",
+        "subscription_details[items][1][price]": "price_fee_q_3",
+        "subscription_details[proration_behavior]": "always_invoice",
+        "subscription_details[proration_date]": "1794996000"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {
+        "metadata[feePlanQuote]": "q_3",
+        "items[0][id]": "si_1",
+        "items[0][price]": "price_sponsor_builder_quarterly",
+        "items[1][id]": "si_fee_1",
+        "items[1][price]": "price_fee_q_3",
+        "proration_behavior": "always_invoice",
+        "proration_date": "1794996000",
+        "payment_behavior": "error_if_incomplete"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "4213",
+        "recurring[interval]": "month",
+        "recurring[interval_count]": "3",
+        "product": "prod_fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_3"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invoices/create_preview",
+      "form": {
+        "subscription": "sub_acme",
+        "subscription_details[items][0][id]": "si_1",
+        "subscription_details[items][0][price]": "price_sponsor_builder_quarterly",
+        "subscription_details[items][1][id]": "si_fee_1",
+        "subscription_details[items][1][price]": "price_fee_q_3",
+        "subscription_details[proration_behavior]": "always_invoice",
+        "subscription_details[proration_date]": "1794996000"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {
+        "metadata[feePlanQuote]": "q_3",
+        "items[0][id]": "si_1",
+        "items[0][price]": "price_sponsor_builder_quarterly",
+        "items[1][id]": "si_fee_1",
+        "items[1][price]": "price_fee_q_3",
+        "proration_behavior": "always_invoice",
+        "proration_date": "1794996000",
+        "payment_behavior": "error_if_incomplete"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    }
+  ]
+}

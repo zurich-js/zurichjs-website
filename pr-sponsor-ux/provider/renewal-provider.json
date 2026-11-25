@@ -1,0 +1,168 @@
+{
+  "invoice": {
+    "due": 12345,
+    "decline": false
+  },
+  "responses": [
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_1"
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "price_sponsor_builder_yearly",
+            "product": "prod_builder",
+            "currency": "chf",
+            "unit_amount": 500000
+          }
+        ]
+      }
+    },
+    {
+      "path": "/v1/prices",
+      "status": 200,
+      "body": {
+        "id": "price_fee_q_2"
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "2540",
+        "recurring[interval]": "month",
+        "recurring[interval_count]": "3",
+        "product_data[name]": "Payment processing fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {
+        "items[0][price]": "price_fee_q_1",
+        "items[0][quantity]": "1",
+        "proration_behavior": "none"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices",
+      "form": {
+        "currency": "chf",
+        "unit_amount": "14964",
+        "recurring[interval]": "year",
+        "recurring[interval_count]": "1",
+        "product": "prod_fee",
+        "metadata[source]": "zurichjs.com/partners",
+        "metadata[role]": "processing_fee",
+        "metadata[quoteId]": "q_2"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscription_schedules",
+      "form": {
+        "from_subscription": "sub_acme"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscription_schedules/sub_sched_1",
+      "form": {
+        "end_behavior": "release",
+        "metadata[plan]": "sponsor_builder_yearly",
+        "metadata[feeQuote]": "q_2",
+        "phases[0][start_date]": "1794960000",
+        "phases[0][end_date]": "1802908800",
+        "phases[0][items][0][price]": "price_sponsor_friend_quarterly",
+        "phases[0][items][0][quantity]": "1",
+        "phases[0][items][1][price]": "price_fee_q_1",
+        "phases[0][items][1][quantity]": "1",
+        "phases[0][metadata][source]": "zurichjs.com/partners",
+        "phases[0][proration_behavior]": "none",
+        "phases[1][duration][interval]": "year",
+        "phases[1][duration][interval_count]": "1",
+        "phases[1][items][0][price]": "price_sponsor_builder_yearly",
+        "phases[1][items][0][quantity]": "1",
+        "phases[1][items][1][price]": "price_fee_q_2",
+        "phases[1][items][1][quantity]": "1",
+        "phases[1][metadata][source]": "zurichjs.com/partners",
+        "phases[1][metadata][feePlanQuote]": "q_2",
+        "phases[1][proration_behavior]": "none"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscription_schedules/sub_sched_1",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/price_fee_q_2",
+      "form": {}
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/sub_acme",
+      "form": {}
+    }
+  ]
+}

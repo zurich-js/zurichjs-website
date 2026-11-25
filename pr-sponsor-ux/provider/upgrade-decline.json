@@ -1,0 +1,8 @@
+{
+  "status": 502,
+  "body": {
+    "ok": false,
+    "error": "We couldn’t change the sponsorship for certain: part of it may be saved. Reload the page to check before you try again, or write to hello@zurichjs.com.",
+    "outcome": "unknown"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "status": 503,
+  "body": {
+    "ok": false,
+    "error": "Sponsorship pages are not available yet. Write to hello@zurichjs.com."
+  }
+}

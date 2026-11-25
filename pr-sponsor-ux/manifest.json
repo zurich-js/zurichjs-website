@@ -1,0 +1,3998 @@
+{
+  "screenshots": [
+    {
+      "scene": "account-absorbed-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-absorbed-offer-320.png",
+      "width": 320,
+      "height": 7304,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "220c499db76dcbc64525eeabc76a77e13fac5d8b96bccf7052213bca7ab1aa40"
+    },
+    {
+      "scene": "account-absorbed-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-absorbed-offer-375.png",
+      "width": 375,
+      "height": 6748,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "84a4a713a410b28f95bc39646b524cf1385c6a58d3be7151662e9cf5e1b75d7f"
+    },
+    {
+      "scene": "account-absorbed-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-absorbed-offer-390.png",
+      "width": 390,
+      "height": 6697,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bb91a2e72319b29fe38b660aaea3b1b6998b5faaf3fe7ab835d0ef1adda4a512"
+    },
+    {
+      "scene": "account-absorbed-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-absorbed-offer-1280.png",
+      "width": 1280,
+      "height": 5324,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6bfeaaaff18d830577496442f50f65b5f8cc298ef2ca05589ee3b9cce1be99a3"
+    },
+    {
+      "scene": "account-absorbed-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-absorbed-offer-1440.png",
+      "width": 1440,
+      "height": 5392,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "189f5a976b8008fd4b8fae3b270104712a3c3b5076d75f37ee4471e7e911b208"
+    },
+    {
+      "scene": "account-agreements",
+      "route": "/partners/account",
+      "file": "screenshots/account-agreements-320.png",
+      "width": 320,
+      "height": 6862,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "728731bfc3475a1530702d1fc5f0aadcd579dbff02ccedd99a0bbeaed6c1137e"
+    },
+    {
+      "scene": "account-agreements",
+      "route": "/partners/account",
+      "file": "screenshots/account-agreements-375.png",
+      "width": 375,
+      "height": 6433,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b4597af173407f92106781d766cff7f478a35df66e01b4c50a869c0a2cbba222"
+    },
+    {
+      "scene": "account-agreements",
+      "route": "/partners/account",
+      "file": "screenshots/account-agreements-390.png",
+      "width": 390,
+      "height": 6353,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7739c2784b967250d9136de6ec9fd3f28ecb7ee3f5cd40a3fc5fb7b842f2805c"
+    },
+    {
+      "scene": "account-agreements",
+      "route": "/partners/account",
+      "file": "screenshots/account-agreements-1280.png",
+      "width": 1280,
+      "height": 4981,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f8e7a659089b7d956665c2211a433b7160945a196306f71f805eeb19d329a851"
+    },
+    {
+      "scene": "account-agreements",
+      "route": "/partners/account",
+      "file": "screenshots/account-agreements-1440.png",
+      "width": 1440,
+      "height": 5055,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "479a632c8a09265a71f190ef1074f06c168b1b2d6240e810f99d9796bbddae1d"
+    },
+    {
+      "scene": "account-colleague-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-colleague-invalid-320.png",
+      "width": 320,
+      "height": 7441,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5c21fb8d7b97b8ef14abbcdc6932f400ae4a6a41067f54968ea9bda622f93212"
+    },
+    {
+      "scene": "account-colleague-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-colleague-invalid-375.png",
+      "width": 375,
+      "height": 6956,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "83f111c30cd183e5a10b0fe83b88ce522da3ec740f2f50e81ed388ab337fd5a2"
+    },
+    {
+      "scene": "account-colleague-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-colleague-invalid-390.png",
+      "width": 390,
+      "height": 6876,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9395aa228b512be1942884dab748c3cecdb5360801c6e45d390c02d6eba933e3"
+    },
+    {
+      "scene": "account-colleague-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-colleague-invalid-1280.png",
+      "width": 1280,
+      "height": 5301,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0e59420d3d5659d375ca500881da46491533823ad35e3f541d7fcba07b8166a8"
+    },
+    {
+      "scene": "account-colleague-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-colleague-invalid-1440.png",
+      "width": 1440,
+      "height": 5374,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c820005609979a5b09f0f8beb779cc823945af316828ee62c553e331f834c9ab"
+    },
+    {
+      "scene": "account-covered",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-320.png",
+      "width": 320,
+      "height": 6364,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "313f83df422534077b923c14369d8fe297746718ef92fc2dd7e712fdf29720de"
+    },
+    {
+      "scene": "account-covered",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-375.png",
+      "width": 375,
+      "height": 5928,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2b853c9bb5d835f28ccf1b55e15795be93422f375faf43641fb4f760535ed6bb"
+    },
+    {
+      "scene": "account-covered",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-390.png",
+      "width": 390,
+      "height": 5876,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "385c376db0c95f8c405ea9ac176f202ade9a9fd4eb907002c470a37248e9d1b9"
+    },
+    {
+      "scene": "account-covered",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-1280.png",
+      "width": 1280,
+      "height": 4692,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3ca75b0cb0fbf6f2ff502ac391c801b2241a7e1686b2d26d150234638e7c9857"
+    },
+    {
+      "scene": "account-covered",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-1440.png",
+      "width": 1440,
+      "height": 4775,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "879cca366f0f5a573a2cb025c47b60b8d2490d40fde4ff10b096f3a2ce1a729d"
+    },
+    {
+      "scene": "account-covered-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-empty-320.png",
+      "width": 320,
+      "height": 6122,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "eff9835adff33db0844c50670ebb174731a6e98feec880d281c025b3f93996d4"
+    },
+    {
+      "scene": "account-covered-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-empty-375.png",
+      "width": 375,
+      "height": 5713,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "395a946f22aa665ce032aec473d7ac39ba6eeb46eb95d5a468531975c9bd9736"
+    },
+    {
+      "scene": "account-covered-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-empty-390.png",
+      "width": 390,
+      "height": 5633,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "52233ccbdac898afd092faee02e6ac76cab1d3acfc9bdac7d72634deabc69d7c"
+    },
+    {
+      "scene": "account-covered-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-empty-1280.png",
+      "width": 1280,
+      "height": 4497,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a48b34ee8e570f89a5c4f279bd2ef45af1796a99c6b879258188add9bf0e9f30"
+    },
+    {
+      "scene": "account-covered-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-empty-1440.png",
+      "width": 1440,
+      "height": 4571,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cab6ef46914eededcbead91887da483b4a4903f9fe5b03e35124c57619916175"
+    },
+    {
+      "scene": "account-covered-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-error-320.png",
+      "width": 320,
+      "height": 6155,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a7dfccc20f5d689763612711a8017bb5b0f7f608e24a7c163e7a4356c8f5d0e9"
+    },
+    {
+      "scene": "account-covered-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-error-375.png",
+      "width": 375,
+      "height": 5774,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "416d719d58041fae9a275039b4a461979074d9065594e6fb0229f1c43d468ee4"
+    },
+    {
+      "scene": "account-covered-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-error-390.png",
+      "width": 390,
+      "height": 5722,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2986bd813d6a39f3487481f3e23ae97c4f6da6c4c8109021a11324a216c8fe75"
+    },
+    {
+      "scene": "account-covered-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-error-1280.png",
+      "width": 1280,
+      "height": 4607,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0c69fe47435fec8acbd23d3ce250d7ddba08a7e78a991998aa2ff67b96e893ba"
+    },
+    {
+      "scene": "account-covered-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-error-1440.png",
+      "width": 1440,
+      "height": 4683,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f8c31c9b45f71d0920a272d5d7942452981eb752cc8e83bb63f4fe14ddf08598"
+    },
+    {
+      "scene": "account-covered-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-loading-320.png",
+      "width": 320,
+      "height": 5983,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3d1a188de799bd800eb5eb6a9430c5c89269d0b5f556c241c07f3f9db50da419"
+    },
+    {
+      "scene": "account-covered-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-loading-375.png",
+      "width": 375,
+      "height": 5602,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3fabdd23eadc56d01fffe25764c1f3ad3817a9744b7fbc209e8f8147d6e61cfa"
+    },
+    {
+      "scene": "account-covered-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-loading-390.png",
+      "width": 390,
+      "height": 5550,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "414c72afef0b9815cea4fa9d738b152661bd136bd459746260dcaffc58bb4d6e"
+    },
+    {
+      "scene": "account-covered-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-loading-1280.png",
+      "width": 1280,
+      "height": 4469,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "803cbeab81a66ba7391eef85af6501b0f32f34cf93576db5e18e65fb16608827"
+    },
+    {
+      "scene": "account-covered-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-loading-1440.png",
+      "width": 1440,
+      "height": 4543,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a1424e05c852777589c9de2293578734375966da03b0bc737efa954096a238fd"
+    },
+    {
+      "scene": "account-covered-stale",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-stale-320.png",
+      "width": 320,
+      "height": 6456,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a0a5ec7be2790e72795cac74f10656be45f858d7e27cbb79c0b741a01b7ddb1c"
+    },
+    {
+      "scene": "account-covered-stale",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-stale-375.png",
+      "width": 375,
+      "height": 6020,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e791ab97db926f2f708789ae4cf386eaebc01302e737f9ad4de5f1690265a093"
+    },
+    {
+      "scene": "account-covered-stale",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-stale-390.png",
+      "width": 390,
+      "height": 5968,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ea54e70c764ca770a1e8dca5d9fa738588617a1ca86a295e28652f13b7e1e5bd"
+    },
+    {
+      "scene": "account-covered-stale",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-stale-1280.png",
+      "width": 1280,
+      "height": 4736,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a6657be540eb013c28fca3e9a3c5a225804eef9082729c3d158821fb8586a06a"
+    },
+    {
+      "scene": "account-covered-stale",
+      "route": "/partners/account",
+      "file": "screenshots/account-covered-stale-1440.png",
+      "width": 1440,
+      "height": 4819,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "37ccee9aee92e00705102a3f0d865de0cb9315bb7e4772bd60a4a6d05aea506a"
+    },
+    {
+      "scene": "account-fee-in-force",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-in-force-320.png",
+      "width": 320,
+      "height": 6431,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a1b09cf4c0323753dd591902e96c264585a7dc99b512d44a58090113798a2d7d"
+    },
+    {
+      "scene": "account-fee-in-force",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-in-force-375.png",
+      "width": 375,
+      "height": 5965,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "937a722e7308aa8ce5e7ec0fab9a68e9eaf63a0731c791386b37907486735d80"
+    },
+    {
+      "scene": "account-fee-in-force",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-in-force-390.png",
+      "width": 390,
+      "height": 5885,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c0b2440ed9a53900c58f5a26a809d6579c77eb37e14b2ded67aed4ffed4661ed"
+    },
+    {
+      "scene": "account-fee-in-force",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-in-force-1280.png",
+      "width": 1280,
+      "height": 4720,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "79097784ef0fceab59500b7e127392a96384d71a1775bfe5f70e115742ed9d5d"
+    },
+    {
+      "scene": "account-fee-in-force",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-in-force-1440.png",
+      "width": 1440,
+      "height": 4794,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "09b0f19e4cdca6ff1afa427ddb4c5e113de6ec6b5bd9843de9ca232fd419955e"
+    },
+    {
+      "scene": "account-fee-to-confirm",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-to-confirm-320.png",
+      "width": 320,
+      "height": 6603,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "64024a357634abb56e5596898a4c1dd5c6798b3cccc4d347db529da37023165e"
+    },
+    {
+      "scene": "account-fee-to-confirm",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-to-confirm-375.png",
+      "width": 375,
+      "height": 6194,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c812b1caebbaadfe36fcda153fe13f9353e85f9c2deed28e3dfc121981e74422"
+    },
+    {
+      "scene": "account-fee-to-confirm",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-to-confirm-390.png",
+      "width": 390,
+      "height": 6056,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "359a044e28537490e5a394e6b5fee85a2c23c028c5604ce664de454d9fb269ad"
+    },
+    {
+      "scene": "account-fee-to-confirm",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-to-confirm-1280.png",
+      "width": 1280,
+      "height": 4836,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "705de28886b56419e601eb3efab3e0a30498c6e8b72ff6aa92f738ccec931271"
+    },
+    {
+      "scene": "account-fee-to-confirm",
+      "route": "/partners/account",
+      "file": "screenshots/account-fee-to-confirm-1440.png",
+      "width": 1440,
+      "height": 4910,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b30c804efcdb79127d41982ac73306638e252e2d0de7d54052531fbce76656ce"
+    },
+    {
+      "scene": "account-invitation",
+      "route": "/partners/account",
+      "file": "screenshots/account-invitation-320.png",
+      "width": 320,
+      "height": 3161,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a021cd00e17cb77bd683729446bcf5bcae60c72a5cf60585ab68dbc2beaf6539"
+    },
+    {
+      "scene": "account-invitation",
+      "route": "/partners/account",
+      "file": "screenshots/account-invitation-375.png",
+      "width": 375,
+      "height": 3057,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "114bf7daaff8eb0f9336b8b7072d65c38b757670a7e7e2dbfe29f958b0c83429"
+    },
+    {
+      "scene": "account-invitation",
+      "route": "/partners/account",
+      "file": "screenshots/account-invitation-390.png",
+      "width": 390,
+      "height": 3029,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e6591607a145227864a628af1c7a0aec5ccb048cd557af7c917fb606ba8ebd86"
+    },
+    {
+      "scene": "account-invitation",
+      "route": "/partners/account",
+      "file": "screenshots/account-invitation-1280.png",
+      "width": 1280,
+      "height": 2258,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "79a76835ef91a5a5b8266cec4a88956f00b91086c9cfa81562a83947a18bd30e"
+    },
+    {
+      "scene": "account-invitation",
+      "route": "/partners/account",
+      "file": "screenshots/account-invitation-1440.png",
+      "width": 1440,
+      "height": 2313,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a9e581ed97fb09546c5f8ef75dfd2489ad4e55ab20ec8f8679b4b0349a07af04"
+    },
+    {
+      "scene": "account-jump-focus",
+      "route": "/partners/account",
+      "file": "screenshots/account-jump-focus-320.png",
+      "width": 320,
+      "height": 6862,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7879842874dba958c290b531efeb93954fb28285b16c7671b4341d8a1cf67621"
+    },
+    {
+      "scene": "account-jump-focus",
+      "route": "/partners/account",
+      "file": "screenshots/account-jump-focus-375.png",
+      "width": 375,
+      "height": 6433,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6d13ff75e1d78c14c8e7c9d5461472c70481328f1f5c237ae79710ff773581e1"
+    },
+    {
+      "scene": "account-jump-focus",
+      "route": "/partners/account",
+      "file": "screenshots/account-jump-focus-390.png",
+      "width": 390,
+      "height": 6353,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d02a4be4cd155569f6c9ac3f77de2a938e940ac4dad78c67cdb5b393ab895cc9"
+    },
+    {
+      "scene": "account-jump-focus",
+      "route": "/partners/account",
+      "file": "screenshots/account-jump-focus-1280.png",
+      "width": 1280,
+      "height": 4981,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1c3a2e584f483b2d8e5e837e92340365481707d66dfffa49bf9c4d4deb22f0bf"
+    },
+    {
+      "scene": "account-jump-focus",
+      "route": "/partners/account",
+      "file": "screenshots/account-jump-focus-1440.png",
+      "width": 1440,
+      "height": 5055,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a74bb141fe42129292239b12ade7aa5c0abb09fbdaedb751313b8e18ef25cf1b"
+    },
+    {
+      "scene": "account-logo-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-logo-invalid-320.png",
+      "width": 320,
+      "height": 7123,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a8d1c2e57f00ab53848e77d9f4381ae467a121370682260a554ba9ff298ac455"
+    },
+    {
+      "scene": "account-logo-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-logo-invalid-375.png",
+      "width": 375,
+      "height": 6670,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6a356a8f524029d1e9cb7da0b77609f3f6dfc3bf6c2a15bbba758dc721132ea2"
+    },
+    {
+      "scene": "account-logo-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-logo-invalid-390.png",
+      "width": 390,
+      "height": 6590,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5af64ea38546a5f9a70166fd2ec638f7de1ae9c70b32529e4cbff29865caf3a3"
+    },
+    {
+      "scene": "account-logo-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-logo-invalid-1280.png",
+      "width": 1280,
+      "height": 5051,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d1dea1ba6f08cf0dbb02e73eac9ed69f9233ac206817f15016aa4891524a9af6"
+    },
+    {
+      "scene": "account-logo-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-logo-invalid-1440.png",
+      "width": 1440,
+      "height": 5124,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7f6c8cfc4440fb69246f1e71fe9360684451875bcda42187a5fda212e0bbe6f3"
+    },
+    {
+      "scene": "account-offer-absorb",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-absorb-320.png",
+      "width": 320,
+      "height": 5350,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "97033c496092e2dd7a3b292932d9f8300e089137b5df8ec657a62a7a0200fdf7"
+    },
+    {
+      "scene": "account-offer-absorb",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-absorb-375.png",
+      "width": 375,
+      "height": 4971,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cb993b1be22b58a73ca039a3c48a99da70f09b7ed16d44fd36c46be14e738b58"
+    },
+    {
+      "scene": "account-offer-absorb",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-absorb-390.png",
+      "width": 390,
+      "height": 4947,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "83c1006efa4738b8ed3e63be262c0007771161cb32ca757ac134d5b6d633490d"
+    },
+    {
+      "scene": "account-offer-absorb",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-absorb-1280.png",
+      "width": 1280,
+      "height": 4022,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "166b1ab91accfb8f48275de0a231d34ba3a9bd9e0f6a53ed4a8fb1a3e74f8287"
+    },
+    {
+      "scene": "account-offer-absorb",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-absorb-1440.png",
+      "width": 1440,
+      "height": 4130,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ddbc7d415f2d39e9fff00a913ba9af1d4c82d5020ee873a7d541f6676df51373"
+    },
+    {
+      "scene": "account-offer-pass-through",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-pass-through-320.png",
+      "width": 320,
+      "height": 5577,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b299021297667d36ca392266d1aceef8889f0bd53680ff4661920c169534d2d3"
+    },
+    {
+      "scene": "account-offer-pass-through",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-pass-through-375.png",
+      "width": 375,
+      "height": 5173,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5930c5c7f0bd9037a43320efdb4ab072ed55f19dffee30fdef4fee67327f064c"
+    },
+    {
+      "scene": "account-offer-pass-through",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-pass-through-390.png",
+      "width": 390,
+      "height": 5173,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "54a58fa79aa5958ea089814c244b3b89863d84591a97fefb0e4b026d66316da7"
+    },
+    {
+      "scene": "account-offer-pass-through",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-pass-through-1280.png",
+      "width": 1280,
+      "height": 4113,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b30ebfd82384aef56365e01eeb31a10276170e6ae69239b89bf971777f5acf96"
+    },
+    {
+      "scene": "account-offer-pass-through",
+      "route": "/partners/account",
+      "file": "screenshots/account-offer-pass-through-1440.png",
+      "width": 1440,
+      "height": 4224,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "26bccb7a43c0182f41f213f7cd114c2470c411654986d86e904727e68d4070a0"
+    },
+    {
+      "scene": "account-pending-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-pending-offer-320.png",
+      "width": 320,
+      "height": 7703,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4dd25492aa212a2151de086a5d56e129921396e1de62e36cb8bfc766d2604229"
+    },
+    {
+      "scene": "account-pending-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-pending-offer-375.png",
+      "width": 375,
+      "height": 7099,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ef905df868494eb211b225278ba32db69352aa029312ee4ad482662c0042561e"
+    },
+    {
+      "scene": "account-pending-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-pending-offer-390.png",
+      "width": 390,
+      "height": 7043,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "85aeee89c1a2ccec89fa16228020a0c845947df4055b3140904a2d14aa9679b7"
+    },
+    {
+      "scene": "account-pending-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-pending-offer-1280.png",
+      "width": 1280,
+      "height": 5487,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6848ae2140ad724642ed3a9ae7e29202e66a45f22149b6dd8e0394c026fe8a3c"
+    },
+    {
+      "scene": "account-pending-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-pending-offer-1440.png",
+      "width": 1440,
+      "height": 5558,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "03d963ccb972c2250dfc42268344762579ef17b9e9611e67b9351dca0bbb76f3"
+    },
+    {
+      "scene": "account-raffle-draw",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffle-draw-320.png",
+      "width": 320,
+      "height": 6346,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d560d1d336419800ab0a56c498856ba254a07a24b3fb4fa87adb56676a04cec8"
+    },
+    {
+      "scene": "account-raffle-draw",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffle-draw-375.png",
+      "width": 375,
+      "height": 5913,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "decc7639821a89ac5c66ffa15a2b9737edcae6a78ff7c892f11afbe334ca0b7b"
+    },
+    {
+      "scene": "account-raffle-draw",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffle-draw-390.png",
+      "width": 390,
+      "height": 5861,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "867c7e1afac8b9e51491e5effc1e15bca3d6fcc9ddf219df4de94a0ccc66256d"
+    },
+    {
+      "scene": "account-raffle-draw",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffle-draw-1280.png",
+      "width": 1280,
+      "height": 4661,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "33344849becf4554e206865a50f5cff732da7d2bf000f4a72f915f5615e9c08f"
+    },
+    {
+      "scene": "account-raffle-draw",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffle-draw-1440.png",
+      "width": 1440,
+      "height": 4739,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f1bbd1d427a75e96e8486a7b87db120f551a1378297b22d0093684702ac46de7"
+    },
+    {
+      "scene": "account-raffles",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-320.png",
+      "width": 320,
+      "height": 7196,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9dddefc802fb48ae7531c36ec19e735dee5971f64d329bd267e859fb08054f9e"
+    },
+    {
+      "scene": "account-raffles",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-375.png",
+      "width": 375,
+      "height": 6684,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "78d392fdf74f232f37ca80650c953d5a39fe91e6be71df65dec5038b7e27ec0e"
+    },
+    {
+      "scene": "account-raffles",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-390.png",
+      "width": 390,
+      "height": 6632,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "50d95dc48e6c198e0d99c2f0f3246c712ebc362dcd3698db365ba66626a3f680"
+    },
+    {
+      "scene": "account-raffles",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-1280.png",
+      "width": 1280,
+      "height": 5078,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4b748598a87c6e159346ca0501f0542943f85aa41d2a70f8c144f982ff826299"
+    },
+    {
+      "scene": "account-raffles",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-1440.png",
+      "width": 1440,
+      "height": 5160,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2b0a9b68ff9e208f7c14daabafba65f0f2239d5cc67f4fc2e22c6765605e20a8"
+    },
+    {
+      "scene": "account-raffles-accepted",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-accepted-320.png",
+      "width": 320,
+      "height": 6586,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "10e5a11f64d4c99a053b0ffa0481456980ebb5cd6c25597e967cf7fdbca91336"
+    },
+    {
+      "scene": "account-raffles-accepted",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-accepted-375.png",
+      "width": 375,
+      "height": 6121,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a3702a0e48d4651c17b949e59ad9156df6c28022c1f0a42ddd385ecd22f04edd"
+    },
+    {
+      "scene": "account-raffles-accepted",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-accepted-390.png",
+      "width": 390,
+      "height": 6069,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "585f6440d1c7a76b903dd27d62237cf4a5f5c793fdb574c8b1836f12fe5dcc98"
+    },
+    {
+      "scene": "account-raffles-accepted",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-accepted-1280.png",
+      "width": 1280,
+      "height": 4746,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "62cb7e045b7edf9f3d1488d5a26a10e8b4c956bc71be9a2529f85c8a2d52e2f1"
+    },
+    {
+      "scene": "account-raffles-accepted",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-accepted-1440.png",
+      "width": 1440,
+      "height": 4824,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c38030a1c883f6c694fda35d150d7a8bd6c43b45b475359cb13b30beb8736793"
+    },
+    {
+      "scene": "account-raffles-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-empty-320.png",
+      "width": 320,
+      "height": 6062,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "991979e0f30cb7e1b6ccbe7d0a99ee1d7e6535aeed8abd21611adc66ef5a0d85"
+    },
+    {
+      "scene": "account-raffles-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-empty-375.png",
+      "width": 375,
+      "height": 5653,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a071a3210ac030417b824ff98f0ee6cdcc230785f8ddb8d0543a8052a9491a9e"
+    },
+    {
+      "scene": "account-raffles-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-empty-390.png",
+      "width": 390,
+      "height": 5601,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "70e77af49ce334991ae62fb807ed2493349ab190f37cdeb0a1ac7c9da30f2952"
+    },
+    {
+      "scene": "account-raffles-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-empty-1280.png",
+      "width": 1280,
+      "height": 4495,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5f0a8280817a5abca1a05736364b016b37810babd6b7cbe4325fe64413aec5e8"
+    },
+    {
+      "scene": "account-raffles-empty",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-empty-1440.png",
+      "width": 1440,
+      "height": 4571,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "15ea8a7f028d0cb673ef5b1d1b2a9330eb291090bab086317d028de2b0f5007a"
+    },
+    {
+      "scene": "account-raffles-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-error-320.png",
+      "width": 320,
+      "height": 6170,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "64adbf645df4632edae5b6780ec3a4c69a44daaf38181728b6330d20810a090e"
+    },
+    {
+      "scene": "account-raffles-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-error-375.png",
+      "width": 375,
+      "height": 5761,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "64e9e28d1db146947aed6af9c3f2d4a41914e6a3d22ae0a62b397ab34bb60348"
+    },
+    {
+      "scene": "account-raffles-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-error-390.png",
+      "width": 390,
+      "height": 5684,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "932a0eeea10552d946794025358a1709c94741fb96bf94ac000b7113880be146"
+    },
+    {
+      "scene": "account-raffles-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-error-1280.png",
+      "width": 1280,
+      "height": 4569,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1613c495074490be23441f419427de78603d4a77dca44d5690f4c34b5884359e"
+    },
+    {
+      "scene": "account-raffles-error",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-error-1440.png",
+      "width": 1440,
+      "height": 4647,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ed7ea7d17ac849ec4b41c499d0ab45dbea8fd5d087422dc7a123080e23d4af95"
+    },
+    {
+      "scene": "account-raffles-form-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-form-invalid-320.png",
+      "width": 320,
+      "height": 7100,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6b30a5a938893ff3703ab8f69104cf777df14862a9bd8a089473be8b334e348f"
+    },
+    {
+      "scene": "account-raffles-form-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-form-invalid-375.png",
+      "width": 375,
+      "height": 6647,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4d2dbd70401ef45d5b1346a978da5d4861eefb54e41615a073324fa416202267"
+    },
+    {
+      "scene": "account-raffles-form-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-form-invalid-390.png",
+      "width": 390,
+      "height": 6573,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0a2a61a623b80be4ece4cdaf26bfd3b1a0b2a087357b15d1d4458d9ce2bfb901"
+    },
+    {
+      "scene": "account-raffles-form-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-form-invalid-1280.png",
+      "width": 1280,
+      "height": 5213,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "eb104149b7355291bcca64a486d38b1a86b578c50de89fbd25a720cf9849f03d"
+    },
+    {
+      "scene": "account-raffles-form-invalid",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-form-invalid-1440.png",
+      "width": 1440,
+      "height": 5292,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f025926f7041effde392a028d6ba2a4f8f215b85f9a64e6ab4e983f7d0d5cc60"
+    },
+    {
+      "scene": "account-raffles-ineligible",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-ineligible-320.png",
+      "width": 320,
+      "height": 6389,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3ca6640ee71116cdf8a385c14e5dcaccd7e41cbbb103d9c2cb6c92365f2bcea6"
+    },
+    {
+      "scene": "account-raffles-ineligible",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-ineligible-375.png",
+      "width": 375,
+      "height": 5956,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a3ce98ef9347700a36f0ee2b83958a14540e1c1d740a02ac16e5a44d7d6a71f5"
+    },
+    {
+      "scene": "account-raffles-ineligible",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-ineligible-390.png",
+      "width": 390,
+      "height": 5904,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7d5bc0b1239a341aba94163fe743500a53445df454e5427bc5516b53760824f2"
+    },
+    {
+      "scene": "account-raffles-ineligible",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-ineligible-1280.png",
+      "width": 1280,
+      "height": 4674,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d4aeedddd7a718a0f9ebd38ceac6f50dba236951629438cac3b9dcb7477f7fd4"
+    },
+    {
+      "scene": "account-raffles-ineligible",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-ineligible-1440.png",
+      "width": 1440,
+      "height": 4751,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "14ae316a6d206a071cba6f95014cf0c76487bce9d530377167e9a4068f538573"
+    },
+    {
+      "scene": "account-raffles-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-loading-320.png",
+      "width": 320,
+      "height": 5998,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ab1f21c8407093cdeadb075dc2be8e8afb9bfc30aef0ba546ec7e3aa7220a1a6"
+    },
+    {
+      "scene": "account-raffles-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-loading-375.png",
+      "width": 375,
+      "height": 5589,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "df6eee2f7922b2c79cc7db1432e6c7b8d7581712058c67491b0d087284fe7299"
+    },
+    {
+      "scene": "account-raffles-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-loading-390.png",
+      "width": 390,
+      "height": 5537,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a64a49b8a483b08750594ad224e59afa9659252455eadb2cfa92165f10ddd88d"
+    },
+    {
+      "scene": "account-raffles-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-loading-1280.png",
+      "width": 1280,
+      "height": 4431,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b735ed0c8242d4474505e11aeaa4b5e600c3d19e8c5f45001bd0c621144d17bd"
+    },
+    {
+      "scene": "account-raffles-loading",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-loading-1440.png",
+      "width": 1440,
+      "height": 4507,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "37ec00b8d5c4b24c400dd93378995f5b8f29ac1504ebdc4e522dc193de3353b7"
+    },
+    {
+      "scene": "account-raffles-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-offer-320.png",
+      "width": 320,
+      "height": 6738,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "75e79a03ea7e10f6aaed0e5b2d245ddac9da90f44cdddf51e9768e1b3d77f8d1"
+    },
+    {
+      "scene": "account-raffles-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-offer-375.png",
+      "width": 375,
+      "height": 6253,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9f6bd74d7e413f4d2854c684c59e0f20de78025c7ffc43ca44e677d2e1f753c6"
+    },
+    {
+      "scene": "account-raffles-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-offer-390.png",
+      "width": 390,
+      "height": 6201,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "8acaa1e37ce723909db96ff1b0a03a7dd9e7c96eea6ff0ad9e955bb2161c6c3c"
+    },
+    {
+      "scene": "account-raffles-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-offer-1280.png",
+      "width": 1280,
+      "height": 4786,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "8996b0d2578446c848d7fa83fd22e2817e755040c152036e50f8ac2ae972ee84"
+    },
+    {
+      "scene": "account-raffles-offer",
+      "route": "/partners/account",
+      "file": "screenshots/account-raffles-offer-1440.png",
+      "width": 1440,
+      "height": 4864,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "372f0979c17405a3cf460286e17374e263b330b7d24e302690114b7247955b43"
+    },
+    {
+      "scene": "account-replaces-renewal",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-replaces-renewal-320.png",
+      "width": 320,
+      "height": 7776,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e53e070f16e34a35f639bfe86c431314a578c7377a07d379786420809be22145"
+    },
+    {
+      "scene": "account-replaces-renewal",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-replaces-renewal-375.png",
+      "width": 375,
+      "height": 7203,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "118214c80344bfee4c1a0d66fbc036ae24ef125a24918188c6b18c25b72ff0ce"
+    },
+    {
+      "scene": "account-replaces-renewal",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-replaces-renewal-390.png",
+      "width": 390,
+      "height": 7124,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bd4354134f9d75bacc323a5485d5d321f32652ac1a5ab8bf18e4b38105bd6bc7"
+    },
+    {
+      "scene": "account-replaces-renewal",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-replaces-renewal-1280.png",
+      "width": 1280,
+      "height": 5433,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "dd875718ce6712b620f4f2ad99bdad8bd46a628abdbd0a235184b774e4547f1a"
+    },
+    {
+      "scene": "account-replaces-renewal",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-replaces-renewal-1440.png",
+      "width": 1440,
+      "height": 5508,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b4dc472ff06b9566c2f7f6f546409e43699bb3e9cadecbc495865151ab112f18"
+    },
+    {
+      "scene": "account-schedule-unknown",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-schedule-unknown-320.png",
+      "width": 320,
+      "height": 7443,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0675a47fc6c922d0fcb8ea08c2d3cb38f9138516a84729474ce8be539dee3a3c"
+    },
+    {
+      "scene": "account-schedule-unknown",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-schedule-unknown-375.png",
+      "width": 375,
+      "height": 6870,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0f8cdd03a2fd8c5f10b5589149274cd7bcb9032d16327a5e3381afa4c77bf4dd"
+    },
+    {
+      "scene": "account-schedule-unknown",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-schedule-unknown-390.png",
+      "width": 390,
+      "height": 6791,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7487db5dc1c802ffcc009a259251344ae2dfdc213aa4079db93eb7204f8a4dcb"
+    },
+    {
+      "scene": "account-schedule-unknown",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-schedule-unknown-1280.png",
+      "width": 1280,
+      "height": 5232,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1eec444180b00840c0a9a536f0cfba9c9a3e48a296bb7267df36ffabf538bb67"
+    },
+    {
+      "scene": "account-schedule-unknown",
+      "route": "/partners/account?change=champion-yearly",
+      "file": "screenshots/account-schedule-unknown-1440.png",
+      "width": 1440,
+      "height": 5310,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "fe3575b8c7b83a1ac2799e1e1a21339b640932048b7a9bfc497ab0940fa5b2a6"
+    },
+    {
+      "scene": "account-shared-contacts",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-contacts-320.png",
+      "width": 320,
+      "height": 6866,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f2b204f7ee4c4abd7d0b6461b3711ae2a16f429450c0e7a37758ff3ac3196275"
+    },
+    {
+      "scene": "account-shared-contacts",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-contacts-375.png",
+      "width": 375,
+      "height": 6313,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d1c115f4c5bc61ffe5b77e4cafed9a4ac3ba0673f1c81cfcafa0b887b6c07ddd"
+    },
+    {
+      "scene": "account-shared-contacts",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-contacts-390.png",
+      "width": 390,
+      "height": 6233,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2351cce8aefd154cb9ad5f7e44377eb6a86ab1868d04ed3ba7f90d3a9f0cc8ec"
+    },
+    {
+      "scene": "account-shared-contacts",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-contacts-1280.png",
+      "width": 1280,
+      "height": 4811,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "384cf28446921e6da10330ff47a9ddf575d041a9e79850f1793405ee2bb0d40f"
+    },
+    {
+      "scene": "account-shared-contacts",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-contacts-1440.png",
+      "width": 1440,
+      "height": 4887,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "379c3536f5ede824612486e3cdf74c49e4c3aeab22b2718ccc27a205cded5bd9"
+    },
+    {
+      "scene": "account-shared-none",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-none-320.png",
+      "width": 320,
+      "height": 6766,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a20532389ea3cf93156d77d9290cf6ded7cd33c9e0d0e7f4510b1ac4e191fbb6"
+    },
+    {
+      "scene": "account-shared-none",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-none-375.png",
+      "width": 375,
+      "height": 6261,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4c74c573f9812bc09a38002382f829c81899a0aee9e8de2eb4974f8f094423a9"
+    },
+    {
+      "scene": "account-shared-none",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-none-390.png",
+      "width": 390,
+      "height": 6181,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "349ff668f62530fa3a3b1178f5d25f0806ac5dd3391ea605dc8138b4477556e7"
+    },
+    {
+      "scene": "account-shared-none",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-none-1280.png",
+      "width": 1280,
+      "height": 4783,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "90a9835526be0710c05efa60d35b7c826a7c4d548d371f2835f025f63fc1e938"
+    },
+    {
+      "scene": "account-shared-none",
+      "route": "/partners/account",
+      "file": "screenshots/account-shared-none-1440.png",
+      "width": 1440,
+      "height": 4859,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3e6eb1e5ed5df6300cdc8c81f84bb8a05ccdc491649e2beceaa6d941d4242aaa"
+    },
+    {
+      "scene": "account-sign-in",
+      "route": "/partners/account",
+      "file": "screenshots/account-sign-in-320.png",
+      "width": 320,
+      "height": 3138,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6294a9070b2762245fddbbf96bc160adf3a7e0fefe17c9c5b383927d0a3f5510"
+    },
+    {
+      "scene": "account-sign-in",
+      "route": "/partners/account",
+      "file": "screenshots/account-sign-in-375.png",
+      "width": 375,
+      "height": 3006,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "55296135492e4576d869642279c33c34357039c472a240ffeb0461da9d3b479d"
+    },
+    {
+      "scene": "account-sign-in",
+      "route": "/partners/account",
+      "file": "screenshots/account-sign-in-390.png",
+      "width": 390,
+      "height": 3006,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4b0117f6d6cc13cf77358ee29b32aefd62d20b555255b6f808decaad7ade41b8"
+    },
+    {
+      "scene": "account-sign-in",
+      "route": "/partners/account",
+      "file": "screenshots/account-sign-in-1280.png",
+      "width": 1280,
+      "height": 2151,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "11b5f120ed0314627f528e97b680132796ade27c9ec3644b92b793fc22f6940c"
+    },
+    {
+      "scene": "account-sign-in",
+      "route": "/partners/account",
+      "file": "screenshots/account-sign-in-1440.png",
+      "width": 1440,
+      "height": 2205,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "49203a2a0bd0b24b2bf26b2b9aef05cb90246422b6bbb59b2525f1f0a2dc7a95"
+    },
+    {
+      "scene": "account-start",
+      "route": "/partners/account",
+      "file": "screenshots/account-start-320.png",
+      "width": 320,
+      "height": 5212,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d35882238b04b178573b79de217565396bbb1e467364db661c70758cb140727c"
+    },
+    {
+      "scene": "account-start",
+      "route": "/partners/account",
+      "file": "screenshots/account-start-375.png",
+      "width": 375,
+      "height": 4873,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1ca9116799344e2dcad9e6f873bfdb1bbc2a524f07077ed4f70a10f2114d9008"
+    },
+    {
+      "scene": "account-start",
+      "route": "/partners/account",
+      "file": "screenshots/account-start-390.png",
+      "width": 390,
+      "height": 4865,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "14a3ec7a11145f464f3cd9e890dd9e83456069de3c4d90cba3eb369f53bb151e"
+    },
+    {
+      "scene": "account-start",
+      "route": "/partners/account",
+      "file": "screenshots/account-start-1280.png",
+      "width": 1280,
+      "height": 3643,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "8b415d89aa39e27001cefb8477734fa6c6910904380694b22b00f444a4420be7"
+    },
+    {
+      "scene": "account-start",
+      "route": "/partners/account",
+      "file": "screenshots/account-start-1440.png",
+      "width": 1440,
+      "height": 3702,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d9449045b7f0a7fde4e63f00b524f7cc5c58f6f66895225a5a929abfe5297a48"
+    },
+    {
+      "scene": "admin-agreement-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-agreement-history-320.png",
+      "width": 320,
+      "height": 6706,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "505ed55e39ea196ab7baba66feb99b884764701cd4d7499296defc3ae0c32141"
+    },
+    {
+      "scene": "admin-agreement-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-agreement-history-375.png",
+      "width": 375,
+      "height": 6395,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a311ef852071e56d4e1f8bd52e9ad77a9652c0955d4641b26dc67f4a19874ca1"
+    },
+    {
+      "scene": "admin-agreement-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-agreement-history-390.png",
+      "width": 390,
+      "height": 6311,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7f68de119209291f576b2f5292f630d4be9f95ce90a1c26971ecaf105b6d66e4"
+    },
+    {
+      "scene": "admin-agreement-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-agreement-history-1280.png",
+      "width": 1280,
+      "height": 4963,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9e3bd60a1c3f2c8c862274658e33cca2456b06e66e999628d201902ba6a7d783"
+    },
+    {
+      "scene": "admin-agreement-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-agreement-history-1440.png",
+      "width": 1440,
+      "height": 5008,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ef62b84c9585b90593a4c4086f09ca715e69754b390b9b91a8a554aeab80f9ea"
+    },
+    {
+      "scene": "admin-contact",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-contact-320.png",
+      "width": 320,
+      "height": 6801,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7d9662921314039de62912c358f92a810f846e2dd55d812b3d2e4ca13b94960f"
+    },
+    {
+      "scene": "admin-contact",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-contact-375.png",
+      "width": 375,
+      "height": 6537,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "edf3b0ac6f7b18116ff90a192f7bbc53561b310d21c5c3b5879adc1675cabbb7"
+    },
+    {
+      "scene": "admin-contact",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-contact-390.png",
+      "width": 390,
+      "height": 6473,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9c0b7fef7942a9ed5a44bc4b0ea7f5bb498beb3938e6974373c46787d7b9e545"
+    },
+    {
+      "scene": "admin-contact",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-contact-1280.png",
+      "width": 1280,
+      "height": 4885,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0d78ffe6e104421e40795c43072d5c15f5b61de1c2564804c9395078b6fed009"
+    },
+    {
+      "scene": "admin-contact",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-contact-1440.png",
+      "width": 1440,
+      "height": 4928,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "70a407574006d28a191bd9d796fd17f34ee604a75f1ace528e58322d2c6464f7"
+    },
+    {
+      "scene": "admin-coverage",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-coverage-320.png",
+      "width": 320,
+      "height": 6297,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c99b8247faaf5efa37035896bfba4986f01b650c792685779acf97e02113b25c"
+    },
+    {
+      "scene": "admin-coverage",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-coverage-375.png",
+      "width": 375,
+      "height": 6053,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3fd957dc44e48e601c7e2e34c174eb2afefbd0c7a6f9e2cca6bb32da076b5f58"
+    },
+    {
+      "scene": "admin-coverage",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-coverage-390.png",
+      "width": 390,
+      "height": 5989,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "dbd634d8050037392390c71c55af8f38c5313146fe208cdd153d9acce7fe876a"
+    },
+    {
+      "scene": "admin-coverage",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-coverage-1280.png",
+      "width": 1280,
+      "height": 4508,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "28709ba7c39c30aeace6dfa438b67dc0d13479d62f18a4e88276301b9f73f8a8"
+    },
+    {
+      "scene": "admin-coverage",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-coverage-1440.png",
+      "width": 1440,
+      "height": 4551,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "df002520a3363c59967a7010b48f8ab40f4ad5fabcd137f8c1e1ac59c2e02d59"
+    },
+    {
+      "scene": "admin-end-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-end-form-320.png",
+      "width": 320,
+      "height": 6960,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bc05eb1586d7f0eb09b7f0970fee40525e344116d6b82972ddfe06ad757a5f62"
+    },
+    {
+      "scene": "admin-end-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-end-form-375.png",
+      "width": 375,
+      "height": 6648,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "33c4699caf4c0599ca856f2171e5fd22a026fb64b586430c5103f7fafd670304"
+    },
+    {
+      "scene": "admin-end-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-end-form-390.png",
+      "width": 390,
+      "height": 6560,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "54f1c495f5f2df9625b3d54ebb1e0a9660f799bf92bf72a54a43f22bc77c69c6"
+    },
+    {
+      "scene": "admin-end-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-end-form-1280.png",
+      "width": 1280,
+      "height": 5032,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0f57eaee1a7d803a383315ffee51744bb247487fca0ccb78afc49d7995c06c99"
+    },
+    {
+      "scene": "admin-end-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-end-form-1440.png",
+      "width": 1440,
+      "height": 5076,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "8d139d4d5a862cf9bb780f1a6741cfd569080f711e79b34eaa485d043625c309"
+    },
+    {
+      "scene": "admin-fees-bank-transfer",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-bank-transfer-320.png",
+      "width": 320,
+      "height": 5837,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ef6276e62170d14a537c4e73a883057d4ab65315dd580f1e7525efd898ec10c4"
+    },
+    {
+      "scene": "admin-fees-bank-transfer",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-bank-transfer-375.png",
+      "width": 375,
+      "height": 5593,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "341a3b975695aa2e90d8bd31649a56d569a23e0ef754936973f9bb68c2e99a85"
+    },
+    {
+      "scene": "admin-fees-bank-transfer",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-bank-transfer-390.png",
+      "width": 390,
+      "height": 5529,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d6698989dc21a8af73e229db279284f6a92a32d2e7eab8b0a12e8273bd09a9c6"
+    },
+    {
+      "scene": "admin-fees-bank-transfer",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-bank-transfer-1280.png",
+      "width": 1280,
+      "height": 4233,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "06c557fec09b4c006382dbc35e4a6b8f67f74de09ad65b2d851c558ba1f8f38c"
+    },
+    {
+      "scene": "admin-fees-bank-transfer",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-bank-transfer-1440.png",
+      "width": 1440,
+      "height": 4275,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "84ac7d3387c92d77551ff1338b2805d4ae6237eb48d6778fedb571b364eca177"
+    },
+    {
+      "scene": "admin-fees-invalid",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-invalid-320.png",
+      "width": 320,
+      "height": 4744,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a164e973dfdbd520fb7ee4e1bc8c2d568ce6e454b677a98ec5792f8f24897f5e"
+    },
+    {
+      "scene": "admin-fees-invalid",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-invalid-375.png",
+      "width": 375,
+      "height": 4477,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "03d3ac6bc670f76e9fbf798133fad63ed6e0948b59c49a8b15157606ac7445b8"
+    },
+    {
+      "scene": "admin-fees-invalid",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-invalid-390.png",
+      "width": 390,
+      "height": 4421,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9dcae933433ee4881034f0482f0c200f5369ed10c741dc136dd0c238450e1f82"
+    },
+    {
+      "scene": "admin-fees-invalid",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-invalid-1280.png",
+      "width": 1280,
+      "height": 3244,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "146316013827698f33a6c59b10d5e78c5dc1b510768e0e3067e34cdeeaf4ac82"
+    },
+    {
+      "scene": "admin-fees-invalid",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-invalid-1440.png",
+      "width": 1440,
+      "height": 3317,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f13574067f908c9e6a2214de7179516a279fe8e2129380f6b0db87688dea4c02"
+    },
+    {
+      "scene": "admin-fees-off-no-tariff",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-no-tariff-320.png",
+      "width": 320,
+      "height": 4033,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e7ae45120c2142f2ec08d201d11c2bfe00224c25d22926c003c494f73aa3f848"
+    },
+    {
+      "scene": "admin-fees-off-no-tariff",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-no-tariff-375.png",
+      "width": 375,
+      "height": 3870,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c16000af0882f2b94bd326977e34825ddd605c5edde9779ad3de83e9bb3c2147"
+    },
+    {
+      "scene": "admin-fees-off-no-tariff",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-no-tariff-390.png",
+      "width": 390,
+      "height": 3814,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a5921b59db4a052c88d334c3a1428a4fe88ba1c377f6a71e732cdd8ce7b7c577"
+    },
+    {
+      "scene": "admin-fees-off-no-tariff",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-no-tariff-1280.png",
+      "width": 1280,
+      "height": 2732,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "398b5cce6edb83903163254ff5a228619a1454b0a9ba252872751c04b047f272"
+    },
+    {
+      "scene": "admin-fees-off-no-tariff",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-no-tariff-1440.png",
+      "width": 1440,
+      "height": 2806,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bb59f7163e4d124caf820deff786e6a4c4d121e7163d526999d0941c8e59ad23"
+    },
+    {
+      "scene": "admin-fees-off-policy",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-policy-320.png",
+      "width": 320,
+      "height": 4145,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9ad380b47b9485877476c57c09901912532b05dcd2eeccc7a71f9d57da2c500a"
+    },
+    {
+      "scene": "admin-fees-off-policy",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-policy-375.png",
+      "width": 375,
+      "height": 3958,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "843b7f052b2cdcfefebd1f674b167779cc8d608f8c7659b6c6e6d2f3be68cdc2"
+    },
+    {
+      "scene": "admin-fees-off-policy",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-policy-390.png",
+      "width": 390,
+      "height": 3902,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "71724290f4f17ee02ea7bf772325f373651af4ad0b8d830e6a8e623742678bd8"
+    },
+    {
+      "scene": "admin-fees-off-policy",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-policy-1280.png",
+      "width": 1280,
+      "height": 2772,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c771b57f6906ed51ebfa8251d031a01d555d84de9d01f5451f94d5e124296c0c"
+    },
+    {
+      "scene": "admin-fees-off-policy",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-off-policy-1440.png",
+      "width": 1440,
+      "height": 2846,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a0d4d9bf71bd433fb001bc6a4b1a075f6213346ffa2375cf2166291746a535fd"
+    },
+    {
+      "scene": "admin-fees-on",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-on-320.png",
+      "width": 320,
+      "height": 4090,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "306acde6c7f326593803d345c62d4284ce5b18acd74f89fb905e802f29aa52ea"
+    },
+    {
+      "scene": "admin-fees-on",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-on-375.png",
+      "width": 375,
+      "height": 3930,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6c98bbad0b5da652723548b036315c0f363600f3f6d43d9ed07f852ce17787af"
+    },
+    {
+      "scene": "admin-fees-on",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-on-390.png",
+      "width": 390,
+      "height": 3874,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3184f3f5bdf8fc1870c3cb17e51f8811c622e05d6241a4a6125ed7c378e87451"
+    },
+    {
+      "scene": "admin-fees-on",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-on-1280.png",
+      "width": 1280,
+      "height": 2772,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "45f2f908f42795f6e707f4deab73b658a6f0b310aefa1faa7d21bbefedf3a7db"
+    },
+    {
+      "scene": "admin-fees-on",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-fees-on-1440.png",
+      "width": 1440,
+      "height": 2846,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bffe7fa7fa4e87e3547b605186e8bc400fa1e6b5794ae6017ff8b51c58faff71"
+    },
+    {
+      "scene": "admin-fees-running",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-running-320.png",
+      "width": 320,
+      "height": 6113,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "00e1cc5aadba43c037f6f5c161d30f4fcff3906aefca17597eb997ff6b22c89d"
+    },
+    {
+      "scene": "admin-fees-running",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-running-375.png",
+      "width": 375,
+      "height": 5869,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6256fb1eb4ba75faaeaa65062b8ade41964d55a8630bbece4b5b7188a03d01aa"
+    },
+    {
+      "scene": "admin-fees-running",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-running-390.png",
+      "width": 390,
+      "height": 5781,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "11dc58d709a037df3ee191c170625f4ef7aed8dbe7459c9fa8e3c3f61bf7c6e8"
+    },
+    {
+      "scene": "admin-fees-running",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-running-1280.png",
+      "width": 1280,
+      "height": 4405,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "288b677b63d8cb8d8d17104fd78ec1c51205d20629f0c61cded13bf6b10b900c"
+    },
+    {
+      "scene": "admin-fees-running",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-running-1440.png",
+      "width": 1440,
+      "height": 4447,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ce59741de184b01a04f56fcac29df5651459c9fd21a5b05078065e38f3ced76a"
+    },
+    {
+      "scene": "admin-fees-sent",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-sent-320.png",
+      "width": 320,
+      "height": 6499,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "da278881c9986d09c5d55e091260b29efaa528e03a7043a09f5c42af91e6dec3"
+    },
+    {
+      "scene": "admin-fees-sent",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-sent-375.png",
+      "width": 375,
+      "height": 6230,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6a4fd9d9f409171b2ecd9c9785cbc6bb3b0341fa32d77c6ef5c200080b311e96"
+    },
+    {
+      "scene": "admin-fees-sent",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-sent-390.png",
+      "width": 390,
+      "height": 6142,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "190e81c0dbe95aab52438fe2cb4077224e236f81dbdca6eae7c727042b2aac6d"
+    },
+    {
+      "scene": "admin-fees-sent",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-sent-1280.png",
+      "width": 1280,
+      "height": 4679,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bfd8e2291050073fa02455706cb760f471d1d167da8197d48833e22d2efc8ea9"
+    },
+    {
+      "scene": "admin-fees-sent",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-fees-sent-1440.png",
+      "width": 1440,
+      "height": 4723,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "98fbd072b4049731710f64195aa1a0d2d8983e4edff03cbe4b83caf10943af35"
+    },
+    {
+      "scene": "admin-import",
+      "route": "/admin/sponsors?add=import",
+      "file": "screenshots/admin-import-320.png",
+      "width": 320,
+      "height": 4934,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "13641839d7840c87009fbdd92df1818a05778a27cae2a3837336bca02c104ebc"
+    },
+    {
+      "scene": "admin-import",
+      "route": "/admin/sponsors?add=import",
+      "file": "screenshots/admin-import-375.png",
+      "width": 375,
+      "height": 4665,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "712d08c480ce0ae130ba930f8ec7ffe877f6855f587164676f58567e523e13a1"
+    },
+    {
+      "scene": "admin-import",
+      "route": "/admin/sponsors?add=import",
+      "file": "screenshots/admin-import-390.png",
+      "width": 390,
+      "height": 4635,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f2c5ea83045abe884eab05ce56c95a76e7c6986161120b959f47e3453a6515db"
+    },
+    {
+      "scene": "admin-import",
+      "route": "/admin/sponsors?add=import",
+      "file": "screenshots/admin-import-1280.png",
+      "width": 1280,
+      "height": 3187,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "48ae489133acd2f1f5e2422956f074dafae817d21c3be34d2ebd76d83fa78399"
+    },
+    {
+      "scene": "admin-import",
+      "route": "/admin/sponsors?add=import",
+      "file": "screenshots/admin-import-1440.png",
+      "width": 1440,
+      "height": 3242,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "daa789f1ebebe90d131fdaa5ec99c0d625386549e2d0c54b90ffb13ff17b6a2b"
+    },
+    {
+      "scene": "admin-invite",
+      "route": "/admin/sponsors?add=invite",
+      "file": "screenshots/admin-invite-320.png",
+      "width": 320,
+      "height": 4583,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5e540f20c10983adabda84ad4f758671cd02a4f58bbdab30ae2853c54c75007c"
+    },
+    {
+      "scene": "admin-invite",
+      "route": "/admin/sponsors?add=invite",
+      "file": "screenshots/admin-invite-375.png",
+      "width": 375,
+      "height": 4389,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "835a029cf7732773dfddd95f6aad4f70959236f53d1092c3b50f684cc310efc5"
+    },
+    {
+      "scene": "admin-invite",
+      "route": "/admin/sponsors?add=invite",
+      "file": "screenshots/admin-invite-390.png",
+      "width": 390,
+      "height": 4361,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "366cd7daa7403fe7b6df119b2a57c80e6ed8ae8cfc41867a180d135c881d13b0"
+    },
+    {
+      "scene": "admin-invite",
+      "route": "/admin/sponsors?add=invite",
+      "file": "screenshots/admin-invite-1280.png",
+      "width": 1280,
+      "height": 3035,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7a66e1f6c2b63e36ac8c03245eef6eb36977df35d0c2d2d2db13a0d8d2d00bdb"
+    },
+    {
+      "scene": "admin-invite",
+      "route": "/admin/sponsors?add=invite",
+      "file": "screenshots/admin-invite-1440.png",
+      "width": 1440,
+      "height": 3090,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "43ccb049bff625d84d5d491914825c3184b86f076e2752e4d68ccf2a42a62f53"
+    },
+    {
+      "scene": "admin-link-created",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-created-320.png",
+      "width": 320,
+      "height": 6397,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f4ae9ab17ea1c89937990950fb98e3c571ecac997cb692837c118072e3b16880"
+    },
+    {
+      "scene": "admin-link-created",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-created-375.png",
+      "width": 375,
+      "height": 6108,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0ad900a741f153798e0fdc3019aef5ee52437d30a74c0092a65352e3794fed1c"
+    },
+    {
+      "scene": "admin-link-created",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-created-390.png",
+      "width": 390,
+      "height": 6108,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ec5c110624a76426b362d5812b808cfb513542dfba9ebe92c3b6274ab772433b"
+    },
+    {
+      "scene": "admin-link-created",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-created-1280.png",
+      "width": 1280,
+      "height": 4604,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "586abb55334eecf5db24f22bfff4649494ac8a7e8cf6c70591376188125d8f79"
+    },
+    {
+      "scene": "admin-link-created",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-created-1440.png",
+      "width": 1440,
+      "height": 4647,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a61908321d305894c75aca2d054c76f836544b7313027f244be9120d45277678"
+    },
+    {
+      "scene": "admin-link-gate-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-gate-closed-320.png",
+      "width": 320,
+      "height": 6979,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "19aa5e70d7993ec7e774c34f92e223e802ab4a8f7d5ddf88b40a2e9bbfcbbca0"
+    },
+    {
+      "scene": "admin-link-gate-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-gate-closed-375.png",
+      "width": 375,
+      "height": 6667,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "14eff178f9ba5cb962ba0282cba170f4a73f4ec4588f33a6f3865f47a27aae52"
+    },
+    {
+      "scene": "admin-link-gate-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-gate-closed-390.png",
+      "width": 390,
+      "height": 6667,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "56829069c742ac20420056b2eab75fa313147b7eeb5da6f8c42225b3ac0c74ec"
+    },
+    {
+      "scene": "admin-link-gate-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-gate-closed-1280.png",
+      "width": 1280,
+      "height": 4874,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "294c8ab443fd7271bb6b44de55426f6440084927aa5d2f5b04923fb4e36e1907"
+    },
+    {
+      "scene": "admin-link-gate-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-gate-closed-1440.png",
+      "width": 1440,
+      "height": 4917,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "567c8be8694726e237e6325ccd61def8387fab02d11e2b382db6ffcd59cc1b0a"
+    },
+    {
+      "scene": "admin-link-pass-through",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-pass-through-320.png",
+      "width": 320,
+      "height": 7222,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "456583c017275eaceb8854a3299802ede34cc5bb27273f697e4c770aca2e49cc"
+    },
+    {
+      "scene": "admin-link-pass-through",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-pass-through-375.png",
+      "width": 375,
+      "height": 6888,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "17dbfea9d4f5cda79b1a01d86bc4603007e1099f9ff8a436f456e6b3a7961ae3"
+    },
+    {
+      "scene": "admin-link-pass-through",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-pass-through-390.png",
+      "width": 390,
+      "height": 6888,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9a2b0330289d58983f37cd7d977dac8992cd104c8f96b6634808298d16f8de3c"
+    },
+    {
+      "scene": "admin-link-pass-through",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-pass-through-1280.png",
+      "width": 1280,
+      "height": 4954,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7df0c87692376c2c7d29691635b44c681babe028620a66b246ebae97006bb93c"
+    },
+    {
+      "scene": "admin-link-pass-through",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-link-pass-through-1440.png",
+      "width": 1440,
+      "height": 4997,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b167aae73f6665bcbd14b15e4b3efa8d95e5d0b10df65d70feb3a87086789364"
+    },
+    {
+      "scene": "admin-raffle-draw-confirm",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-draw-confirm-320.png",
+      "width": 320,
+      "height": 6783,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "87ec9b082dda7c58fa748a64e89b820663e50c9e07a1a1199896c356730e3ec5"
+    },
+    {
+      "scene": "admin-raffle-draw-confirm",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-draw-confirm-375.png",
+      "width": 375,
+      "height": 6407,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f08eaa069524729e190ca17ae939ee90ef0c1c48d7e6af3367e6e91d6eed4a69"
+    },
+    {
+      "scene": "admin-raffle-draw-confirm",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-draw-confirm-390.png",
+      "width": 390,
+      "height": 6343,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7d1faa2ed27a2361a7184d5758c303c373e702afac67dc7c947b78fa645b88ce"
+    },
+    {
+      "scene": "admin-raffle-draw-confirm",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-draw-confirm-1280.png",
+      "width": 1280,
+      "height": 4687,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "422f3dc616191d612b03c327b6b62e75c669292e5ea5f676cb8d6c2efa9e549a"
+    },
+    {
+      "scene": "admin-raffle-draw-confirm",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-draw-confirm-1440.png",
+      "width": 1440,
+      "height": 4729,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f4fee4f23e325b9a82e5820f80e5cc40734302819e75dc554124e5eb47e84497"
+    },
+    {
+      "scene": "admin-raffle-drawn",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-drawn-320.png",
+      "width": 320,
+      "height": 6875,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ccb6cde1485fcfe90d5a8a8a1e5fc87fa7ec141873e1a4193771aff57d4e8aea"
+    },
+    {
+      "scene": "admin-raffle-drawn",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-drawn-375.png",
+      "width": 375,
+      "height": 6535,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "41b33f8892d9b9305e45e73116ca5e949543912276f16752324000958226f992"
+    },
+    {
+      "scene": "admin-raffle-drawn",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-drawn-390.png",
+      "width": 390,
+      "height": 6471,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d7f47d79c093c2b9b38f01456b5f39aec6020dc77b17bced892d3a87f82a09df"
+    },
+    {
+      "scene": "admin-raffle-drawn",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-drawn-1280.png",
+      "width": 1280,
+      "height": 4735,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d8d00f731fd49fb1278628fadc65e55d4c186db00cf895656587afca21c36f14"
+    },
+    {
+      "scene": "admin-raffle-drawn",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-drawn-1440.png",
+      "width": 1440,
+      "height": 4777,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3c720c681a5acf43094ec5f0df3370d543e11a934c42819c1b4155e7a63b93b7"
+    },
+    {
+      "scene": "admin-raffle-open",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-320.png",
+      "width": 320,
+      "height": 6673,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e3e8433e917f3cc2af5e0eeb7947f08ccf3b8c1af8aab822d45ccabcd3ab8e3d"
+    },
+    {
+      "scene": "admin-raffle-open",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-375.png",
+      "width": 375,
+      "height": 6381,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "778ac0e82ec43348449e424040f5bb988f3db1da8f629314279525d39f3a3ad6"
+    },
+    {
+      "scene": "admin-raffle-open",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-390.png",
+      "width": 390,
+      "height": 6317,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0bd9a1e9ee2a2e6f6b19c6483d26cc922f02eb0e416781b4d3c0b00671b6e527"
+    },
+    {
+      "scene": "admin-raffle-open",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-1280.png",
+      "width": 1280,
+      "height": 4733,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "aeb2f6595be48b25e6bc74b276536910f8c3d35abcb83b8e20ad1ccd9cfb1acb"
+    },
+    {
+      "scene": "admin-raffle-open",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-1440.png",
+      "width": 1440,
+      "height": 4775,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "66e4f058cf6c834118b26c8fc5d5f0e70882b7731018027a52fb51e37c19850c"
+    },
+    {
+      "scene": "admin-raffle-open-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-form-320.png",
+      "width": 320,
+      "height": 6863,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "91ea36f599749dd954c31420e044d8480e6dea7bd1136787f570d6f7c41f1a91"
+    },
+    {
+      "scene": "admin-raffle-open-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-form-375.png",
+      "width": 375,
+      "height": 6487,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0d3afd0bde51c55d7817c8229f9e672cd18a57ba9980b47e7ecae15b308a5f9b"
+    },
+    {
+      "scene": "admin-raffle-open-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-form-390.png",
+      "width": 390,
+      "height": 6423,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e1ae212e37c32f0b47a161b71f496964aec5ccaa0f608fc8e4301e2cead36dda"
+    },
+    {
+      "scene": "admin-raffle-open-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-form-1280.png",
+      "width": 1280,
+      "height": 4815,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "755ed479d255d93611594307c961bcbf2f74d7bc812a3672986b6744f7d65484"
+    },
+    {
+      "scene": "admin-raffle-open-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-open-form-1440.png",
+      "width": 1440,
+      "height": 4857,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f1f30449381ef7747b24068e753256aa31214140fe84fc5928c81f21de1e77ad"
+    },
+    {
+      "scene": "admin-raffle-rules-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-rules-closed-320.png",
+      "width": 320,
+      "height": 6551,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "43a5284d57fa1f6f17e250f0a6470e1987ca2f289fd52ea5a39aa85207674ccc"
+    },
+    {
+      "scene": "admin-raffle-rules-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-rules-closed-375.png",
+      "width": 375,
+      "height": 6175,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9281d3ba410ef516d4105ffaa57ea8b094e3a9f70c7dcc5fee536813903e4eb4"
+    },
+    {
+      "scene": "admin-raffle-rules-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-rules-closed-390.png",
+      "width": 390,
+      "height": 6111,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "dd1d8a2813d93140e0d293360266f01ad71ecb465b50538d017dad0dcd67139c"
+    },
+    {
+      "scene": "admin-raffle-rules-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-rules-closed-1280.png",
+      "width": 1280,
+      "height": 4587,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "701c9cd417bbd63292a7a07e1ca0d31e32d89bf7597a4eef11cb3d27fba21953"
+    },
+    {
+      "scene": "admin-raffle-rules-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffle-rules-closed-1440.png",
+      "width": 1440,
+      "height": 4629,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1c2fd84ab02237b33b4508e156f0d472007a432b3c3118b29fe223b7458a9a0c"
+    },
+    {
+      "scene": "admin-raffles",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-320.png",
+      "width": 320,
+      "height": 7790,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c057e2d5da21dcd9eebea9f80af474d689fd1f8be849a2242c762afcba35741a"
+    },
+    {
+      "scene": "admin-raffles",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-375.png",
+      "width": 375,
+      "height": 7198,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e8df58676610754608f9767581a50f65b77ac9bd3b08119a54fdc5dd723f4ced"
+    },
+    {
+      "scene": "admin-raffles",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-390.png",
+      "width": 390,
+      "height": 7110,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d1f3aa3f4031556102a535dcd350dc4557398ced09be6222ad253c248c1cdc25"
+    },
+    {
+      "scene": "admin-raffles",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-1280.png",
+      "width": 1280,
+      "height": 5186,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5b99f5edaba9eeb6b075d66a6683c994af049fbbbc07162f6457a3547f4b3654"
+    },
+    {
+      "scene": "admin-raffles",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-1440.png",
+      "width": 1440,
+      "height": 5229,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "00536114940b8a66cef098701400b361467468f404b559e01b6a8fe07fa42ca5"
+    },
+    {
+      "scene": "admin-raffles-offer-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-offer-form-320.png",
+      "width": 320,
+      "height": 6767,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9df2dc193124cd950ba2a5cce2063ab3651a3bcda58b9c35d78978f3ae0aad3e"
+    },
+    {
+      "scene": "admin-raffles-offer-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-offer-form-375.png",
+      "width": 375,
+      "height": 6355,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "89c6e6794150b19e023999a4bd37aa259b26af1e554f62479889a71f51786b18"
+    },
+    {
+      "scene": "admin-raffles-offer-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-offer-form-390.png",
+      "width": 390,
+      "height": 6291,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4c6fffc53f9dc18f5d48c9f98ec8ee101e7b6279d6fec6d62192aedd2504ff01"
+    },
+    {
+      "scene": "admin-raffles-offer-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-offer-form-1280.png",
+      "width": 1280,
+      "height": 4783,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "50054d50fa6c41aa4541cda7042dba9a308e9df62a5d216f6cb600a6fb94082f"
+    },
+    {
+      "scene": "admin-raffles-offer-form",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-offer-form-1440.png",
+      "width": 1440,
+      "height": 4825,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "7f834ae117061e6230c3a75a5513588cc9d6c408d6b659d1503a65cccbfe4d30"
+    },
+    {
+      "scene": "admin-raffles-terms-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-terms-closed-320.png",
+      "width": 320,
+      "height": 6275,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "22092673cf62b264f91b366044efc6aadf913fb5e8dae888ba94d381407a483f"
+    },
+    {
+      "scene": "admin-raffles-terms-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-terms-closed-375.png",
+      "width": 375,
+      "height": 5947,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c939b23a24fc61b31f462b0239fd1725a1706837e862c0158c51a3e736931792"
+    },
+    {
+      "scene": "admin-raffles-terms-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-terms-closed-390.png",
+      "width": 390,
+      "height": 5883,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b230e99693801be30852a5d95f7470da0f2e845759557a9ee12d94581428ca85"
+    },
+    {
+      "scene": "admin-raffles-terms-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-terms-closed-1280.png",
+      "width": 1280,
+      "height": 4491,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "fb1ac44df8a9edebd5e8d0913cd13ab99c20a2b6ecdd398e57fe57ec97e2d3c1"
+    },
+    {
+      "scene": "admin-raffles-terms-closed",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-raffles-terms-closed-1440.png",
+      "width": 1440,
+      "height": 4533,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "89fb8b61367193631358b7aed978acef3564b251ef04f1e22787d7de7017c02f"
+    },
+    {
+      "scene": "admin-search-empty",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-search-empty-320.png",
+      "width": 320,
+      "height": 3885,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "070568e5fd71e52f7c07409e60d93b3ef4eaa6e904d1c57463b5127541900564"
+    },
+    {
+      "scene": "admin-search-empty",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-search-empty-375.png",
+      "width": 375,
+      "height": 3749,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9e33973cec645ce9a9b869ba482241efb7734f8679e0b8ecc935392095672415"
+    },
+    {
+      "scene": "admin-search-empty",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-search-empty-390.png",
+      "width": 390,
+      "height": 3693,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "25a9cb7b5e0c93c7135a8a0e70ed307d9309ed313a255ea62bb445a108ddd50b"
+    },
+    {
+      "scene": "admin-search-empty",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-search-empty-1280.png",
+      "width": 1280,
+      "height": 2702,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ce56fd86ae2798a533017a1fa692665a4bdc76d89bf67b188c1d733e7cc0d633"
+    },
+    {
+      "scene": "admin-search-empty",
+      "route": "/admin/sponsors",
+      "file": "screenshots/admin-search-empty-1440.png",
+      "width": 1440,
+      "height": 2776,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f9a034ff343c13b18952ce39a8869469b9157380cfa8d3387fab6a5c34d788ac"
+    },
+    {
+      "scene": "admin-sharing-erase",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-erase-320.png",
+      "width": 320,
+      "height": 7515,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "8c175a7434ffd0a0d1d0d0bb0dae65945eadaa3ed089bf9779ae8caa2d7f887d"
+    },
+    {
+      "scene": "admin-sharing-erase",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-erase-375.png",
+      "width": 375,
+      "height": 7052,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0ead137d4dd7adefaa6bc38b5dd0749eff885a281c32d3afa3af71f9489abc47"
+    },
+    {
+      "scene": "admin-sharing-erase",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-erase-390.png",
+      "width": 390,
+      "height": 6988,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ca6f084f75d44bd18783a3e9f8a4fddf56dd4a5e2301f5c98806632634524f86"
+    },
+    {
+      "scene": "admin-sharing-erase",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-erase-1280.png",
+      "width": 1280,
+      "height": 5292,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cb6eebab95c42ca027364a86f8d69ecc24967ecb93b64b0d8652a5afb96a05a3"
+    },
+    {
+      "scene": "admin-sharing-erase",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-erase-1440.png",
+      "width": 1440,
+      "height": 5307,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b72951c9a0ffd2f20a95b56ef8cbdd324968945c4ce0f3c9839764da424b5e6a"
+    },
+    {
+      "scene": "admin-sharing-gate-off",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-gate-off-320.png",
+      "width": 320,
+      "height": 6775,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "089e43f071a95745d5282a5e38f5ae0b9532414ed464ee102c882099c03d4508"
+    },
+    {
+      "scene": "admin-sharing-gate-off",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-gate-off-375.png",
+      "width": 375,
+      "height": 6483,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "261e74efc1f18d1ce7ae967c67db95837f2a944c162a0c70b833b06ddb39ecc4"
+    },
+    {
+      "scene": "admin-sharing-gate-off",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-gate-off-390.png",
+      "width": 390,
+      "height": 6419,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ed19e8ae299d57a9c4d19536fff46b87e806f16e8e2702d4feaa87a15d740906"
+    },
+    {
+      "scene": "admin-sharing-gate-off",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-gate-off-1280.png",
+      "width": 1280,
+      "height": 4683,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "de7083ee079c2f8a76266fbfef6080e830fca892a75e94f96295d302a7a183e0"
+    },
+    {
+      "scene": "admin-sharing-gate-off",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-gate-off-1440.png",
+      "width": 1440,
+      "height": 4725,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "fabf2484cbc82de60dddf3e4cc7b03b78e9d65d371d7b73c59ecc0502fdb6672"
+    },
+    {
+      "scene": "admin-sharing-release",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-release-320.png",
+      "width": 320,
+      "height": 7352,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f9bcebb89b594679754740f6202d202a0d85c71df7a069b5387a7e15ad8d3bbe"
+    },
+    {
+      "scene": "admin-sharing-release",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-release-375.png",
+      "width": 375,
+      "height": 6940,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9a213df3490fbd9059086a59e423957652f43c400d1b063aba2f6c7d60cf22dd"
+    },
+    {
+      "scene": "admin-sharing-release",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-release-390.png",
+      "width": 390,
+      "height": 6876,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b1a537586eb168543a0f4bab4189b2c09d3e2c262bb0bbd01516016f80916d7a"
+    },
+    {
+      "scene": "admin-sharing-release",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-release-1280.png",
+      "width": 1280,
+      "height": 5148,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "60cb86f94105b692342585d4ec2281a1ca32e62b8030a91576abcfe0c096d379"
+    },
+    {
+      "scene": "admin-sharing-release",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/admin-sharing-release-1440.png",
+      "width": 1440,
+      "height": 5191,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a0f4ac895cceea079b3ea32740a37f0b432c0602433f61066d87797c6ec5ddec"
+    },
+    {
+      "scene": "billing-failure-coverage",
+      "route": "/partners/account",
+      "file": "screenshots/billing-failure-coverage-320.png",
+      "width": 320,
+      "height": 3336,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6b90cd25aa18af043034cd0f6d7f49ef856a1e4f0f2ce0cbe79ed3b7f5a08c4a"
+    },
+    {
+      "scene": "billing-failure-coverage",
+      "route": "/partners/account",
+      "file": "screenshots/billing-failure-coverage-375.png",
+      "width": 375,
+      "height": 3147,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "238776df24dc9d6507629149c210927452a57240dc3b57f62607f979d2533cfd"
+    },
+    {
+      "scene": "billing-failure-coverage",
+      "route": "/partners/account",
+      "file": "screenshots/billing-failure-coverage-390.png",
+      "width": 390,
+      "height": 3147,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a0203967bf1a873f8c3a37291bc8678ed6006eec34a05dd5f215b48d91b1a31e"
+    },
+    {
+      "scene": "billing-failure-coverage",
+      "route": "/partners/account",
+      "file": "screenshots/billing-failure-coverage-1280.png",
+      "width": 1280,
+      "height": 2473,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c5873dd66a0ba49f4640ddaadc938fa57cfa0bd84ba4809c5d354afc68ef12b0"
+    },
+    {
+      "scene": "billing-failure-coverage",
+      "route": "/partners/account",
+      "file": "screenshots/billing-failure-coverage-1440.png",
+      "width": 1440,
+      "height": 2538,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e8e2cf1252790f04da3db7e3e619c4219d5b7c2bcad2604dca2b9e8c8d02ab41"
+    },
+    {
+      "scene": "board-plan-invitation",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/board-plan-invitation-320.png",
+      "width": 320,
+      "height": 6286,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c834f3e99265749a02d2b57c8bd80ee092bb23dc6789d35ca5b0dcd20d12b1fe"
+    },
+    {
+      "scene": "board-plan-invitation",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/board-plan-invitation-375.png",
+      "width": 375,
+      "height": 6042,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "555779a873c8e84bf8be3f5e1a2b6b5e61644e712935826ab7860b8d8f9b6d1d"
+    },
+    {
+      "scene": "board-plan-invitation",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/board-plan-invitation-390.png",
+      "width": 390,
+      "height": 5978,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0259c7a7613ca6dd072783de81a188d7b74bdf39500fc6cd6765bad962ac5a2e"
+    },
+    {
+      "scene": "board-plan-invitation",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/board-plan-invitation-1280.png",
+      "width": 1280,
+      "height": 4590,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "43768aee6d2b35c2023894864308aa9c47842d2ae174e2ef3415e5dcbf870255"
+    },
+    {
+      "scene": "board-plan-invitation",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/board-plan-invitation-1440.png",
+      "width": 1440,
+      "height": 4635,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "78fe2d34287065d646e9ff52fd2d251f937c58ece51a67134e1ab6ac3615b755"
+    },
+    {
+      "scene": "coverage-retry",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/coverage-retry-320.png",
+      "width": 320,
+      "height": 6150,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e533f963d360e9aea94b87e1878d5d0fff722f52181009d0015d19e0d71c6c82"
+    },
+    {
+      "scene": "coverage-retry",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/coverage-retry-375.png",
+      "width": 375,
+      "height": 5881,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "06e073909f768a1fc98bd863a1ec9dc7974711699b9bf0e7ec29abc335f13d07"
+    },
+    {
+      "scene": "coverage-retry",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/coverage-retry-390.png",
+      "width": 390,
+      "height": 5817,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d9379eac003c11d30c816d4244467835fde241dfd8137286b9e0fed36d5ce185"
+    },
+    {
+      "scene": "coverage-retry",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/coverage-retry-1280.png",
+      "width": 1280,
+      "height": 4438,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "1973f0e93d6bff41ec5cdfaa967296bbe9de414fa8726470cd3a3f036d4bbdce"
+    },
+    {
+      "scene": "coverage-retry",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/coverage-retry-1440.png",
+      "width": 1440,
+      "height": 4483,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c236cf49a7e6b8f59fe944fa2e40de04e52661c7c88143c5f880971ea3c10f31"
+    },
+    {
+      "scene": "empty-coverage-status",
+      "route": "/partners/account",
+      "file": "screenshots/empty-coverage-status-320.png",
+      "width": 320,
+      "height": 6122,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "eff9835adff33db0844c50670ebb174731a6e98feec880d281c025b3f93996d4"
+    },
+    {
+      "scene": "empty-coverage-status",
+      "route": "/partners/account",
+      "file": "screenshots/empty-coverage-status-375.png",
+      "width": 375,
+      "height": 5713,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "395a946f22aa665ce032aec473d7ac39ba6eeb46eb95d5a468531975c9bd9736"
+    },
+    {
+      "scene": "empty-coverage-status",
+      "route": "/partners/account",
+      "file": "screenshots/empty-coverage-status-390.png",
+      "width": 390,
+      "height": 5633,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "52233ccbdac898afd092faee02e6ac76cab1d3acfc9bdac7d72634deabc69d7c"
+    },
+    {
+      "scene": "empty-coverage-status",
+      "route": "/partners/account",
+      "file": "screenshots/empty-coverage-status-1280.png",
+      "width": 1280,
+      "height": 4497,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d982d6ec77c50690f041d7afb0b1e5355baf8340825aacff7e6ffba2898f3f8e"
+    },
+    {
+      "scene": "empty-coverage-status",
+      "route": "/partners/account",
+      "file": "screenshots/empty-coverage-status-1440.png",
+      "width": 1440,
+      "height": 4571,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cb581a9d3014c62a81c01fe0b338fc878fabc72e4690a68c6cc16ed2d2e68b64"
+    },
+    {
+      "scene": "preview-changed",
+      "route": "/partners/account",
+      "file": "screenshots/preview-changed-320.png",
+      "width": 320,
+      "height": 8491,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "dd9143a9163562832256553806f829a2f1abaa127d76655ad43604fee1218b20"
+    },
+    {
+      "scene": "preview-changed",
+      "route": "/partners/account",
+      "file": "screenshots/preview-changed-375.png",
+      "width": 375,
+      "height": 7833,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "d2bececc3c6188a5389bc0df43934e0ff5196a5946af266cfcc0aba3dc87cf83"
+    },
+    {
+      "scene": "preview-changed",
+      "route": "/partners/account",
+      "file": "screenshots/preview-changed-390.png",
+      "width": 390,
+      "height": 7729,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "db150f4b3fd8a77253b7cbc155141640e08ae3599a79f5f2c4ced54dc43ce474"
+    },
+    {
+      "scene": "preview-changed",
+      "route": "/partners/account",
+      "file": "screenshots/preview-changed-1280.png",
+      "width": 1280,
+      "height": 5923,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "ecacc7ca68250585728341e96320a8c5d9d4227944390d61923c738238f91ab1"
+    },
+    {
+      "scene": "preview-changed",
+      "route": "/partners/account",
+      "file": "screenshots/preview-changed-1440.png",
+      "width": 1440,
+      "height": 6007,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "571a01a5bb4bdd26012bcaca2e5875205fe01bf7f0842482b4861b430e7b3015"
+    },
+    {
+      "scene": "provider-confirmed",
+      "route": "/partners/account",
+      "file": "screenshots/provider-confirmed-320.png",
+      "width": 320,
+      "height": 6459,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "28b73eae1710ce185e8ab3177121f8c54ad923ff3ca2e932111be3e4f79ea4c5"
+    },
+    {
+      "scene": "provider-confirmed",
+      "route": "/partners/account",
+      "file": "screenshots/provider-confirmed-375.png",
+      "width": 375,
+      "height": 5967,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3789b1bce92ad1f31dd81dc0e4bd6674a5ece795d55ae6d066ae704d63d35f97"
+    },
+    {
+      "scene": "provider-confirmed",
+      "route": "/partners/account",
+      "file": "screenshots/provider-confirmed-390.png",
+      "width": 390,
+      "height": 5887,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0f20bf0d0430a8ede1780b70b5b3d72917b9b2238b234e4873ea4ba433b3130a"
+    },
+    {
+      "scene": "provider-confirmed",
+      "route": "/partners/account",
+      "file": "screenshots/provider-confirmed-1280.png",
+      "width": 1280,
+      "height": 4769,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "09396cd9fb4c374976c7a6934e9fc177f77945ff5de7b807dc23af426510f684"
+    },
+    {
+      "scene": "provider-confirmed",
+      "route": "/partners/account",
+      "file": "screenshots/provider-confirmed-1440.png",
+      "width": 1440,
+      "height": 4841,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3467c6e75c92d366fb32ee971cff74d15a7c15bb2a801db3777d1350030e5caf"
+    },
+    {
+      "scene": "provider-decline",
+      "route": "/partners/account",
+      "file": "screenshots/provider-decline-320.png",
+      "width": 320,
+      "height": 8695,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "797bda4ec7330a1282203762c7f0bbefdb9302a7042b440b13d25f21a3b956d9"
+    },
+    {
+      "scene": "provider-decline",
+      "route": "/partners/account",
+      "file": "screenshots/provider-decline-375.png",
+      "width": 375,
+      "height": 7991,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f3d73e0cedfe082bbaa05b5fff6f9293787e5a717d9faa301fc2a1cf0b91c17a"
+    },
+    {
+      "scene": "provider-decline",
+      "route": "/partners/account",
+      "file": "screenshots/provider-decline-390.png",
+      "width": 390,
+      "height": 7859,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "35891e8c3ad20a56975fb75aa87902578909bf8d7ce8cd30c72d027f287fdeb5"
+    },
+    {
+      "scene": "provider-decline",
+      "route": "/partners/account",
+      "file": "screenshots/provider-decline-1280.png",
+      "width": 1280,
+      "height": 5886,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "b86c852d94cc69b8a7e5809129fffd9d0fe1f6e35ac96c403799849df784627b"
+    },
+    {
+      "scene": "provider-decline",
+      "route": "/partners/account",
+      "file": "screenshots/provider-decline-1440.png",
+      "width": 1440,
+      "height": 5968,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "289d1d24986ffee77d903c3b328c7c516bf2eb029bd9e57e2def837787a8c975"
+    },
+    {
+      "scene": "provider-reconfirm",
+      "route": "/partners/account",
+      "file": "screenshots/provider-reconfirm-320.png",
+      "width": 320,
+      "height": 8379,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "fa5f224211ab37096eb1cceebd5ecb99c1fd03a5bf9493199431e002c6126b00"
+    },
+    {
+      "scene": "provider-reconfirm",
+      "route": "/partners/account",
+      "file": "screenshots/provider-reconfirm-375.png",
+      "width": 375,
+      "height": 7725,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "12a3cb53771b2de8b17c7635abb9ce09d2f77028a1ae34aa3c16e1cf4e027b01"
+    },
+    {
+      "scene": "provider-reconfirm",
+      "route": "/partners/account",
+      "file": "screenshots/provider-reconfirm-390.png",
+      "width": 390,
+      "height": 7593,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5c9e713ce086a2357ac01790e92e85b641faafe9fa87df696fc4df6dcdaf0fe2"
+    },
+    {
+      "scene": "provider-reconfirm",
+      "route": "/partners/account",
+      "file": "screenshots/provider-reconfirm-1280.png",
+      "width": 1280,
+      "height": 5736,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "de0ec9cb8562b62d7d9393f538dedfe34e4d570cd0883146764ad2f565d1b105"
+    },
+    {
+      "scene": "provider-reconfirm",
+      "route": "/partners/account",
+      "file": "screenshots/provider-reconfirm-1440.png",
+      "width": 1440,
+      "height": 5814,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cb8f5c45369ae061c4629d09ff2ab7a4e609d139029b9f45b09657b16ab0dd10"
+    },
+    {
+      "scene": "provider-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/provider-renewal-320.png",
+      "width": 320,
+      "height": 8291,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4f06cbc01711dafca625249c85950784608b61862d44d7d1188e23a48fbb0c69"
+    },
+    {
+      "scene": "provider-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/provider-renewal-375.png",
+      "width": 375,
+      "height": 7637,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "f2e32311ca8f17fbadc9b6e80eb765b9456bdf4758aeafa6f5514abfbe368481"
+    },
+    {
+      "scene": "provider-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/provider-renewal-390.png",
+      "width": 390,
+      "height": 7533,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6a71053b8dcea983b0a1c5a50797e8b80c84959d9eb69f4858643bdffd3439ef"
+    },
+    {
+      "scene": "provider-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/provider-renewal-1280.png",
+      "width": 1280,
+      "height": 5700,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "c7a18b70f21d252517b29df8c41d19627c1686ccb4e09910f26add54918dcbc5"
+    },
+    {
+      "scene": "provider-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/provider-renewal-1440.png",
+      "width": 1440,
+      "height": 5778,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "6dd1a0b72f58940be5503ecbc68c35d99350e06e27d0e3f7355b67343aae6f3b"
+    },
+    {
+      "scene": "provider-stale",
+      "route": "/partners/account",
+      "file": "screenshots/provider-stale-320.png",
+      "width": 320,
+      "height": 8595,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "3a518a7a599eab6de53f30d5465c98299ab1567d5603c8cff0433c6523dfa8a6"
+    },
+    {
+      "scene": "provider-stale",
+      "route": "/partners/account",
+      "file": "screenshots/provider-stale-375.png",
+      "width": 375,
+      "height": 7916,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "adb568952ba1322eff15ba08a95f4fbcf1aab2071828e2a7694c2797d19fc5d5"
+    },
+    {
+      "scene": "provider-stale",
+      "route": "/partners/account",
+      "file": "screenshots/provider-stale-390.png",
+      "width": 390,
+      "height": 7784,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "65a55c6129ab0878d4ff671dd3fe530f19968f3f0ccd0cfb649a9079385e10b7"
+    },
+    {
+      "scene": "provider-stale",
+      "route": "/partners/account",
+      "file": "screenshots/provider-stale-1280.png",
+      "width": 1280,
+      "height": 5828,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "a5bc23d82e82fb67da88ec4898fa7364ed06631435b4dcdcedf2ad24bf551be6"
+    },
+    {
+      "scene": "provider-stale",
+      "route": "/partners/account",
+      "file": "screenshots/provider-stale-1440.png",
+      "width": 1440,
+      "height": 5908,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5a6ae6a71e54a61208022dd09fd7436b43530cdddb15bc9ff25c746d8dcb9c9d"
+    },
+    {
+      "scene": "provider-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/provider-upgrade-320.png",
+      "width": 320,
+      "height": 8379,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "fa5f224211ab37096eb1cceebd5ecb99c1fd03a5bf9493199431e002c6126b00"
+    },
+    {
+      "scene": "provider-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/provider-upgrade-375.png",
+      "width": 375,
+      "height": 7725,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "12a3cb53771b2de8b17c7635abb9ce09d2f77028a1ae34aa3c16e1cf4e027b01"
+    },
+    {
+      "scene": "provider-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/provider-upgrade-390.png",
+      "width": 390,
+      "height": 7593,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "5c9e713ce086a2357ac01790e92e85b641faafe9fa87df696fc4df6dcdaf0fe2"
+    },
+    {
+      "scene": "provider-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/provider-upgrade-1280.png",
+      "width": 1280,
+      "height": 5736,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "bba979570c2b5b53846b5738c4ba7e9db064a83d4d63056b93b86dcb08838860"
+    },
+    {
+      "scene": "provider-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/provider-upgrade-1440.png",
+      "width": 1440,
+      "height": 5814,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "cb8f5c45369ae061c4629d09ff2ab7a4e609d139029b9f45b09657b16ab0dd10"
+    },
+    {
+      "scene": "quoted-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-renewal-320.png",
+      "width": 320,
+      "height": 8213,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e6749cfbda00a27c3f9ecdd4df923a98d913da366d5e88cd0ee9ae842c3e65e4"
+    },
+    {
+      "scene": "quoted-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-renewal-375.png",
+      "width": 375,
+      "height": 7582,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "350b6bc1bec10e7f0e5e6d88c6b509240757319bf3cef29b64c7cd45fbed220d"
+    },
+    {
+      "scene": "quoted-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-renewal-390.png",
+      "width": 390,
+      "height": 7503,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "208929d1512acebea14ed34df331f47b15639bdeaebe298c16bb45e160d280fb"
+    },
+    {
+      "scene": "quoted-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-renewal-1280.png",
+      "width": 1280,
+      "height": 5794,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "df592182241806db1b65cde23c6ade5bd5f966adbd2b1af03372ea32d9b98efe"
+    },
+    {
+      "scene": "quoted-renewal",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-renewal-1440.png",
+      "width": 1440,
+      "height": 5877,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "e969b0c2182a0b72d2fcc6cc5c1c2cb69df5f026383bb38a8bb891a0a57a227d"
+    },
+    {
+      "scene": "quoted-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-upgrade-320.png",
+      "width": 320,
+      "height": 8300,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9d2298bb843b2ec05f61c6b5f2322a3370efbff4a38037a80dfa6112d5eecf1f"
+    },
+    {
+      "scene": "quoted-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-upgrade-375.png",
+      "width": 375,
+      "height": 7642,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2e2d9b3555ab6234d82c6d4046038e7b4416142fc5d0ed1e4052256e0a620f0e"
+    },
+    {
+      "scene": "quoted-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-upgrade-390.png",
+      "width": 390,
+      "height": 7563,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "06406587ce6c9d9ea4445469b41c91f98d4a32d57b361d802f5626d7eefefd10"
+    },
+    {
+      "scene": "quoted-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-upgrade-1280.png",
+      "width": 1280,
+      "height": 5830,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "38f6d86d142c154594a6590ab0364269bb390e84bb9d6e9035febeda09e4f327"
+    },
+    {
+      "scene": "quoted-upgrade",
+      "route": "/partners/account",
+      "file": "screenshots/quoted-upgrade-1440.png",
+      "width": 1440,
+      "height": 5913,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "0de41e1590890e56caeef2eec359b054bd1f3d059e2432c531544063abb03e7c"
+    },
+    {
+      "scene": "refreshed-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/refreshed-history-320.png",
+      "width": 320,
+      "height": 5294,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "87ca3e3f864bd109213a8a8d49c42eed7a21d7c4dbd08ae54600c1ce76e06018"
+    },
+    {
+      "scene": "refreshed-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/refreshed-history-375.png",
+      "width": 375,
+      "height": 5086,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "9fa57908968e424a3d69aa0cf14ba3afe8448d0d8ae94415f46bc0913fb6b538"
+    },
+    {
+      "scene": "refreshed-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/refreshed-history-390.png",
+      "width": 390,
+      "height": 5054,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "12640be4d5fb6affacf5e6543d687ceb7748cc1ce5498bbb3ffeee5dbefdef5c"
+    },
+    {
+      "scene": "refreshed-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/refreshed-history-1280.png",
+      "width": 1280,
+      "height": 3950,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "4699d03a80d2f14a584588630e4debb894ea7fac8ab555303c0a0edb03be7a8d"
+    },
+    {
+      "scene": "refreshed-history",
+      "route": "/admin/sponsors?id=7d2f6a0e-5b1c-4f1e-9a53-2f0c8f1f0001",
+      "file": "screenshots/refreshed-history-1440.png",
+      "width": 1440,
+      "height": 3995,
+      "font": "Figtree-Bold",
+      "overflow": 0,
+      "sha256": "2391d22430bcf7b8c6e94f7a22deda618b99552e51d720b7ad39054b04d13854"
+    }
+  ],
+  "recordings": [
+    {
+      "scene": "account-logo-and-colleague",
+      "mp4": {
+        "file": "recordings/account-logo-and-colleague.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 233,
+        "seconds": 9.32,
+        "sha256": "60ba7753a303c4471097770cb3c476b2a000b901b94e849dbf7f0f91e6016317"
+      },
+      "gif": {
+        "file": "recordings/account-logo-and-colleague.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 75,
+        "seconds": 9.38,
+        "sha256": "04c70a28118c6998e875513e163c0ece61243c0cc1c9bf471dcb7a28ecc9f02a"
+      }
+    },
+    {
+      "scene": "board-find-and-review",
+      "mp4": {
+        "file": "recordings/board-find-and-review.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 81,
+        "seconds": 3.24,
+        "sha256": "622b5cae04aeaa3f5957258c6fba22002d9df904df9cd9647c1379a0379d07b2"
+      },
+      "gif": {
+        "file": "recordings/board-find-and-review.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 26,
+        "seconds": 3.26,
+        "sha256": "482a430839745c3cb1152950976afa6746e0c0e8541b49201565f35f7c234ced"
+      }
+    },
+    {
+      "scene": "confirm-plan-now",
+      "mp4": {
+        "file": "recordings/confirm-plan-now.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 144,
+        "seconds": 5.76,
+        "sha256": "50e45a26eb6310a966e79d33b941a0ce9de385db467ff066698f0c4484b57d9c"
+      },
+      "gif": {
+        "file": "recordings/confirm-plan-now.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 46,
+        "seconds": 5.76,
+        "sha256": "0ada687f7f8f9d9625213b6a893c07e954834e4e787d02c27bb788817ac4d0f5"
+      }
+    },
+    {
+      "scene": "confirm-plan-renewal",
+      "mp4": {
+        "file": "recordings/confirm-plan-renewal.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 114,
+        "seconds": 4.56,
+        "sha256": "ecc0aa0da097872c5b5700af00af769291aa7570ed81eb298b0a8f666bbac4f1"
+      },
+      "gif": {
+        "file": "recordings/confirm-plan-renewal.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 36,
+        "seconds": 4.51,
+        "sha256": "8b548fa9ab7e768f3c9c69c4fb971bff955d8cec823ed560411526eb16995cf5"
+      }
+    },
+    {
+      "scene": "flow-board-confirms-meetup",
+      "mp4": {
+        "file": "recordings/flow-board-confirms-meetup.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 116,
+        "seconds": 4.64,
+        "sha256": "74b052a33af5d72a046937dcd7fe6c9a2af2cd8656dbc71fe8d8cb5c51c1da80"
+      },
+      "gif": {
+        "file": "recordings/flow-board-confirms-meetup.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 37,
+        "seconds": 4.63,
+        "sha256": "1dee94887c5a4aa1af49024eb9467bc7ad45033a0fb49f5e4643e451fe095f70"
+      }
+    },
+    {
+      "scene": "flow-board-fee-choice",
+      "mp4": {
+        "file": "recordings/flow-board-fee-choice.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 141,
+        "seconds": 5.64,
+        "sha256": "1be43adbc6c769cadbc3d29ef60a845fbe849e4575d028f65d4722da5f7d6aa4"
+      },
+      "gif": {
+        "file": "recordings/flow-board-fee-choice.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 45,
+        "seconds": 5.63,
+        "sha256": "736eb8fc2db0670c558d360c474eacc34bb42c2ea2b6090174508e6073f794ea"
+      }
+    },
+    {
+      "scene": "flow-board-offers",
+      "mp4": {
+        "file": "recordings/flow-board-offers.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 171,
+        "seconds": 6.84,
+        "sha256": "07fd0c577bc09613615c91284e075421934579ad45a140fe03ca2975f3df8205"
+      },
+      "gif": {
+        "file": "recordings/flow-board-offers.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 55,
+        "seconds": 6.88,
+        "sha256": "396b2fcf64ee5279b202b14106e059cf143f7e305597f9d3839391f532f50ae4"
+      }
+    },
+    {
+      "scene": "flow-board-open-close-draw",
+      "mp4": {
+        "file": "recordings/flow-board-open-close-draw.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 236,
+        "seconds": 9.44,
+        "sha256": "1a7cda5af0033bccc52e716b70f2f077f5d83f9671f1d36317add86a35d03af0"
+      },
+      "gif": {
+        "file": "recordings/flow-board-open-close-draw.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 76,
+        "seconds": 9.51,
+        "sha256": "0493c34c64c6b39929b170ddf1f6251216f641080c4d99a1e4c1169360f45365"
+      }
+    },
+    {
+      "scene": "flow-board-releases",
+      "mp4": {
+        "file": "recordings/flow-board-releases.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 201,
+        "seconds": 8.04,
+        "sha256": "99ac4233e9ff1245c9e1bba2afda0e3f528cdd53d903dbc440758075e21c1318"
+      },
+      "gif": {
+        "file": "recordings/flow-board-releases.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 64,
+        "seconds": 8.01,
+        "sha256": "f18c3e244fb8c53b145d171e9bcdf75ac27a6d671f661a7d3ff49be0e86bdf51"
+      }
+    },
+    {
+      "scene": "flow-board-sends-fee",
+      "mp4": {
+        "file": "recordings/flow-board-sends-fee.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 175,
+        "seconds": 7.0,
+        "sha256": "dcb177da066857be9e7bdfc4f5b31602033df7628de0d9e5c59a1800f3db853d"
+      },
+      "gif": {
+        "file": "recordings/flow-board-sends-fee.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 56,
+        "seconds": 7.01,
+        "sha256": "0e2e806d17dd10c4e22c534d77d109057663e9ee5993140c4e8c8355b3ab85d8"
+      }
+    },
+    {
+      "scene": "flow-sponsor-accepts",
+      "mp4": {
+        "file": "recordings/flow-sponsor-accepts.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 108,
+        "seconds": 4.32,
+        "sha256": "f238afb557cf4d96029c434b61ef94c78302b631f91657f5344ef8d7dfa5a36f"
+      },
+      "gif": {
+        "file": "recordings/flow-sponsor-accepts.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 35,
+        "seconds": 4.38,
+        "sha256": "6433e0e6b73307f397f805297850031db33f671e5c86048e5ff7da913ed07c2a"
+      }
+    },
+    {
+      "scene": "flow-sponsor-confirms-fee",
+      "mp4": {
+        "file": "recordings/flow-sponsor-confirms-fee.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 113,
+        "seconds": 4.52,
+        "sha256": "856518e59418be80b35af255be6fe7252e34dbf7b67cd75e0664d4a5e017fe95"
+      },
+      "gif": {
+        "file": "recordings/flow-sponsor-confirms-fee.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 36,
+        "seconds": 4.51,
+        "sha256": "fdec15bf7b55fc1d2143970a22d9bd6eea2f561ffc3f47046595ff2439bfa96e"
+      }
+    },
+    {
+      "scene": "flow-sponsor-dashboard",
+      "mp4": {
+        "file": "recordings/flow-sponsor-dashboard.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 153,
+        "seconds": 6.12,
+        "sha256": "27d3e32fa82065c5eac762704da04417447b79502407a69c1a73222b8dbc43ab"
+      },
+      "gif": {
+        "file": "recordings/flow-sponsor-dashboard.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 49,
+        "seconds": 6.13,
+        "sha256": "37265e301c8b5a9a862f55c8c6909c32b94b53a0c1b2f14cb9ef047e5c0c6ab7"
+      }
+    },
+    {
+      "scene": "flow-sponsor-offer",
+      "mp4": {
+        "file": "recordings/flow-sponsor-offer.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 105,
+        "seconds": 4.2,
+        "sha256": "395bbbcfa8a0a0d79cae41fb8b6a567d2454456749977df917a21f06ca3f7b40"
+      },
+      "gif": {
+        "file": "recordings/flow-sponsor-offer.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 34,
+        "seconds": 4.26,
+        "sha256": "0594442feadb138237b6ade269f1bde6d17806079356bb1ccb45458dfd53fd31"
+      }
+    },
+    {
+      "scene": "flow-sponsor-proposes",
+      "mp4": {
+        "file": "recordings/flow-sponsor-proposes.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 205,
+        "seconds": 8.2,
+        "sha256": "72776ed119477b7f25174421f4175731c5e7b60d8b3d6b57ed4fd33debdaae1a"
+      },
+      "gif": {
+        "file": "recordings/flow-sponsor-proposes.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 66,
+        "seconds": 8.26,
+        "sha256": "0728fdc43c9f16f4aa73e701910599a7f337639f5712dbfff538b210cfd0dd79"
+      }
+    },
+    {
+      "scene": "refresh-stale-invoice-and-confirm",
+      "mp4": {
+        "file": "recordings/refresh-stale-invoice-and-confirm.mp4",
+        "width": 390,
+        "height": 872,
+        "frames": 82,
+        "seconds": 3.28,
+        "sha256": "c4ff2ee109ba1a232a4e0504b4b074acfbe63f4ee151a782a34cd2061aa1fbf3"
+      },
+      "gif": {
+        "file": "recordings/refresh-stale-invoice-and-confirm.gif",
+        "width": 390,
+        "height": 872,
+        "frames": 26,
+        "seconds": 3.26,
+        "sha256": "dedaaeca0b1c43bf2922e7322ae9097840d487f12f6fdfb7376940383e76a4b6"
+      }
+    },
+    {
+      "scene": "retry-coverage-and-refresh-history",
+      "mp4": {
+        "file": "recordings/retry-coverage-and-refresh-history.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 61,
+        "seconds": 2.44,
+        "sha256": "5f1827d8e639f620965c90f7e1a3df37dc02e0278c0d8690e43b73e5337708b4"
+      },
+      "gif": {
+        "file": "recordings/retry-coverage-and-refresh-history.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 20,
+        "seconds": 2.51,
+        "sha256": "b3c13676ab95b52077ce9ca29fafac6ecc4778228bc8b8c2f837addaec0779fa"
+      }
+    },
+    {
+      "scene": "send-plan-offer",
+      "mp4": {
+        "file": "recordings/send-plan-offer.mp4",
+        "width": 1280,
+        "height": 928,
+        "frames": 133,
+        "seconds": 5.32,
+        "sha256": "6959e6d9b988b5247c84816a69c2158f21b49bbeef2f8076b8655fdcc8f3562d"
+      },
+      "gif": {
+        "file": "recordings/send-plan-offer.gif",
+        "width": 720,
+        "height": 522,
+        "frames": 43,
+        "seconds": 5.38,
+        "sha256": "4db3c49eac4a2f04d2e8abec1ac75004b0225526bc4593bd2ee42940206e2b99"
+      }
+    }
+  ]
+}

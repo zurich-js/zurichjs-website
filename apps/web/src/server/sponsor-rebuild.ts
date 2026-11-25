@@ -3,7 +3,8 @@
  *
  * The site is static and reads the sponsorships at build time (sponsor-public.ts), so a sponsorship
  * that starts, ends, changes tier or is linked to another partner record queues a build the same
- * way a Sanity publish does: a pending entry in the `rebuild` Blobs store, built by
+ * way a Sanity publish does (as does moving the meetups a running one-time sponsorship covers): a
+ * pending entry in the `rebuild` Blobs store, built by
  * `scheduled-rebuild` once things have been quiet for two minutes. Wrapping the store catches every
  * writer (the sponsor, the board, Stripe's webhook, the daily check) in one place.
  *
@@ -21,6 +22,17 @@ export const statusChangeIsPublic = (from: Status, to: Status) => isRunning(from
 
 /** A pending sponsorship is not on the site, so its details can change freely. */
 export const patchIsPublic = (patch: SponsorPatch, after: Pick<Sponsor, 'status'>) => after.status !== 'pending' && PUBLIC_FIELDS.some((k) => k in patch);
+
+/** A concurrent move gets a fresh version and survives acknowledgement of the earlier build. */
+export async function queueCoverage(store: SponsorStore, queue: (reason: string) => Promise<void>, versions: string[]) {
+  if (!versions.length) return;
+  try {
+    await queue('sponsored meetups moved');
+    await store.acknowledgeMeetupRebuilds(versions);
+  } catch (error) {
+    console.warn('[sponsorship] meetup rebuild still pending', error);
+  }
+}
 
 export function withRebuilds(store: SponsorStore, queue: (reason: string) => Promise<void>): SponsorStore {
   const safely = async (reason: string) => {
@@ -41,7 +53,11 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
     async create(input, contact, actor, opts) {
       const created = await store.create(input, contact, actor, opts);
       // An imported sponsorship starts running.
-      if (isRunning(created.sponsor.status)) await safely('sponsorship added as running');
+      if (isRunning(created.sponsor.status)) {
+        const version = opts?.meetups?.length ? (await store.get(created.sponsor.id))?.meetupRebuildId : null;
+        if (version) await queueCoverage(store, queue, [version]);
+        else await safely('sponsorship added as running');
+      }
       return created;
     },
     async transition(id, input) {
@@ -55,6 +71,12 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
       const s = await store.update(id, patch, actor);
       if (patchIsPublic(patch, s)) await safely('sponsor details changed');
       return s;
+    },
+    async setMeetups(id, list, actor) {
+      const saved = await store.setMeetups(id, list, actor);
+      const version = (await store.get(id))?.meetupRebuildId;
+      if (version) await queueCoverage(store, queue, [version]);
+      return saved;
     },
   };
 }

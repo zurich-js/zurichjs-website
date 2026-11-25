@@ -19,6 +19,7 @@
  * site's one webhook (STRIPE_WEBHOOK_SECRET, server/stripe-webhook.ts).
  */
 import {
+  confirmedContact,
   currentOfferId,
   fromLookupKey,
   isRecurring,
@@ -85,7 +86,7 @@ export function stripeAddress(text: string | null): Record<string, string> | und
 }
 
 /** A contact who may receive email: added by the board or themselves, or a colleague who accepted (signed in). */
-export const confirmed = (c: Contact) => c.addedBy !== 'sponsor' || !!c.userId;
+export const confirmed = (c: Contact) => confirmedContact(c);
 
 /** Who gets Stripe's receipts: a confirmed billing contact, else the primary contact. */
 export const billingContact = (contacts: Contact[]) => {

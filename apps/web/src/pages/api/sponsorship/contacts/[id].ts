@@ -1,7 +1,8 @@
 /**
- * Remove a colleague. Not yourself, and not the last primary contact. The board sees it in Slack.
+ * Remove a colleague. Not yourself, and not the last confirmed primary contact. The board sees it in Slack.
  * DELETE /api/sponsorship/contacts/:id   (session cookie) → 200 { ok } · 404 · 409 · 429 · 401
  */
+import { ContactRequired } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed } from '../../../../server/http.ts';
 import { clientKey, rateLimited } from '../../../../server/rateLimit.ts';
@@ -21,8 +22,12 @@ export const handleRemoveContact = (request: Request, id: string, deps: SponsorR
       const target = contacts.find((c) => c.id === id);
       if (!target) return fail(404, 'No such colleague.');
       if (target.id === contact.id) return fail(409, 'You cannot remove yourself. Ask a colleague, or write to hello@zurichjs.com.');
-      if (target.role === 'primary' && contacts.filter((c) => c.role === 'primary').length === 1) return fail(409, 'Keep at least one primary contact.');
-      await store.removeContact(target.id, { kind: 'sponsor', id: user.id });
+      try {
+        await store.removeContact(target.id, { kind: 'sponsor', id: user.id });
+      } catch (cause) {
+        if (cause instanceof ContactRequired) return fail(409, 'Keep at least one confirmed primary contact.');
+        throw cause;
+      }
       await note(`:bust_in_silhouette: ${slackText(contact.name)} removed ${slackText(target.name)} from ${who(sponsor)}'s sponsorship page.`, lifecycle);
       return json(200, { ok: true });
     },

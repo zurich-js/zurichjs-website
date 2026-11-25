@@ -59,11 +59,12 @@ export function eventSupporters(ev: Pick<Event, 'hosts' | 'supporters'>, partner
  *           so a partner withdrawn from promotion may still be named; on an
  *           upcoming one it is left out.
  *   season  current sponsors, only while the event is not past: a past event never
- *           implies that today's sponsors supported it.
+ *           implies that today's sponsors supported it. A one-time sponsor (`coverage`) is
+ *           thanked on the meetups it sponsors, not as a season sponsor on the others.
  */
 export function eventThanks(ev: Pick<Event, 'hosts' | 'supporters'>, partners: Partner[], { past }: { past: boolean }) {
   const own = eventSupporters(ev, partners).filter((s) => past || !s.partner.delisted);
-  const season = past ? [] : groupPartners(partners).currentSponsors.filter((p) => !own.some((x) => x.partner.id === p.id));
+  const season = past ? [] : groupPartners(partners).currentSponsors.filter((p) => !p.coverage && !own.some((x) => x.partner.id === p.id));
   return { own, season };
 }
 
@@ -95,7 +96,8 @@ export function groupPartners(partners: Partner[]) {
     /** Current sponsors by tier, highest first; sponsors without a tier last. Empty tiers are left out. */
     sponsorsByTier: [...TIERS, undefined].map((tier) => ({ tier, partners: currentSponsors.filter((p) => p.tier === tier) })).filter((g) => g.partners.length > 0),
     pastSponsors: partners.filter((p) => sponsor(p) && !p.current).sort(byTier),
-    venues: partners.filter((p) => has(p, 'venue') || has(p, 'food')).sort(byName),
+    // A current sponsor that also hosted is listed with the sponsors only.
+    venues: partners.filter((p) => (has(p, 'venue') || has(p, 'food')) && !(sponsor(p) && p.current)).sort(byName),
     conferences: current('conference'),
     communities: current('community').filter((p) => !has(p, 'conference')),
     supporting: current('supporting').filter((p) => !has(p, 'conference') && !has(p, 'community')),

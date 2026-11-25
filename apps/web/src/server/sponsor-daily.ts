@@ -24,6 +24,7 @@
  * run, because each step is decided again from the saved rows (a reminder by its catch-up rule).
  */
 import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/sponsorship';
+import { queueCoverage, queueRebuild } from './sponsor-rebuild.ts';
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, who, zurichDay } from './sponsor.ts';
 import { emailNotice, PER_NOTICE_MS, sendNotices, slackNotice } from './sponsor-notices.ts';
@@ -55,7 +56,7 @@ export interface DailyResult {
   stripeOpen: string[];
 }
 
-export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<DailyResult> {
+export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number }; queueRebuild?: typeof queueRebuild }): Promise<DailyResult> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
   const out: DailyResult = {
@@ -98,7 +99,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
             `${key}:slack`,
             reason === 'withdrawn'
               ? `:hourglass: ${who(s)} was never paid and a meetup it covered is over; the sponsorship is closed. ${adminUrl(deps.origin, s.id)}`
-              : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. Mark them as a past sponsor in Sanity.`,
+              : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. The site lists them as a past sponsor from the next build.`,
           ),
         ],
       });
@@ -164,5 +165,9 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
   // No notice is claimed without time to send one; the rest wait for the next run.
   if (!deps.deadline || deps.deadline.remaining() >= PER_NOTICE_MS) out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
   if (room()) out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: room })).closed;
+  if (room()) {
+    const versions = await deps.store.pendingMeetupRebuilds();
+    if (room()) await queueCoverage(deps.store, deps.queueRebuild ?? queueRebuild, versions);
+  }
   return out;
 }

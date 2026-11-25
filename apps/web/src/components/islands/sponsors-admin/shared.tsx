@@ -64,6 +64,7 @@ const ATTENTION_TONE: Record<Attention, TagTone> = {
   meetup_passed_unpaid: 'danger',
   manual_due_soon: 'black',
   invite_waiting: 'black',
+  checkout_abandoned: 'black',
   new_logo: 'black',
 };
 

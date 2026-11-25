@@ -157,7 +157,7 @@ export function SponsorDetail({
     <article aria-labelledby="h-sponsor" class="flex flex-col gap-8">
       <header class="flex flex-col items-start gap-3">
         <TextButton onClick={onBack}>Back to sponsors</TextButton>
-        <Heading id="h-sponsor" size="subsection" focus={heading} class="scroll-mt-6 break-words">
+        <Heading id="h-sponsor" size="subsection" focus={heading} class="scroll-mt-header break-words">
           {s.companyName}
         </Heading>
         <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-2 text-compact">
@@ -180,10 +180,22 @@ export function SponsorDetail({
         />
       )}
 
+      <nav aria-label="Sponsor sections" class="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <TextButton href="#h-actions">Actions</TextButton>
+        {s.cycle !== 'once' && <TextButton href="#h-coverage">Covered meetups</TextButton>}
+        {s.cycle === 'once' && <TextButton href="#h-payments">Card payments</TextButton>}
+        {s.cycle !== 'once' && s.status !== 'ended' && <TextButton href="#h-sponsor-fees">Processing fees</TextButton>}
+        <TextButton href="#h-raffles">Raffles</TextButton>
+        <TextButton href="#h-contacts">Contacts</TextButton>
+        <TextButton href="#h-logos">Logos</TextButton>
+        <TextButton href="#h-contracts">Contracts</TextButton>
+        <TextButton href="#sponsor-records">Agreements and history</TextButton>
+        <TextButton href="#h-edit">Details and notes</TextButton>
+      </nav>
       <Summary d={d} />
 
-      <section ref={actionsRef} aria-labelledby="h-actions" class="flex scroll-mt-6 flex-col gap-4">
-        <Heading as="h3" size="card" id="h-actions">
+      <section ref={actionsRef} aria-labelledby="h-actions" class="flex scroll-mt-header flex-col gap-4">
+        <Heading as="h3" size="card" id="h-actions" class="scroll-mt-header" focus>
           Actions
         </Heading>
         {actions.length === 0 ? (
@@ -195,7 +207,7 @@ export function SponsorDetail({
               return (
                 <Button
                   key={a.key}
-                  variant={expanded ? 'primary' : 'secondary'}
+                  variant={a.key === 'end' ? 'plain' : expanded ? 'primary' : 'secondary'}
                   grow
                   aria-expanded={expanded}
                   aria-controls="sponsor-action"
@@ -858,7 +870,9 @@ function Records({ d }: { d: Detail }) {
   return (
     <div class={cardClass('outline', 'md')}>
       <details>
-        <summary class="cursor-pointer text-card-title font-bold">Agreements and history</summary>
+        <summary id="sponsor-records" class="scroll-mt-header cursor-pointer text-card-title font-bold">
+          Agreements and history
+        </summary>
         <div class="flex flex-col gap-6 pt-5">
           <section aria-labelledby="h-agreements" class="flex flex-col gap-3">
             <Heading as="h4" size="card" id="h-agreements">

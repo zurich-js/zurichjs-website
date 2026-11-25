@@ -69,7 +69,7 @@ function world() {
   const feePrices = new Map<string, string>();
   const feeAmounts = new Map<string, number>();
   let feePrice = '';
-  const invoice = { due: 12345 };
+  const invoice = { due: 12345, decline: false };
   const schedule = {
     metadata: { feeQuote: '' },
     status: 'active',
@@ -202,6 +202,8 @@ function world() {
       return ok({ id: 'si_fee_1' });
     }
     if (path.startsWith('subscriptions/')) {
+      if (invoice.decline && method === 'POST' && params.get('payment_behavior') === 'error_if_incomplete')
+        return new Response(JSON.stringify({ error: { code: 'card_declined', message: 'Your card was declined.' } }), { status: 402 });
       if (method === 'POST' && params.get('items[0][deleted]') === 'true' && params.get('items[0][id]') === sub.feeItem) sub.feeItem = null;
       // Stripe refuses cancel_at_period_end while a schedule manages the subscription.
       if (method === 'POST' && params.has('cancel_at_period_end') && sub.schedule)
@@ -766,7 +768,7 @@ describe('sponsorship flow', () => {
       expect(await fees.openQuote(s.id, 'sponsorship', null)).toBeNull();
     }
     expect((await suggest(policy)).status).toBe(200);
-    const offer = (await me()).fees.toConfirm;
+    let offer = (await me()).fees.toConfirm;
     expect(offer.plan).toMatchObject({ ...target, timing: operation === 'upgrade' ? 'now' : 'renewal', dueNow: operation === 'upgrade' ? 'CHF 123.45' : 'CHF 0.00' });
     const confirm = (id: string) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), env: policy });
     expect((await confirm(prior)).status).toBe(409);
@@ -775,13 +777,28 @@ describe('sponsorship flow', () => {
       w.invoice.due++;
       expect((await confirm(offer.id)).status).toBe(503);
       expect((await fees.quote(offer.id))?.applyingBy).toBeFalsy();
-      w.invoice.due--;
+      const stale = offer.id;
+      expect((await suggest(policy)).status).toBe(200);
+      offer = (await me()).fees.toConfirm;
+      expect(offer.id).not.toBe(stale);
+      expect(offer.plan.dueNow).toBe('CHF 123.46');
+      expect((await confirm(stale)).status).toBe(409);
+      w.invoice.decline = true;
+      const declined = await confirm(offer.id);
+      expect(declined.ok).toBe(false);
+      expect((await declined.json()).ok).toBe(false);
+      expect(await store.get(s.id)).toMatchObject({ tier: s.tier, cycle: s.cycle });
+      expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+      expect(w.sub.lookupKey).toBe('sponsor_friend_quarterly');
+      w.invoice.decline = false;
     }
     expect((await confirm(offer.id)).status).toBe(200);
     expect((await confirm(offer.id)).status).toBe(200);
     expect(stripe.requests.some((r) => r.idempotencyKey?.includes(offer.id))).toBe(true);
     if (operation === 'upgrade') {
-      expect(w.calls.filter((c) => c.params.get('proration_behavior') === 'always_invoice')).toHaveLength(1);
+      const upgrades = w.calls.filter((c) => c.params.get('proration_behavior') === 'always_invoice');
+      expect(upgrades).toHaveLength(2);
+      for (const request of upgrades) expect(request.params.get('payment_behavior')).toBe('error_if_incomplete');
       expect((await fees.acceptedQuote(s.id))?.id).toBe(offer.id);
     } else {
       expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);

@@ -36,7 +36,6 @@ function readView(): View {
   return { kind: 'list' };
 }
 
-/** Attention first, then newest (the API answers newest first). */
 /** The status badge already says "Payment overdue": the matching attention badge would repeat it. */
 const flags = (s: Row) => s.attention.filter((f) => !(f === 'payment_overdue' && s.status === 'past_due'));
 
@@ -187,7 +186,7 @@ function SponsorList({
   return (
     <section aria-labelledby="h-sponsors" class="flex flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <Heading id="h-sponsors" size="subsection" focus={heading} class="scroll-mt-6">
+        <Heading id="h-sponsors" size="subsection" focus={heading} class="scroll-mt-header">
           Sponsors
         </Heading>
         <div class="flex w-full flex-wrap gap-3 md:w-auto">
@@ -219,7 +218,7 @@ function SponsorList({
       )}
 
       <form class="flex flex-col gap-4" role="search" onSubmit={(e) => e.preventDefault()}>
-        <TextField label="Search" name="q" type="search" placeholder="Company or legal name" value={q} onInput={(e) => onQ(inputValue(e))} class="max-w-form" />
+        <TextField id="sponsor-search" label="Search" name="q" type="search" placeholder="Company or legal name" value={q} onInput={(e) => onQ(inputValue(e))} class="max-w-form" />
         <ChipGroup
           label="Status"
           value={status}
@@ -239,10 +238,25 @@ function SponsorList({
         </Notice>
       )}
 
-      {rows && (
-        // Phones: one card per sponsor (a five-column table does not fit).
+      {rows?.length === 0 && !error && (
+        <div role="status" class="flex flex-col items-start gap-3">
+          <p>{filtered ? 'No sponsors match.' : 'No sponsors yet.'}</p>
+          {filtered && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                onQ('');
+                onStatus('');
+                document.getElementById('sponsor-search')?.focus();
+              }}
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+      )}
+      {!!rows?.length && (
         <ul class="m-0 flex list-none flex-col gap-3 p-0 md:hidden" aria-label="Sponsors">
-          {rows.length === 0 && <li class="text-ink-2">No sponsors match.</li>}
           {rows.map((s) => (
             <li key={s.id} class={cardClass('outline', 'sm')}>
               <TextButton size="body" href={href(s.id)} external={false} class="self-start break-words" onClick={(e) => follow(e, () => onOpen(s.id))}>
@@ -265,7 +279,7 @@ function SponsorList({
         </ul>
       )}
 
-      {rows && (
+      {!!rows?.length && (
         <div class="hidden overflow-x-auto rounded-card border border-grey-frame md:block">
           <table class="w-full border-collapse text-compact">
             <caption class="sr-only">Sponsors</caption>
@@ -279,13 +293,6 @@ function SponsorList({
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={5} class="px-4 py-6 text-ink-2">
-                    No sponsors match.
-                  </td>
-                </tr>
-              )}
               {rows.map((s) => (
                 <tr key={s.id} class="border-t border-grey-frame align-top">
                   <td class="px-4 py-3">

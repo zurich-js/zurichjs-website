@@ -19,14 +19,9 @@ export function Offer({ offer, contactEmail }: { offer: OfferView; contactEmail:
   const per = (v: string) => (q.per ? `${v} ${q.per}` : v);
   const rows: [string, string][] = [
     ['For', q.purpose],
-    [q.surcharge ? 'Amount' : 'Total', per(q.base)],
-    ...(q.surcharge
-      ? ([
-          ['Payment processing fee', per(q.surcharge)],
-          ['Total', per(q.total)],
-        ] as [string, string][])
-      : []),
+    [q.surcharge ? 'Amount' : 'Total', per(q.surcharge ? q.base : q.total)],
   ];
+  if (q.surcharge) rows.push(['Payment processing fee', per(q.surcharge)], ['Total', per(q.total)]);
   return (
     <section aria-labelledby="h-offer" class={cardClass('outline', 'lg')}>
       <Heading id="h-offer" size="subsection">

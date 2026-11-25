@@ -225,7 +225,7 @@ export function Block({ id, title, intro, children }: { id: string; title: strin
   return (
     <section aria-labelledby={id} class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <Heading as="h3" size="card" id={id} focus class="scroll-mt-6">
+        <Heading as="h3" size="card" id={id} focus class="scroll-mt-header">
           {title}
         </Heading>
         {intro && <p class="m-0 text-compact text-ink-2">{intro}</p>}

@@ -13,6 +13,7 @@ import { Tag } from '@zurichjs/design/islands/Tag';
 import { buttonClass, cardClass } from '@zurichjs/design/recipes';
 import { longDate } from '../../../server/dates.ts';
 import type { RaffleView } from '../../../server/raffle.ts';
+import { api, post } from '../admin-api.ts';
 import { TextButton } from '../forms/shared.tsx';
 
 type SponsorRaffle = RaffleView & {
@@ -34,17 +35,12 @@ interface Meetup {
 type Res<T> = { ok: true; data: T } | { ok: false; error: string; field?: string };
 
 async function call<T>(path: string, body: unknown, onSignedOut: () => void): Promise<Res<T> | null> {
-  const res = await fetch(path, {
-    method: body === undefined ? 'GET' : 'POST',
-    credentials: 'same-origin',
-    ...(body === undefined ? {} : { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
-  }).catch(() => null);
-  if (res?.status === 401) {
+  const { status, body: data } = body === undefined ? await api<T>(path) : await post<T>(path, body);
+  if (status === 401) {
     onSignedOut();
     return null;
   }
-  const data = res ? ((await res.json().catch(() => ({}))) as T & { ok?: boolean; error?: string; field?: string }) : null;
-  if (!res?.ok || !data?.ok) return { ok: false, error: data?.error ?? 'We couldn’t reach the site. Check your connection and try again.', field: data?.field };
+  if (status !== 200 || !data.ok) return { ok: false, error: data.error ?? 'We couldn’t load the raffle details.', field: data.field };
   return { ok: true, data };
 }
 
@@ -78,7 +74,7 @@ export function Raffles({ contactEmail, onSignedOut }: { contactEmail: string; o
 
   return (
     <section aria-labelledby="h-raffles" aria-busy={!data && !error} class={cardClass('outline', 'lg')}>
-      <Heading id="h-raffles" size="subsection">
+      <Heading id="h-raffles" size="subsection" focus class="scroll-mt-header">
         Raffle add-ons
       </Heading>
       <p class={body}>
@@ -172,7 +168,7 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
 
   const q = r.quote;
   return (
-    <li id={`raffle-${r.id}`} class={cardClass('filled', 'md')}>
+    <li id={`raffle-${r.id}`} class={cardClass('filled', 'md', 'scroll-mt-header')}>
       <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-4">
         <div class="flex min-w-0 flex-col">
           <span class="text-lead font-bold break-words">
@@ -233,7 +229,7 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
                 </>
               }
               checked={agree}
-              onChange={(e) => setAgree((e.target as HTMLInputElement).checked)}
+              onChange={(e) => setAgree(e.currentTarget.checked)}
             />
             <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
               <Button
@@ -243,7 +239,9 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
               >
                 {busy === 'accept' ? 'Accepting…' : 'Accept the offer'}
               </Button>
-              <TextButton onClick={() => void send({ action: 'withdraw' }, 'withdraw', 'Raffle withdrawn.')}>Withdraw</TextButton>
+              <TextButton disabled={!!busy} onClick={() => void send({ action: 'withdraw' }, 'withdraw', 'Raffle withdrawn.')}>
+                Withdraw
+              </TextButton>
             </div>
           </div>
         ) : (
@@ -275,7 +273,9 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
       ))}
       {r.stage === 'proposed' && (
         <div>
-          <TextButton onClick={() => void send({ action: 'withdraw' }, 'withdraw', 'Raffle withdrawn.')}>{busy === 'withdraw' ? 'Withdrawing…' : 'Withdraw'}</TextButton>
+          <TextButton disabled={!!busy} onClick={() => void send({ action: 'withdraw' }, 'withdraw', 'Raffle withdrawn.')}>
+            {busy === 'withdraw' ? 'Withdrawing…' : 'Withdraw'}
+          </TextButton>
         </div>
       )}
       {error && <Notice tone="danger" live title={error} />}
@@ -293,7 +293,9 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
   useEffect(() => {
     let active = true;
     void call<{ meetups: Meetup[] }>('/api/sponsorship/meetups', undefined, onSignedOut).then((r) => {
-      if (active) setMeetups(r?.ok ? r.data.meetups : []);
+      if (!active || !r) return;
+      if (!r.ok) setError({ field: 'eventId', message: r.error });
+      setMeetups(r.ok ? r.data.meetups : []);
     });
     return () => {
       active = false;
@@ -324,7 +326,7 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
         invalid={!!err('eventId')}
         onChange={(e) => setF({ ...f, eventId: (e.target as HTMLSelectElement).value })}
       >
-        <option value="">{meetups ? (meetups.length ? 'Choose an upcoming meetup' : 'No upcoming meetup is published yet') : 'Loading the meetups…'}</option>
+        <option value="">{!meetups ? 'Loading the meetups…' : meetups.length || err('eventId') ? 'Choose an upcoming meetup' : 'No upcoming meetup is published yet'}</option>
         {(meetups ?? []).map((m) => (
           <option key={m.id} value={m.id}>
             {m.title}, {longDate(m.date)}
@@ -348,7 +350,7 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
         onInput={(e) => setF({ ...f, quantity: (e.target as HTMLInputElement).value })}
       />
       <ChipGroup
-        label="Who gets the prize"
+        label="Who provides the prize"
         value={f.fulfilment}
         onChange={(v) => setF({ ...f, fulfilment: v })}
         options={[
@@ -369,7 +371,7 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
       <p class={hint}>Nothing is charged now. We confirm the meetup and send you an offer with the amount and the raffle terms.</p>
       {error && !['eventId', 'prize', 'quantity', 'budgetChf'].includes(error.field ?? '') && <Notice tone="danger" live title={error.message} />}
       <div class="flex flex-col gap-3 md:flex-row md:items-center">
-        <Button type="submit" variant="primary" disabled={busy}>
+        <Button type="submit" variant="primary" disabled={busy || !meetups?.length}>
           {busy ? 'Sending…' : 'Send the proposal'}
         </Button>
         <Button variant="secondary" onClick={onCancel}>
@@ -419,7 +421,7 @@ function SharedContacts({ raffleId, share, onSignedOut }: { raffleId: string; sh
           {data.rows.length ? (
             <ul class="m-0 flex list-none flex-col gap-1 p-0 text-compact">
               {data.rows.map((x) => (
-                <li key={x.email || x.name} class="break-words">
+                <li key={x.reference} class="break-words">
                   {[x.name, x.email].filter(Boolean).join(', ')} (reference {x.reference})
                 </li>
               ))}

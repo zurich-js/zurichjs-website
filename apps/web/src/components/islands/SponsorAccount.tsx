@@ -20,13 +20,14 @@ import { Checkbox, ChipGroup, FileField, SelectField, TextArea, TextField, isEma
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
-import { cardClass, cx, noticeClass, type ButtonVariant } from '@zurichjs/design/recipes';
+import { buttonClass, cardClass, cx, noticeClass, type ButtonVariant } from '@zurichjs/design/recipes';
 import { setSignedIn } from '@zurichjs/design/session';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
 import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, renewalReference, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { zurichDay } from '@zurichjs/events';
-import { longDate, shortDate } from '../../server/dates.ts';
+import { longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
+import { api } from './admin-api.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
 import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
 import { Fees, type FeesView } from './sponsor-account/Fees.tsx';
@@ -129,14 +130,12 @@ async function call<T extends object>(
 ): Promise<Result<T> | null> {
   const method = init.method ?? 'POST';
   const payload = init.form ? { body: init.form } : method === 'POST' ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(init.json ?? {}) } : {};
-  const res = await fetch(path, { method, credentials: 'same-origin', ...payload }).catch(() => null);
-  if (!res) return { ok: false, error: 'We couldn’t reach the site. Check your connection and try again.' };
-  if (res.status === 401) {
+  const { status, body: data } = await api<T>(path, { method, ...payload });
+  if (status === 401) {
     ctx.onSignedOut();
     return null;
   }
-  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; field?: string } & T;
-  if (!res.ok || !data.ok) return { ok: false, error: data.error ?? `That did not work. Try again, or write to ${ctx.contactEmail}.`, field: data.field };
+  if (status < 200 || status >= 300 || !data.ok) return { ok: false, error: data.error ?? `That did not work. Write to ${ctx.contactEmail}.`, field: data.field };
   return { ...data, ok: true };
 }
 
@@ -641,7 +640,7 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
           }}
         />
       ) : s ? (
-        <Sponsorship key={s.id} ctx={ctx} s={s} link={link} cancelled={cancelled} />
+        <Sponsorship key={s.id} ctx={ctx} s={s} link={link} onCloseLink={() => setLink(null)} cancelled={cancelled} />
       ) : (
         <StartForm ctx={ctx} s={null} cancelled={cancelled} />
       )}
@@ -686,10 +685,13 @@ function Invitation({ ctx, company, tierName, onAnswered }: { ctx: Ctx; company:
 
 /* ------------------------------------------------------------------ a sponsorship */
 
-function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; link: Link | null; cancelled: boolean }) {
+function Sponsorship({ ctx, s, link, onCloseLink, cancelled }: { ctx: Ctx; s: SponsorView; link: Link | null; onCloseLink: () => void; cancelled: boolean }) {
   const [again, setAgain] = useState(false);
   const recurring = s.cycle !== 'once';
-  const offeredPlan = ctx.me.fees?.toConfirm?.plan;
+  const [dismissedOffer, setDismissedOffer] = useState<string | undefined>();
+  const result = useResult();
+  const offer = ctx.me.fees?.toConfirm;
+  const offeredPlan = offer?.id !== dismissedOffer ? offer?.plan : null;
   const review = link ?? (offeredPlan && !offeredPlan.scheduled && canChange(s) ? { kind: 'plan' as const, tier: offeredPlan.tier, cycle: offeredPlan.cycle } : null);
   return (
     <>
@@ -711,20 +713,46 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
           )}
         </Notice>
       )}
-      {review && <LinkedChange key={ctx.me.fees?.toConfirm?.id} ctx={ctx} s={s} link={review} />}
+      <ResultNotice result={result} />
+      {review && (
+        <LinkedChange
+          key={offer?.id}
+          ctx={ctx}
+          s={s}
+          link={review}
+          onClose={(message) => {
+            dropParams('change');
+            setDismissedOffer(offer?.id);
+            onCloseLink();
+            if (message) {
+              result.set({ tone: 'success', text: message });
+              void ctx.reload();
+            } else {
+              document.getElementById('h-sponsorship')?.focus();
+            }
+          }}
+        />
+      )}
+      <nav aria-label="Account sections" class="flex flex-wrap gap-x-5 gap-y-2">
+        <TextButton href="#h-sponsorship">Current plan</TextButton>
+        {s.status !== 'pending' && <TextButton href="#h-raffles">Raffles</TextButton>}
+        {s.status !== 'ended' && <TextButton href="#h-logo">Logo</TextButton>}
+        {s.status !== 'pending' && s.status !== 'ended' && <TextButton href="#h-details">Billing details</TextButton>}
+        <TextButton href="#h-colleagues">Colleagues</TextButton>
+        <TextButton href="#h-agreements">Agreements</TextButton>
+      </nav>
       <SponsorCard ctx={ctx} s={s} linkOpen={!!review} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
       {recurring && s.status !== 'pending' && ctx.me.fees && <Fees fees={ctx.me.fees} onSignedOut={ctx.onSignedOut} onChanged={() => void ctx.reload()} />}
       <CoveredMeetups contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status !== 'pending' && <Raffles contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />}
       {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
-      {/* The board's offer is paid through its link only (the server refuses a second payment page). */}
       {s.status === 'pending' && (!ctx.me.offer || ctx.me.offer.quote.interval) && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}
       <Colleagues ctx={ctx} />
       <Agreements ctx={ctx} />
-      {recurring && (running(s) || s.status === 'ending') && link?.kind !== 'end' && <EndSection ctx={ctx} s={s} />}
+      {recurring && (running(s) || s.status === 'ending') && review?.kind !== 'end' && <EndSection ctx={ctx} s={s} />}
     </>
   );
 }
@@ -766,8 +794,8 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
   };
 
   const rows: [string, ComponentChildren][] = [
-    ['Tier', s.tierName],
-    ['Fee', s.feeLabel],
+    [linkOpen ? 'Current tier' : 'Tier', s.tierName],
+    [linkOpen ? 'Current plan fee' : 'Fee', s.feeLabel],
     ['How often you pay', s.cycle === 'once' ? 'One-time' : s.cycleLabel],
     ['Payment', s.paymentLabel],
   ];
@@ -817,7 +845,7 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
     <section aria-labelledby="h-sponsorship" class="flex flex-col gap-4">
       <div class={cardClass('filled', 'lg')}>
         <div class="flex flex-col gap-1">
-          <Heading id="h-sponsorship" size="subsection">
+          <Heading id="h-sponsorship" size="subsection" focus class="scroll-mt-header">
             {s.companyName}
           </Heading>
           <p class={cx('m-0 text-card-title font-bold', s.status === 'past_due' ? 'text-danger' : 'text-black')}>{statusLine(s)}</p>
@@ -880,31 +908,19 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
 }
 
 /** A change we agreed, opened from our email's link: filled in, at the top, to check and confirm. */
-function LinkedChange({ ctx, s, link }: { ctx: Ctx; s: SponsorView; link: Link }) {
-  const [closed, setClosed] = useState(false);
-  const result = useResult();
-  if (closed) return null;
-  const finish = (text: string) => {
-    dropParams('change');
-    result.set({ tone: 'success', text });
-    void ctx.reload();
-  };
-  const close = () => {
-    dropParams('change');
-    setClosed(true);
-  };
+function LinkedChange({ ctx, s, link, onClose }: { ctx: Ctx; s: SponsorView; link: Link; onClose: (message?: string) => void }) {
   return (
     <section aria-labelledby="h-linked" class={cardClass('outline', 'lg')}>
-      <Heading id="h-linked" size="subsection">
+      <Heading id="h-linked" size="subsection" focus class="scroll-mt-header">
         {link.kind === 'end' ? 'End sponsorship' : 'Change tier or how often you pay'}
       </Heading>
-      {result.message ? (
-        <ResultNotice result={result} />
+      <p class={body}>
+        Your current plan is {s.tierName}, {ctx.me.fees?.inForce ? `${ctx.me.fees.inForce.total} ${ctx.me.fees.inForce.per}` : s.feeLabel}.
+      </p>
+      {link.kind === 'end' ? (
+        <EndForm ctx={ctx} s={s} onDone={onClose} onCancel={() => onClose()} />
       ) : (
-        <>
-          <p class={body}>We set this up as we discussed. Check it and confirm.</p>
-          {link.kind === 'end' ? <EndForm ctx={ctx} s={s} onDone={finish} onCancel={close} /> : <ChangePlan ctx={ctx} s={s} initial={link} onDone={finish} onCancel={close} />}
-        </>
+        <ChangePlan ctx={ctx} s={s} initial={link} onDone={onClose} onCancel={() => onClose()} />
       )}
     </section>
   );
@@ -950,9 +966,7 @@ function ChangePlan({
   const [acceptedQuote, setAcceptedQuote] = useState<string | null>(null);
   const needsOffer = ctx.me.fees?.inForce?.feeChoice === 'pass_through' && !unchanged;
   const effect = needsOffer
-    ? quote?.plan
-      ? `${plan}. ${quote.base} plus ${quote.surcharge} processing fee, totalling ${quote.total} ${quote.per}. ${quote.plan.dueNow} due on confirmation. ${quote.plan.timing === 'renewal' ? 'The new price starts on ' + longDate(quote.plan.from) + '.' : 'The new plan starts immediately.'}`
-      : 'Ask the board for a quote for this plan, including its processing fee.'
+    ? 'Ask the board for a quote for this plan, including its processing fee.'
     : timing === 'none'
       ? 'This is your current plan.'
       : unchecked
@@ -962,12 +976,12 @@ function ChangePlan({
           : timing === 'now'
             ? manual
               ? `${plan}. This applies as soon as you confirm, and we bill the difference.`
-              : `${plan}. This applies now, and Stripe charges only the difference for this term.`
+              : `${plan}. Stripe charges only the difference for this term. An exact amount is unavailable before you confirm.`
             : `${plan}. This applies from your next renewal${s.paidUntil ? `, on ${longDate(s.paidUntil)}` : ''}. Nothing is charged now.`;
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (busy || unchanged || (needsOffer && (!quote || acceptedQuote !== quote.id))) return;
+    if (busy || unchanged || (needsOffer && !quote) || (quote && acceptedQuote !== quote.id)) return;
     if (!sig.valid) {
       errs.setTried(true);
       focusError();
@@ -984,6 +998,7 @@ function ChangePlan({
     setBusy(false);
     if (!r) return;
     if (!r.ok) {
+      setAcceptedQuote(null);
       errs.setServer(r);
       if (r.field && SIGN_FIELDS.includes(r.field)) focusError();
       else result.set({ tone: 'danger', text: r.error });
@@ -1008,12 +1023,35 @@ function ChangePlan({
         </Heading>
       )}
       <ChipGroup<Tier> label="Tier" value={tier} onChange={setTier} options={TIERS.map((t) => ({ value: t.key, label: `${t.name}, ${feeLabel(t.key, cycle)}` }))} />
-      <ChipGroup<Cycle> label="How often you pay" value={cycle} onChange={setCycle} options={RECURRING.map((c) => ({ value: c as Cycle, label: CYCLE_CHOICE[c] }))} />
+      <ChipGroup<Cycle> label="How often you pay" value={cycle} onChange={setCycle} options={RECURRING.map((c) => ({ value: c, label: CYCLE_CHOICE[c] }))} />
       <Benefits summary={`What ${tierInfo(tier).name} includes`} items={benefitsOf(tier)} />
-      <p class="m-0 text-compact font-bold" aria-live="polite">
-        {effect}
-        {!unchanged && pending && ` This replaces ${planName(pending.tier, pending.cycle)}, scheduled for ${longDate(pending.from)}.`}
-      </p>
+      <div aria-live="polite" class="flex flex-col gap-3">
+        {!unchanged && quote?.plan ? (
+          <>
+            <Heading as="h3" size="card">
+              Proposed plan
+            </Heading>
+            <Rows
+              rows={[
+                ['Plan', tierInfo(tier).name],
+                ['Plan fee', quote.base],
+                ['Processing fee', quote.surcharge ?? 'Covered by ZurichJS'],
+                ['Recurring total', `${quote.total} ${quote.per}`],
+                ['Due today', quote.plan.dueNow],
+                ['Effective date', quote.plan.timing === 'renewal' ? longDate(zurichDay(quote.plan.from)) : 'When the upgrade is confirmed'],
+              ]}
+            />
+            {quote.plan.timing === 'now' && <p class={hint}>Proration calculated as of {shortDateTime(quote.plan.from)} (Zurich time).</p>}
+          </>
+        ) : (
+          <p class={body}>{effect}</p>
+        )}
+        {!unchanged && pending && (
+          <p class={hint}>
+            This replaces {planName(pending.tier, pending.cycle)}, scheduled for {longDate(pending.from)}.
+          </p>
+        )}
+      </div>
       {!unchanged && quote?.plan && (
         <Checkbox
           label={`I agree to ${quote.total} ${quote.per} and ${quote.plan.dueNow} due now.`}
@@ -1029,9 +1067,16 @@ function ChangePlan({
             {busy ? 'Changing…' : signedLabel(sig, 'Sign and change', 'Confirm the change')}
           </Button>
         )}
-        {unchecked && (
-          <Button variant="primary" onClick={() => void ctx.reload()}>
-            Check again
+        {(unchecked || (quote && result.message?.tone === 'danger')) && (
+          <Button
+            variant="primary"
+            onClick={async () => {
+              const heading = formRef.current?.closest('section')?.getAttribute('aria-labelledby');
+              await ctx.reload();
+              requestAnimationFrame(() => (document.getElementById(heading ?? '') ?? document.getElementById('sponsor-account'))?.focus());
+            }}
+          >
+            {unchecked ? 'Check again' : 'Check latest offer'}
           </Button>
         )}
         <Button variant="secondary" onClick={onCancel}>
@@ -1468,7 +1513,7 @@ function DetailsSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
 
   return (
     <section aria-labelledby="h-details" class="flex flex-col gap-4">
-      <Heading id="h-details" size="subsection">
+      <Heading id="h-details" size="subsection" focus class="scroll-mt-header">
         Company and billing details
       </Heading>
       {editing ? (
@@ -1582,7 +1627,7 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
 
   return (
     <section aria-labelledby="h-logo" class="flex flex-col gap-4">
-      <Heading id="h-logo" size="subsection">
+      <Heading id="h-logo" size="subsection" focus class="scroll-mt-header">
         Logo
       </Heading>
       <p class={body}>
@@ -1608,23 +1653,26 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
             </figcaption>
           </figure>
         )}
-        <form ref={formRef} onSubmit={upload} noValidate class={cardClass('outline', 'lg')}>
-          <FileField
-            key={picker}
-            label={latest ? 'Upload a new logo' : 'Upload your logo'}
-            hint="SVG, PNG or WebP, up to 2 MB. A version for a white background works best."
-            accept={LOGO_TYPES}
-            fileName={file?.name ?? null}
-            onFile={pick}
-            invalid={!!error}
-            error={error}
-          />
-          <Actions>
-            <Button type="submit" variant="primary" disabled={busy}>
-              {busy ? 'Uploading…' : 'Upload logo'}
-            </Button>
-          </Actions>
-        </form>
+        <details>
+          <summary class={buttonClass({ variant: 'secondary' })}>{latest ? 'Replace logo' : 'Add logo'}</summary>
+          <form ref={formRef} onSubmit={upload} noValidate class="flex flex-col gap-4 pt-4">
+            <FileField
+              key={picker}
+              label={latest ? 'Upload a new logo' : 'Upload your logo'}
+              hint="SVG, PNG or WebP, up to 2 MB. A version for a white background works best."
+              accept={LOGO_TYPES}
+              fileName={file?.name ?? null}
+              onFile={pick}
+              invalid={!!error}
+              error={error}
+            />
+            <Actions>
+              <Button type="submit" variant="primary" disabled={busy}>
+                {busy ? 'Uploading…' : 'Upload logo'}
+              </Button>
+            </Actions>
+          </form>
+        </details>
       </div>
       <ResultNotice result={result} />
     </section>
@@ -1696,7 +1744,7 @@ function Colleagues({ ctx }: { ctx: Ctx }) {
 
   return (
     <section aria-labelledby="h-colleagues" class="flex flex-col gap-4">
-      <Heading id="h-colleagues" size="subsection">
+      <Heading id="h-colleagues" size="subsection" focus class="scroll-mt-header">
         Colleagues
       </Heading>
       <p class={body}>Everyone listed can sign in here with their own email. Billing contacts get the payment emails and receipts; without one, they go to the primary contact.</p>
@@ -1728,7 +1776,6 @@ function Colleagues({ ctx }: { ctx: Ctx }) {
                         variant="secondary"
                         onClick={() => {
                           setConfirm('');
-                          // Back to the button that opened it.
                           requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-remove="${c.id}"] button`)?.focus());
                         }}
                       >
@@ -1753,45 +1800,47 @@ function Colleagues({ ctx }: { ctx: Ctx }) {
       {full ? (
         <p class={hint}>A sponsorship can have up to {MAX_CONTACTS} people. Remove someone to add another.</p>
       ) : (
-        <form ref={formRef} onSubmit={add} noValidate aria-labelledby="h-add" class={cardClass('outline', 'lg')}>
-          <Heading as="h3" size="card" id="h-add">
+        <details>
+          <summary id="h-add" class={buttonClass({ variant: 'secondary' })}>
             Add a colleague
-          </Heading>
-          <p class={hint}>We do not email them. They join by signing in here with the email you add.</p>
-          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <TextField
-              label="Name"
-              name="name"
-              autoComplete="off"
-              value={form.name}
-              onInput={(e) => setForm({ ...form, name: (e.target as HTMLInputElement).value })}
-              invalid={!!errorOf('name')}
-              error={errorOf('name') || undefined}
+          </summary>
+          <form ref={formRef} onSubmit={add} noValidate aria-labelledby="h-add" class="flex max-w-form flex-col gap-4 pt-4">
+            <p class={hint}>We do not email them. They join by signing in here with the email you add.</p>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <TextField
+                label="Name"
+                name="name"
+                autoComplete="off"
+                value={form.name}
+                onInput={(e) => setForm({ ...form, name: (e.target as HTMLInputElement).value })}
+                invalid={!!errorOf('name')}
+                error={errorOf('name') || undefined}
+              />
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                autoComplete="off"
+                value={form.email}
+                onInput={(e) => setForm({ ...form, email: (e.target as HTMLInputElement).value })}
+                invalid={!!errorOf('email')}
+                error={errorOf('email') || undefined}
+              />
+            </div>
+            <ChipGroup<Role>
+              label="Role"
+              value={form.role}
+              onChange={(role) => setForm({ ...form, role })}
+              options={(['primary', 'billing', 'other'] as Role[]).map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
             />
-            <TextField
-              label="Email"
-              name="email"
-              type="email"
-              autoComplete="off"
-              value={form.email}
-              onInput={(e) => setForm({ ...form, email: (e.target as HTMLInputElement).value })}
-              invalid={!!errorOf('email')}
-              error={errorOf('email') || undefined}
-            />
-          </div>
-          <ChipGroup<Role>
-            label="Role"
-            value={form.role}
-            onChange={(role) => setForm({ ...form, role })}
-            options={(['primary', 'billing', 'other'] as Role[]).map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
-          />
-          <ResultNotice result={result} />
-          <Actions>
-            <Button type="submit" variant="primary" disabled={busy === 'add'}>
-              {busy === 'add' ? 'Adding…' : 'Add colleague'}
-            </Button>
-          </Actions>
-        </form>
+            <ResultNotice result={result} />
+            <Actions>
+              <Button type="submit" variant="primary" disabled={busy === 'add'}>
+                {busy === 'add' ? 'Adding…' : 'Add colleague'}
+              </Button>
+            </Actions>
+          </form>
+        </details>
       )}
     </section>
   );
@@ -1802,7 +1851,7 @@ function Agreements({ ctx }: { ctx: Ctx }) {
   const contracts = ctx.me.contracts ?? [];
   return (
     <section aria-labelledby="h-agreements" class="flex flex-col gap-4">
-      <Heading id="h-agreements" size="subsection">
+      <Heading id="h-agreements" size="subsection" focus class="scroll-mt-header">
         Agreements and contracts
       </Heading>
       {contracts.length > 0 && (

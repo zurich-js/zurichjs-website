@@ -10,6 +10,7 @@ import { Heading } from '@zurichjs/design/islands/Heading';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { cardClass } from '@zurichjs/design/recipes';
 import type { QuoteView } from '../../../server/sponsor-fees.ts';
+import { post } from '../admin-api.ts';
 
 export interface FeesView {
   inForce: QuoteView | null;
@@ -29,25 +30,19 @@ export function Fees({ fees, onSignedOut, onChanged }: { fees: FeesView; onSigne
     if (!q || !agree || busy) return;
     setBusy(true);
     setError('');
-    const res = await fetch('/api/sponsorship/fees', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ quoteId: q.id, confirm: true }),
-    }).catch(() => null);
+    const { status, body } = await post('/api/sponsorship/fees', { quoteId: q.id, confirm: true });
     setBusy(false);
-    if (res?.status === 401) return onSignedOut();
-    const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }) : null;
-    if (!res?.ok || !data?.ok) return setError(data?.error ?? 'We couldn’t reach the site. Check your connection and try again.');
+    if (status === 401) return onSignedOut();
+    if (status !== 200) return setError(body.error ?? 'Could not confirm the processing fee.');
     onChanged();
   };
 
   return (
     <section aria-labelledby="h-fees" class={cardClass('outline', 'lg')}>
       <Heading id="h-fees" size="subsection">
-        {q ? 'Processing fee to confirm' : 'Processing fee'}
+        {q ? 'Processing fee to confirm' : 'Current processing fee'}
       </Heading>
-      {current && !q && (
+      {current && (
         <p class="m-0 text-body text-ink-2 text-pretty">
           You cover the card processing fee: {current.surcharge} {current.per}, a separate line on every renewal ({current.total} {current.per} in total).
         </p>
@@ -62,7 +57,7 @@ export function Fees({ fees, onSignedOut, onChanged }: { fees: FeesView; onSigne
           <Checkbox
             label={`I agree to the total of ${q.total} ${q.per} from the next renewal.`}
             checked={agree}
-            onChange={(e) => setAcceptedId((e.target as HTMLInputElement).checked ? q.id : null)}
+            onChange={(e) => setAcceptedId(e.currentTarget.checked ? q.id : null)}
           />
           {error && <Notice tone="danger" live title={error} />}
           <div>

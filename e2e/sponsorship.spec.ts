@@ -389,12 +389,16 @@ test.describe('the sponsorship page (/partners/account)', () => {
 
     await tick.check();
     await confirm.click();
-    await expect(end.getByRole('alert')).toHaveText('That did not work. Try again, or write to hello@zurichjs.com.');
+    await expect(end.getByRole('alert')).toHaveText('The site did not confirm this, so we don’t know whether it was saved. Reload the page to check before you try again.');
     // Nothing is lost: the form is still open and ticked, and the sponsorship still shows as active.
     await expect(tick).toBeChecked();
     await expect(confirm).toBeEnabled();
     await expect(card.getByText('Active, paid through 1st November 2027')).toBeVisible();
 
+    await page.reload();
+    await expect(card.getByText('Active, paid through 1st November 2027')).toBeVisible();
+    await end.getByRole('button', { name: 'End sponsorship' }).click();
+    await tick.check();
     fail = false;
     await confirm.click();
     await expect(end.getByRole('status')).toHaveText('Done. Your sponsorship ends after 1st November 2027. Nothing more is charged, and you can keep it until then.');
@@ -432,6 +436,65 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await form.getByRole('button', { name: 'Check again' }).click();
     await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toBeVisible();
     expect(plans).toBe(0);
+  });
+
+  test('a revised invoice requires fresh consent to its price before submitting the upgrade', async ({ page }) => {
+    let revised = false;
+    const attempts: unknown[] = [];
+    const current = sponsor({ cycle: 'quarterly', cycleLabel: 'Quarterly', feeLabel: 'CHF 840 a quarter' });
+    const quote = () => ({
+      id: revised ? 'revised' : 'original',
+      feeChoice: 'pass_through',
+      base: 'CHF 1’400.00',
+      surcharge: 'CHF 42.13',
+      total: 'CHF 1’442.13',
+      per: 'a quarter',
+      plan: { tier: 'builder', cycle: 'quarterly', timing: 'now', dueNow: revised ? 'CHF 123.46' : 'CHF 123.45', from: '2026-11-18T10:00:00Z', scheduled: false },
+    });
+    await mockMe(page, () => ({
+      ...me(current),
+      fees: { inForce: { feeChoice: 'pass_through', surcharge: 'CHF 25.40', total: 'CHF 865.40', per: 'a quarter' }, toConfirm: quote() },
+    }));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      attempts.push(route.request().postDataJSON());
+      const first = !revised;
+      revised = true;
+      return route.fulfill({
+        status: first ? 409 : 502,
+        json: { ok: false, error: first ? 'This offer was replaced. Review the current quote.' : 'The payment was not confirmed.' },
+      });
+    });
+    await page.goto(ACCOUNT);
+    const panel = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    const value = (term: string) =>
+      panel
+        .locator('dl > div')
+        .filter({ has: page.getByText(term, { exact: true }) })
+        .locator('dd');
+    const submit = panel.getByRole('button', { name: 'Confirm the change' });
+    await expect(panel.getByText('Your current plan is Community Friend, CHF 865.40 a quarter.')).toBeVisible();
+    await expect(value('Plan')).toHaveText('Community Builder');
+    await expect(value('Processing fee')).toHaveText('CHF 42.13');
+    await expect(value('Recurring total')).toHaveText('CHF 1’442.13 a quarter');
+    await expect(value('Due today')).toHaveText('CHF 123.45');
+    await expect(value('Effective date')).toHaveText('When the upgrade is confirmed');
+    await expect(panel.getByText(/Proration calculated as of 18th Nov 2026, 11:00/)).toBeVisible();
+
+    const confirm = async () => {
+      for (const tick of await panel.getByRole('checkbox').all()) await tick.press('Space');
+      await submit.press('Enter');
+    };
+    await confirm();
+    await expect(panel.getByRole('alert')).toHaveText('This offer was replaced. Review the current quote.');
+    await panel.getByRole('button', { name: 'Check latest offer' }).press('Enter');
+    await expect(panel.getByRole('heading', { level: 2 })).toBeFocused();
+    await expect(value('Due today')).toHaveText('CHF 123.46');
+    await expect(submit).toBeDisabled();
+    await confirm();
+    await expect(panel.getByRole('alert')).toHaveText('The payment was not confirmed.');
+    await expect(panel.getByRole('status')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Acme AG' })).toContainText('Community Friend');
+    expect(attempts).toEqual(['original', 'revised'].map((quoteId) => expect.objectContaining({ quoteId, acceptFee: true, confirm: true })));
   });
 
   test('a change link opened while the scheduled change is unknown cannot be confirmed yet', async ({ page }) => {
@@ -560,7 +623,9 @@ test.describe('the board’s sponsors (/admin/sponsors)', () => {
     await add.click();
     await expect(panel.getByText('This sponsorship has ended.', { exact: false })).toBeVisible();
     await expect(add).toHaveCount(0);
-    await page.getByText('Agreements and history', { exact: true }).click();
+    await page.getByRole('link', { name: 'Agreements and history' }).click();
+    await expect(page.locator('summary', { hasText: 'Agreements and history' })).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(page.getByRole('region', { name: 'History' })).toContainText('Meetup confirmed as covered.');
   });
 

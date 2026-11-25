@@ -312,7 +312,43 @@ describe('sponsorship board actions that fail half-way', () => {
     );
     expect((await handleRecordPayment(asAdmin('/x', { paidUntil: '2027-06-01' }), sponsor.id, deps())).status).toBe(400);
     expect(w.emails).toHaveLength(0);
+    expect(w.slackPosts).toHaveLength(0);
     expect((await store.events(sponsor.id)).some((e) => e.type === 'payment_recorded')).toBe(false);
+  });
+
+  it.each([false, true])('a transfer closes a link saved after its initial cleanup (closure fails: %s)', async (failClosure) => {
+    const id = await pendingBundle();
+    const original = store.update.bind(store);
+    let interleaved = false;
+    store.update = async (...args) => {
+      if (!interleaved && args[1].paymentMode === 'manual') {
+        interleaved = true;
+        expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(200);
+        if (failClosure) w.failNext('POST', /^payment_links\/plink_/);
+      }
+      return original(...args);
+    };
+    const body = { paidUntil: '2027-11-18' };
+    const response = await handleRecordPayment(asAdmin('/x', body), id, deps());
+    if (failClosure) {
+      expect(response.status).toBe(502);
+      expect(w.activeLinks.size).toBe(1);
+      expect(w.emails).toHaveLength(0);
+      expect(w.slackPosts.filter((text) => text.includes('Payment recorded'))).toHaveLength(0);
+      expect((await handleRecordPayment(asAdmin('/x', body), id, deps())).status).toBe(200);
+    } else expect(response.status).toBe(200);
+    expect(w.activeLinks.size).toBe(0);
+    expect(await store.get(id)).toMatchObject({ status: 'active', paymentLinkId: null });
+    expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
+  });
+
+  it.each([false, true])('a past-due date resumes only a proven transfer (proof: %s)', async (proven) => {
+    const { sponsor } = await store.create(newSponsor({ paymentMode: 'manual', status: 'past_due', startedAt: '2026-06-01', paidUntil: '2026-10-01' }), contact, BOARD);
+    if (proven) await store.log(sponsor.id, 'payment_recording', BOARD, { paidUntil: '2026-10-01' });
+    expect((await handleRecordPayment(asAdmin('/x', { paidUntil: '2026-10-01' }), sponsor.id, deps())).status).toBe(proven ? 200 : 400);
+    expect(await store.get(sponsor.id)).toMatchObject({ status: proven ? 'active' : 'past_due' });
+    expect(w.emails).toHaveLength(proven ? 1 : 0);
+    expect(w.slackPosts).toHaveLength(proven ? 1 : 0);
   });
 
   it('a payment link is not kept when a bank transfer is recorded while Stripe creates it', async () => {

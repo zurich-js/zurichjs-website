@@ -381,6 +381,8 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
+  await closeCheckout(updated, deps.store, deps.stripe);
+  await closePaymentLink(updated, deps.store, deps.stripe);
   await deps.store.log(s.id, 'payment_recorded', actor, { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) });
   const paidThrough = longDate(lastDay(p.paidUntil));
   await emailSponsor(updated, 'sponsor-payment-recorded', (base) => ({ ...base, amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }), {

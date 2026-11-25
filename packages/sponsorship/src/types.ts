@@ -138,13 +138,21 @@ export interface Contact {
 
 export type NewContact = Pick<Contact, 'email' | 'name' | 'role'> & { addedBy?: ContactSource };
 
-/** A meetup a one-time sponsorship covers. */
+/** A meetup a sponsorship covers: the meetups of a one-time sponsorship, or those the board confirmed for a recurring one. */
 export interface SponsorMeetup {
   /** The Sanity event id. */
   eventId: string;
   title: string;
   /** YYYY-MM-DD, Zurich. */
   date: string;
+}
+
+/** A coverage row with its history: who confirmed it and, once taken off, when. Rows are never deleted. */
+export interface CoverageRow extends SponsorMeetup {
+  confirmedAt: string;
+  confirmedBy: ActorKind;
+  removedAt: string | null;
+  removedBy: ActorKind | null;
 }
 
 /** A contract signed outside the site (PDF), kept with the sponsorship. */

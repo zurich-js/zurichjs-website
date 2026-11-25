@@ -20,6 +20,7 @@ import {
   isCycle,
   isRunning,
   isTier,
+  type FeeStore,
   type Contact,
   type NewSponsor,
   type Sponsor,
@@ -41,6 +42,7 @@ import type { LogoStore } from './sponsor-logo.ts';
 import { knownFailure, lifecycleDeps, type Meetup } from './sponsor-route.ts';
 import { closeCheckout } from './sponsor-stripe.ts';
 import { StripeUnavailable } from './stripe.ts';
+import type { RaffleStore } from '@zurichjs/raffle';
 
 export interface SponsorAdminDeps {
   env?: Env;
@@ -51,6 +53,10 @@ export interface SponsorAdminDeps {
   now?: number;
   logos?: LogoStore;
   meetups?: () => Promise<Meetup[]>;
+  /** Tariffs and quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
+  /** Raffle add-ons (raffle.ts); the database by default. */
+  raffles?: RaffleStore;
 }
 
 export interface SponsorAdminCtx {
@@ -75,7 +81,7 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
       env,
       store,
       origin,
-      lifecycle: lifecycleDeps(env, store, origin, { fetch: deadline(REQUEST_BUDGET_MS).fetch(deps.fetch), slack: deps.slack, log: deps.log, now }),
+      lifecycle: lifecycleDeps(env, store, origin, { fetch: deadline(REQUEST_BUDGET_MS).fetch(deps.fetch), slack: deps.slack, log: deps.log, fees: deps.fees, now }),
     });
   } catch (cause) {
     const known = knownFailure(cause);

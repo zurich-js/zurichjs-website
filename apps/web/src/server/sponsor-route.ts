@@ -10,8 +10,10 @@
  * someone else's email to a sponsorship they did not ask to join. A contact already linked to
  * another account is never taken over.
  */
-import type { Contact, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
+import type { Contact, FeeStore, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
 import { TransitionError } from '@zurichjs/sponsorship';
+import { RaffleNotFound, RaffleRuleError, type RaffleStore } from '@zurichjs/raffle';
+import { FeeGateClosed } from '@zurichjs/sponsorship';
 import { sameOrigin } from './admin-auth.ts';
 import { sessionUser, siteOrigin, type AuthUser } from './auth.ts';
 import { deadline, REQUEST_BUDGET_MS } from './deadline.ts';
@@ -35,6 +37,10 @@ export interface SponsorRouteDeps {
   logos?: LogoStore;
   /** Upcoming meetups for one-time sponsorships (Sanity). */
   meetups?: () => Promise<Meetup[]>;
+  /** Payment quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
+  /** Raffle add-ons (raffle.ts); the database by default. */
+  raffles?: RaffleStore;
 }
 
 export interface Meetup {
@@ -66,8 +72,8 @@ export async function contactFor(user: AuthUser, store: SponsorStore): Promise<{
   return { contact: await store.linkContact(byEmail.id, user.id), invitation: null };
 }
 
-export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, deps: Pick<SponsorRouteDeps, 'fetch' | 'slack' | 'log' | 'now'>): LifecycleDeps {
-  return { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, now: deps.now, stripe: { env, fetch: deps.fetch, now: deps.now } };
+export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, deps: Pick<SponsorRouteDeps, 'fetch' | 'slack' | 'log' | 'now' | 'fees'>): LifecycleDeps {
+  return { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, now: deps.now, fees: deps.fees, stripe: { env, fetch: deps.fetch, now: deps.now } };
 }
 
 /** Errors every sponsorship route answers the same way. Returns null for anything unexpected. */
@@ -78,6 +84,9 @@ export function knownFailure(cause: unknown): Response | null {
   if (cause instanceof PaymentLinkPending) return fail(409, cause.message);
   if (cause instanceof PaymentLinkRace) return fail(409, 'Someone created a payment link at the same moment. Reload to see it.');
   if (cause instanceof TransitionError) return fail(409, cause.message);
+  if (cause instanceof RaffleNotFound) return fail(404, cause.message);
+  if (cause instanceof RaffleRuleError) return fail(cause.code === 'invalid' ? 400 : 409, cause.message);
+  if (cause instanceof FeeGateClosed) return fail(409, cause.message, { field: 'feeChoice' });
   return null;
 }
 

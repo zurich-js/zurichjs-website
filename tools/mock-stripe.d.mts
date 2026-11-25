@@ -12,7 +12,7 @@ export interface MockStripe {
   requests: MockStripeRequest[];
   close: () => Promise<void>;
 }
-export function startMockStripe(port?: number): Promise<MockStripe>;
+export function startMockStripe(port?: number, routeFixture?: typeof fetch): Promise<MockStripe>;
 
 /** Membership fees in rappen by Stripe lookup key, as the mock prices them. */
 export const MEMBER_FEES: Record<string, number>;

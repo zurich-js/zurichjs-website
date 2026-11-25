@@ -8,7 +8,10 @@
  *     pendingChangeUnknown (Stripe could not be asked, or its schedule could not be read: pendingChange says nothing),
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
- *     invitation: { company, tierName } | null (a colleague added this email; accept or decline)
+ *     invitation: { company, tierName } | null (a colleague added this email; accept or decline),
+ *     offer: { quote, payUrl, preparing } | null (pending: the board's open offer, with base, fee and total;
+ *       payUrl only once its link is published, `preparing` while it is not)
+ *     fees: { inForce, toConfirm } (recurring: the processing fee in force, and one the board offered to confirm)
  *   }
  *   401 · 503 · 502
  *
@@ -21,6 +24,7 @@ import { agreementView, contactView, documentView, logoView, sponsorView } from 
 import { offerCover } from '../../../server/sponsor-lifecycle.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 import { pendingChange } from '../../../server/sponsor-stripe.ts';
+import { feeStore, quoteView } from '../../../server/sponsor-fees.ts';
 import { tierInfo } from '@zurichjs/sponsorship';
 
 export const prerender = false;
@@ -57,6 +61,10 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         changeOf(s, deps, env),
         offerCover(s, store),
       ]);
+      // Waiting for payment: the offer the board froze (fees.ts), so they see base, fee and total first.
+      const fees = deps.fees ?? feeStore(env);
+      const [quote, inForce] = await Promise.all([fees.openQuote(s.id, 'sponsorship', null), s.cycle === 'once' ? null : fees.acceptedQuote(s.id)]);
+      const toConfirm = s.status !== 'pending' && quote?.interval ? quote : null;
       const mine = agreements.find((a) => a.signerEmail === user.email);
       return json(200, {
         ...base,
@@ -72,6 +80,11 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         signedCurrent: cover.agreements.some((a) => a.version === AGREEMENT.version) || cover.contracts.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,
+        offer:
+          s.status === 'pending' && quote
+            ? { quote: quoteView(quote), payUrl: quote.linkState === 'live' ? quote.linkUrl : null, preparing: !quote.interval && quote.linkState !== 'live' }
+            : null,
+        fees: { inForce: inForce ? quoteView(inForce) : null, toConfirm: toConfirm ? quoteView(toConfirm) : null },
       });
     },
     'load your sponsorship',

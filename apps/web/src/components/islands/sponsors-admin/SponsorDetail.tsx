@@ -18,10 +18,15 @@ import type { PartnerView } from '../../../server/partner-admin.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, TextButton, optional } from '../forms/shared.tsx';
+import { SponsorPayments } from './fees.tsx';
+import { Coverage } from './Coverage.tsx';
+import { Raffles } from './Raffles.tsx';
+import { SponsorFees } from './SponsorFees.tsx';
 import { ActionForm, actionsFor, canRecordPayment, planName, type Done, type OpenAction } from './actions.tsx';
 import {
   AttentionBadge,
   BASE,
+  Block,
   CopyLink,
   Notice,
   ROLE_LABEL,
@@ -215,6 +220,10 @@ export function SponsorDetail({
         </div>
       </section>
 
+      {s.cycle === 'once' && <SponsorPayments {...ctx} />}
+      {s.cycle !== 'once' && <Coverage sponsor={s} {...ctx} />}
+      <Raffles id={id} onSignedOut={onSignedOut} />
+      {s.cycle !== 'once' && s.status !== 'ended' && <SponsorFees id={id} pending={s.status === 'pending'} onSignedOut={onSignedOut} />}
       <Contacts contacts={d.contacts} sponsor={s} {...ctx} />
       <Logos logos={d.logos} ended={s.status === 'ended'} partnerId={s.partnerId} {...ctx} />
       <Contracts contracts={d.contracts} {...ctx} />
@@ -429,20 +438,6 @@ function Pairs({ rows }: { rows: [string, ComponentChildren][] }) {
 }
 
 /* ------------------------------------------------------------------ contacts */
-
-function Block({ id, title, intro, children }: { id: string; title: string; intro?: string; children: ComponentChildren }) {
-  return (
-    <section aria-labelledby={id} class="flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <Heading as="h3" size="card" id={id} focus class="scroll-mt-6">
-          {title}
-        </Heading>
-        {intro && <p class="m-0 text-compact text-ink-2">{intro}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { contacts: Contact[]; sponsor: AdminSponsorView }) {
   const [inviting, setInviting] = useState<string | null>(null);
@@ -823,6 +818,10 @@ function eventText(e: SponsorEvent): string {
       const n = Array.isArray(p.events) ? p.events.length : 0;
       return n ? `Meetups set (${n === 1 ? 'one meetup' : `${n} meetups`}).` : 'Meetups set.';
     }
+    case 'meetup_covered':
+      return 'Meetup confirmed as covered.';
+    case 'meetup_uncovered':
+      return 'Covered meetup taken off.';
     case 'change_suggested':
       return p.kind === 'end'
         ? 'Change sent to confirm: end the sponsorship.'

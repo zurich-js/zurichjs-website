@@ -47,7 +47,7 @@ const board = { kind: 'board', id: 'test' } as const;
     expect(beforeRemoval).toHaveLength(1);
     // #98 keeps a meetup taken off a sponsorship as a row with removed_at set.
     pgdb.sql(`alter table sponsor_meetups add column if not exists removed_at timestamptz`);
-    pgdb.sql(`update sponsor_meetups set removed_at = now() where sponsor_id = '${sponsor.id}' and event_id = 'event-dec'`);
+    pgdb.sql(`update sponsor_meetups set removed_at = now(), removed_by = 'board' where sponsor_id = '${sponsor.id}' and event_id = 'event-dec'`);
     expect(await read(sponsor.id)).toMatchObject({ eventIds: ['event-jan'] });
     await store.acknowledgeMeetupRebuilds(beforeRemoval);
     const restartedStore = postgresStore(pool);

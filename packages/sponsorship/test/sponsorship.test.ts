@@ -112,6 +112,28 @@ describe('memory store', () => {
     expect(bundleLabel('friend', 2, 500)).toBe('CHF 1’000 for 2 meetups (CHF 500 each)');
     expect(bundleLabel('champion', 1, null)).toBe('CHF 1’000 for one meetup');
   });
+  it('keeps the history of covered meetups: taken off, never deleted, confirmed again on return', async () => {
+    const store = memoryStore();
+    const { sponsor: s } = await store.create(acme, { email: 'c@acme.ch', name: 'C', role: 'primary' }, board);
+    await store.cover(s.id, { eventId: 'e1', title: 'December', date: '2026-12-09' }, board);
+    await store.cover(s.id, { eventId: 'e2', title: 'January', date: '2027-01-13' }, board);
+    expect((await store.uncover(s.id, 'e1', board)).map((m) => m.eventId)).toEqual(['e2']);
+    await expect(store.uncover(s.id, 'e1', board)).rejects.toThrow(/No covered meetup/);
+    const history = await store.coverage(s.id);
+    expect(history.map((r) => [r.eventId, r.removedBy])).toEqual([
+      ['e1', 'board'],
+      ['e2', null],
+    ]);
+    // A bundle move takes off what is not in the new list and brings back what is.
+    await store.setMeetups(s.id, [{ eventId: 'e1', title: 'December', date: '2026-12-09' }], sponsor);
+    expect((await store.meetups(s.id)).map((m) => m.eventId)).toEqual(['e1']);
+    expect((await store.coverage(s.id)).map((r) => [r.eventId, r.confirmedBy, r.removedBy])).toEqual([
+      ['e1', 'sponsor', null],
+      ['e2', 'board', 'sponsor'],
+    ]);
+    expect((await store.events(s.id)).map((e) => e.type)).toEqual(['created', 'meetup_covered', 'meetup_covered', 'meetup_uncovered', 'meetups_set']);
+  });
+
   it('summarises many sponsors as their own reads do', async () => {
     const store = memoryStore();
     const { sponsor: a } = await store.create({ ...acme, cycle: 'once' }, { email: 'a@acme.ch', name: 'A', role: 'primary' }, board);

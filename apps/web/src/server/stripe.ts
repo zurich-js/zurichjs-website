@@ -56,7 +56,6 @@ export class StripeUnavailable extends Error {}
 
 /** The `source` metadata on donation Checkout sessions and subscriptions; the webhook routes by it. */
 export const DONATION_SOURCE = 'zurichjs.com/donate';
-
 export class StripeRequestError extends Error {
   readonly status: number;
   readonly code: string | undefined;

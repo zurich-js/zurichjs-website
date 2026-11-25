@@ -51,6 +51,7 @@ x-node: &node
     - nm-forms:/app/packages/forms/node_modules
     - nm-integrations:/app/packages/integrations/node_modules
     - nm-membership:/app/packages/membership/node_modules
+    - nm-raffle:/app/packages/raffle/node_modules
     - nm-seo:/app/packages/seo/node_modules
     - nm-sponsorship:/app/packages/sponsorship/node_modules
 
@@ -265,5 +266,6 @@ volumes:
   nm-forms:
   nm-integrations:
   nm-membership:
+  nm-raffle:
   nm-seo:
   nm-sponsorship:

@@ -20,6 +20,7 @@ import {
 } from './store.ts';
 import type {
   Actor,
+  CoverageRow,
   Agreement,
   Contact,
   LinkAttempt,
@@ -112,6 +113,21 @@ const STRIPE_COLUMNS: Record<keyof StripeLinks, string> = {
 const setters = <K extends string>(map: Record<K, string>, values: Partial<Record<K, unknown>>) =>
   (Object.entries(values) as [K, unknown][]).filter(([k, v]) => v !== undefined && Object.hasOwn(map, k));
 
+const MEETUP = 'event_id, title, date';
+const meetupOf = (r: Row) => camel<SponsorMeetup>(r);
+
+/**
+ * Upserts `$2` (a JSON list of { event_id, title, date }) for sponsor `$1` by the actor kind in
+ * placeholder `kind`. A row taken off is confirmed again, by this actor and now; a covered row
+ * keeps its confirmation.
+ */
+const upsertMeetups = (kind: string) => `insert into sponsor_meetups (sponsor_id, event_id, title, date, confirmed_by)
+  select $1, x.event_id, x.title, x.date::date, ${kind} from jsonb_to_recordset($2::jsonb) as x(event_id text, title text, date text)
+  on conflict (sponsor_id, event_id) do update set title = excluded.title, date = excluded.date,
+    confirmed_at = case when sponsor_meetups.removed_at is null then sponsor_meetups.confirmed_at else now() end,
+    confirmed_by = case when sponsor_meetups.removed_at is null then sponsor_meetups.confirmed_by else excluded.confirmed_by end,
+    removed_at = null, removed_by = null`;
+
 function mapError(err: unknown): Error {
   const e = err as { code?: string; constraint?: string; message?: string };
   if (e.code === '23505' && e.constraint === 'sponsor_contacts_email_key') return new DuplicateContact('that email');
@@ -198,6 +214,8 @@ export function postgresStore(db: Queryable): SponsorStore {
     if (!s) throw new NotFound('sponsor');
     return s;
   };
+  const covered = async (sponsorId: string) =>
+    UUID.test(sponsorId) ? (await q(`select ${MEETUP} from sponsor_meetups where sponsor_id = $1 and removed_at is null order by date, event_id`, [sponsorId])).map(meetupOf) : [];
 
   /**
    * With `expect`: only while those columns hold those values (null matches null); undefined
@@ -352,10 +370,7 @@ export function postgresStore(db: Queryable): SponsorStore {
       return sponsorOf(rows[0]);
     },
 
-    meetups: async (sponsorId) =>
-      UUID.test(sponsorId)
-        ? (await q('select event_id, title, date from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => camel<SponsorMeetup>(r))
-        : [],
+    meetups: covered,
     pendingMeetupRebuilds: async () =>
       (await q<{ meetup_rebuild_id: string }>('select meetup_rebuild_id from sponsors where meetup_rebuild_id is not null')).map((r) => r.meetup_rebuild_id),
     async acknowledgeMeetupRebuilds(versions) {
@@ -367,7 +382,7 @@ export function postgresStore(db: Queryable): SponsorStore {
       const ids = [...byId.keys()].filter((id) => UUID.test(id));
       if (!ids.length) return out;
       const [meetups, contracts, logos] = await Promise.all([
-        q('select sponsor_id, event_id, title, date from sponsor_meetups where sponsor_id = any($1::uuid[]) order by date, event_id', [ids]),
+        q('select sponsor_id, event_id, title, date from sponsor_meetups where sponsor_id = any($1::uuid[]) and removed_at is null order by date, event_id', [ids]),
         q('select distinct sponsor_id from sponsor_documents where sponsor_id = any($1::uuid[])', [ids]),
         q('select distinct on (sponsor_id) * from sponsor_logos where sponsor_id = any($1::uuid[]) order by sponsor_id, uploaded_at desc', [ids]),
       ]);
@@ -379,13 +394,13 @@ export function postgresStore(db: Queryable): SponsorStore {
     },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];
-      // One statement: upsert the new list, remove only meetups not in it (the two never touch the
-      // same row), and append the audit row.
+      // One statement: take off the covered meetups not in the list (the row stays), upsert the
+      // list (a row taken off is confirmed again), and append the audit row. The two never touch
+      // the same row.
       await q(
-        `with gone as (delete from sponsor_meetups where sponsor_id = $1 and not (event_id = any($3::text[]))),
-              ins as (insert into sponsor_meetups (sponsor_id, event_id, title, date)
-                      select $1, x.event_id, x.title, x.date::date from jsonb_to_recordset($2::jsonb) as x(event_id text, title text, date text)
-                      on conflict (sponsor_id, event_id) do update set title = excluded.title, date = excluded.date)
+        `with gone as (update sponsor_meetups set removed_at = now(), removed_by = $4
+                       where sponsor_id = $1 and removed_at is null and not (event_id = any($3::text[]))),
+              ins as (${upsertMeetups('$4')})
          insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, 'meetups_set', $4, $5, $6::jsonb)`,
         [
           sponsorId,
@@ -393,10 +408,36 @@ export function postgresStore(db: Queryable): SponsorStore {
           unique.map((m) => m.eventId),
           actor.kind,
           actor.id,
-          JSON.stringify({ events: unique.map((m) => m.eventId) }),
+          JSON.stringify({ events: [...unique].sort((a, b) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId)).map((m) => m.eventId) }),
         ],
       );
-      return (await q('select event_id, title, date from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => camel<SponsorMeetup>(r));
+      return covered(sponsorId);
+    },
+    coverage: async (sponsorId) =>
+      UUID.test(sponsorId)
+        ? (await q('select * from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => {
+            const { sponsorId: _, ...row } = camel<CoverageRow & { sponsorId: string }>(r);
+            return row;
+          })
+        : [],
+    async cover(sponsorId, m, actor) {
+      await q(
+        `with ins as (${upsertMeetups('$3')})
+         insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, 'meetup_covered', $3, $4, $5::jsonb)`,
+        [sponsorId, JSON.stringify([{ event_id: m.eventId, title: m.title, date: m.date }]), actor.kind, actor.id, JSON.stringify({ eventId: m.eventId })],
+      );
+      return covered(sponsorId);
+    },
+    async uncover(sponsorId, eventId, actor) {
+      const rows = await audited(
+        `update sponsor_meetups set removed_at = now(), removed_by = $3 where sponsor_id = $1 and event_id = $2 and removed_at is null returning sponsor_id as sponsor_ref`,
+        [sponsorId, eventId, actor.kind],
+        'meetup_uncovered',
+        actor,
+        { eventId },
+      );
+      if (!rows[0]) throw new NotFound('covered meetup');
+      return covered(sponsorId);
     },
 
     contacts: async (sponsorId) =>
@@ -528,12 +569,15 @@ export function postgresStore(db: Queryable): SponsorStore {
     },
     async beginLinkAttempt(sponsorId, request, key = crypto.randomUUID()) {
       if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
-      const [r] = await q(
-        `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
-        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms`,
-        [sponsorId, request, key],
-      );
-      if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
+      const r = (
+        await q(
+          `insert into sponsor_payment_link_attempts (sponsor_id,request,key) select id,$2,$3 from sponsors where id=$1 and status <> 'ended' for share
+        on conflict (key) do update set key=excluded.key where sponsor_payment_link_attempts.sponsor_id=excluded.sponsor_id
+        and sponsor_payment_link_attempts.request=excluded.request returning *,extract(epoch from clock_timestamp()-created_at)*1000 as age_ms`,
+          [sponsorId, request, key],
+        )
+      )[0];
+      if (!r) throw new TransitionError('The payment link or sponsorship changed.', 'conflict');
       return attemptOf(r);
     },
     async linkAttemptCreated(key, linkId) {

@@ -177,6 +177,9 @@ importers:
       '@zurichjs/membership':
         specifier: workspace:*
         version: link:../../packages/membership
+      '@zurichjs/raffle':
+        specifier: workspace:*
+        version: link:../../packages/raffle
       '@zurichjs/seo':
         specifier: workspace:*
         version: link:../../packages/seo
@@ -350,6 +353,21 @@ importers:
         version: 5.9.3
 
   packages/membership:
+    devDependencies:
+      '@types/pg':
+        specifier: 8.23.1
+        version: 8.23.1
+      '@zurichjs/config':
+        specifier: workspace:*
+        version: link:../config
+      pg:
+        specifier: 8.23.1
+        version: 8.23.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/raffle:
     devDependencies:
       '@types/pg':
         specifier: 8.23.1

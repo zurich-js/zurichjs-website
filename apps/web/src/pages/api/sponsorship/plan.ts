@@ -8,6 +8,9 @@
  * POST /api/sponsorship/plan   (session cookie)   { tier, cycle, replaces? (tier-cycle@date shown at confirmation), confirm? | signerName?, signerTitle?, agreementVersion }
  *   200 { ok, sponsor, timing: 'none' | 'now' | 'renewal', from } · 400 · 404 · 409 · 401 · 503 · 502
  */
+import { AGREEMENT } from '@zurichjs/sponsorship';
+import { feeStore } from '../../../server/sponsor-fees.ts';
+import { applyFeePlan } from '../../../server/sponsor-stripe.ts';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
@@ -31,11 +34,48 @@ export const handlePlan = (request: Request, deps: SponsorRouteDeps = {}) =>
       if (body.replaces != null && typeof body.replaces !== 'string') return fail(400, 'Reload the page to check the renewal plan.');
       const same = plan.value.tier === sponsor.tier && plan.value.cycle === sponsor.cycle;
       let signer = null;
-      if (!same) {
+      if (!same || body.quoteId !== undefined) {
         const sig = parseSignature(body);
         if (!sig.ok) return fail(400, sig.error, { field: sig.field });
         signer = await resolveSigner(sponsor, contact, sig.value, user.email, lifecycle);
         if (!signer) return fail(400, 'Confirm the change under the sponsorship agreement.', { field: 'agreement' });
+      }
+      if (body.quoteId !== undefined) {
+        if (typeof body.quoteId !== 'string' || !contact || !signer || body.acceptFee !== true) return fail(400, 'Confirm the displayed plan and fee.');
+        const fees = deps.fees ?? feeStore(lifecycle.env);
+        const q = await fees.quote(body.quoteId);
+        const terms = q?.planChange;
+        if (
+          !q ||
+          !terms ||
+          q.sponsorId !== sponsor.id ||
+          terms.subscription !== sponsor.stripeSubscriptionId ||
+          terms.tier !== plan.value.tier ||
+          terms.cycle !== plan.value.cycle ||
+          !['active', 'past_due'].includes(sponsor.status)
+        )
+          return fail(409, 'This plan offer no longer applies.');
+        const response = (s: typeof sponsor) =>
+          json(200, {
+            ok: true,
+            sponsor: sponsorView(s),
+            timing: terms.charge.timing,
+            from: terms.charge.timing === 'renewal' ? new Date(terms.periodEnd * 1000).toISOString().slice(0, 10) : null,
+          });
+        if (q.status === 'accepted') return response(sponsor);
+        if (q.applyingBy && q.applyingBy !== contact.id) return fail(409, 'Another contact is confirming this quote.');
+        if (q.status !== 'open' || (await fees.acceptedQuote(sponsor.id))?.id !== terms.previousQuote) return fail(409, 'This offer was replaced. Review the current quote.');
+        const signature = { ...signer, version: AGREEMENT.version };
+        const applied = await applyFeePlan(q, terms, lifecycle.stripe, async () => {
+          if (!(await fees.claimRecurring(q.id, contact.id, signature))) throw new Error('The sponsor must review the current quote.');
+        });
+        if ('schedule' in applied) {
+          if (!(await fees.savePlanSchedule(q.id, applied.schedule))) throw new Error('The confirmed schedule needs reconciliation.');
+          return response(sponsor);
+        }
+        const updated = await lifecycle.store.update(sponsor.id, plan.value, { kind: 'sponsor', id: user.id });
+        if (!(await fees.acceptQuote(q.id, contact.id, applied.item))) throw new Error('The confirmed Stripe change needs reconciliation.');
+        return response(updated);
       }
       const r = await changePlan(sponsor, plan.value, { kind: 'sponsor', id: user.id }, lifecycle, signer, body.replaces ?? null);
       return json(200, { ok: true, sponsor: sponsorView(r.sponsor), timing: r.timing, from: r.from, droppedChange: r.droppedChange ?? null });

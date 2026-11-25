@@ -425,7 +425,7 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
     if (busy) return;
     setBusy(true);
     setError(null);
-    const { status, body } = await post<{ confirmationTo?: string[] }>(`${BASE}/${id}/payment`, {
+    const { status, body } = await post<{ confirmationTo?: string[]; alreadyRecorded: boolean }>(`${BASE}/${id}/payment`, {
       paidUntil,
       amount: received ?? undefined,
       reference: reference.trim() || undefined,
@@ -436,6 +436,7 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
       setConfirming(false);
       return setError({ field: body.field, message: body.error ?? 'Could not record the payment.' });
     }
+    if (body.alreadyRecorded) return onDone({ text: `This bank transfer was already recorded for the period through ${through}.` });
     const to = body.confirmationTo ?? [];
     onDone({
       text: `Bank transfer recorded: paid through ${through}. ${to.length ? `A confirmation goes to ${to.join(', ')}.` : 'No confirmation sent: they have no billing or primary contact.'}`,

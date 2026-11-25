@@ -27,7 +27,7 @@ export const handleRecordPayment = (request: Request, id: string, deps: SponsorA
       const reference = text(body.reference, 100);
       if (reference === false) return fail(400, 'Keep the reference under 100 characters.', { field: 'reference' });
       const r = await recordPayment(s, { paidUntil: body.paidUntil, amount: amount.value, reference: reference ?? null }, BOARD, lifecycle);
-      return json(200, { ok: true, sponsor: adminSponsorView(r.sponsor, await store.meetups(s.id)), confirmationTo: r.confirmationTo });
+      return json(200, { ok: true, sponsor: adminSponsorView(r.sponsor, await store.meetups(s.id)), confirmationTo: r.confirmationTo, alreadyRecorded: r.alreadyRecorded });
     },
     'record the payment',
   );

@@ -20,6 +20,7 @@
  */
 import {
   confirmedContact,
+  currentOfferId,
   fromLookupKey,
   isRecurring,
   meetupPrice,

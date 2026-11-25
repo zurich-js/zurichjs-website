@@ -3,7 +3,7 @@ type: Domain
 title: Partners and sponsorship
 description: Hosts, sponsors and community partners: where the list comes from, who counts as current, where they are thanked, the sponsorship offering on /partners and the enquiry form.
 tags: [partners, sponsorship, frontend]
-timestamp: "2026-11-24T00:00:00Z"
+timestamp: "2026-11-25T00:00:00Z"
 ---
 
 # Partners and sponsorship

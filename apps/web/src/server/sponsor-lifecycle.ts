@@ -357,7 +357,7 @@ export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'termina
       `${key}:slack`,
       reason === 'withdrawn'
         ? `:no_entry: Invitation to ${who(s)} withdrawn.`
-        : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. Mark them as a past sponsor in Sanity.`,
+        : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. The site lists them as a past sponsor from the next build.`,
       afterStripe,
     ),
   ];
@@ -370,17 +370,6 @@ export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'termina
     ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason, notices });
   }
   await closeStripe(ended, deps);
-  // Queued once Stripe is closed (the note says so); a retry queues nothing new and sends what is left.
-  const key = `sponsor-ended:${s.id}:${reason}`;
-  await deps.store.queueNotices(s.id, [
-    ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason })] : []),
-    slackNotice(
-      `${key}:slack`,
-      reason === 'withdrawn'
-        ? `:no_entry: Invitation to ${who(s)} withdrawn.`
-        : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. The site lists them as a past sponsor from the next build.`,
-    ),
-  ]);
   await deliver(s, deps);
   return ended;
 }
@@ -448,8 +437,21 @@ export interface RecordedPayment {
  * sponsorships paid that way or not started yet; card sponsorships are paid in Stripe. Moves paid
  * through on, starts a sponsorship that had not started, emails the sponsor a confirmation.
  */
-/** Returns the sponsorship and who the confirmation goes to (the billing contacts, else the primary). */
-export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<{ sponsor: Sponsor; confirmationTo: string[] }> {
+export async function recordPayment(
+  s: Sponsor,
+  p: RecordedPayment,
+  actor: Actor,
+  deps: LifecycleDeps,
+): Promise<{ sponsor: Sponsor; alreadyRecorded: boolean; confirmationTo: string[] }> {
+  const events = await deps.store.events(s.id);
+  const offerStart = events.findLastIndex((e) => e.fromStatus === 'ended' && e.toStatus === 'pending');
+  const onDate = events.slice(offerStart + 1).filter((e) => e.payload.paidUntil === p.paidUntil);
+  const completed = onDate.findLast((e) => e.type === 'payment_recorded');
+  const sameTransfer = (payload: Record<string, unknown>) => (payload.amount ?? null) === p.amount && (payload.reference ?? null) === p.reference;
+  if (completed) {
+    if (!sameTransfer(completed.payload)) throw new SponsorshipError('A transfer with different details was recorded for this date. Check the payment history.', 409, 'paidUntil');
+    return { sponsor: s, alreadyRecorded: true, confirmationTo: [] };
+  }
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
   const recording = onDate.findLast((e) => e.type === 'payment_recording');
@@ -471,15 +473,25 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   const paidThrough = longDate(lastDay(p.paidUntil));
   const key = `sponsor-payment-recorded:${s.id}:${p.paidUntil}`;
   const to = (await recipients(deps.store, s.id, 'billing')).map((c) => c.email);
-  await deps.store.queueNotices(s.id, [
-    ...(to.length ? [emailNotice(key, 'sponsor-payment-recorded', { amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }, 'billing')] : []),
-    slackNotice(
-      `${key}:slack`,
-      `:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. ${to.length ? 'They are emailed a confirmation.' : 'No confirmation: they have no billing or primary contact.'}`,
-    ),
-  ]);
+  // The receipt and the note are written with the mark that the payment is recorded: a failure
+  // before or in this write is resumed by the same form again, and nothing after it can lose them.
+  await deps.store.queueNotices(
+    s.id,
+    [
+      ...(to.length ? [emailNotice(key, 'sponsor-payment-recorded', { amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }, 'billing')] : []),
+      slackNotice(
+        `${key}:slack`,
+        `:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. ${to.length ? 'They are emailed a confirmation.' : 'No confirmation: they have no billing or primary contact.'}`,
+      ),
+    ],
+    {
+      type: 'payment_recorded',
+      actor,
+      payload: { ...p },
+    },
+  );
   await deliver(s, deps);
-  return { sponsor: updated, confirmationTo: to };
+  return { sponsor: updated, alreadyRecorded: false, confirmationTo: to };
 }
 
 /* ------------------------------------------------------------------ one-time bundles */

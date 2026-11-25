@@ -77,6 +77,8 @@ export interface Sponsor {
   /** A Stripe payment link the board created for a one-time sponsorship (with a contract on file). */
   paymentLinkId: string | null;
   paymentLinkUrl: string | null;
+  /** Queue acknowledgement clears only this version of the public meetup coverage. */
+  meetupRebuildId: string | null;
   /** Board-only notes. */
   notes: string | null;
   /** While `ending`: when it was agreed, and the day it ends (first day without it). */

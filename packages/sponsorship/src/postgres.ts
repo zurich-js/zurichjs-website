@@ -7,7 +7,7 @@
  * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
+import { settleInvoice, DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
 import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
@@ -330,6 +330,11 @@ export function postgresStore(db: Queryable): SponsorStore {
       UUID.test(sponsorId)
         ? (await q('select event_id, title, date from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => camel<SponsorMeetup>(r))
         : [],
+    pendingMeetupRebuilds: async () =>
+      (await q<{ meetup_rebuild_id: string }>('select meetup_rebuild_id from sponsors where meetup_rebuild_id is not null')).map((r) => r.meetup_rebuild_id),
+    async acknowledgeMeetupRebuilds(versions) {
+      await q('update sponsors set meetup_rebuild_id = null where meetup_rebuild_id = any($1::uuid[])', [versions]);
+    },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];
       // One statement: upsert the new list, remove only meetups not in it (the two never touch the

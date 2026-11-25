@@ -11,8 +11,8 @@
 //                    src/server/db-target.json for the functions. Dropped when the PR closes
 //                    (.github/workflows/preview-db-cleanup.yml).
 //   anything else    migrated if a URL is set, otherwise skipped (CI and local builds need no database).
-//
-// Local development uses the Docker Postgres and tools/docker/migrate.sh instead.
+//                    The local Docker stack runs it against its own Postgres before the site starts
+//                    (docker-compose.yml), so local and deployed databases are migrated the same way.
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import pg from 'pg';
 
@@ -60,6 +60,12 @@ await client.connect();
 try {
   await client.query("select pg_advisory_lock(hashtext('zurichjs:migrations'))");
   await client.query('create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())');
+  // A local database made before this script ran the local stack recorded its migrations in local_migrations.
+  if (context === 'local' && (await client.query("select to_regclass('local_migrations') as t")).rows[0].t) {
+    await client.query('insert into schema_migrations (name, applied_at) select name, applied_at from local_migrations on conflict do nothing');
+    await client.query('drop table local_migrations');
+    log('took over the records of local_migrations');
+  }
   const done = new Set((await client.query('select name from schema_migrations')).rows.map((r) => r.name));
   const files = readdirSync(MIGRATIONS)
     .filter((f) => f.endsWith('.sql'))

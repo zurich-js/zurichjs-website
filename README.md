@@ -11,7 +11,7 @@ pnpm e2e                                   # Playwright against apps/web/dist (b
 node tools/serve-dist.mjs 4321 &           # serve the build like Netlify (pretty URLs, redirects)
 node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity gate
 pnpm lint && pnpm lint:ui && pnpm format:check && pnpm knip && pnpm typecheck
-pnpm local                                 # Docker: site + Postgres + Mailpit + Stripe test mode
+just up                                 # Docker: site + Postgres + Mailpit + Stripe test mode
 ```
 
 Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11.

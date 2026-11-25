@@ -31,10 +31,22 @@ const assertDraft = (id: string) => {
 
 type Env = Record<string, string | undefined>;
 
+/**
+ * Writing to the `production` dataset is refused unless SANITY_ALLOW_PRODUCTION_WRITES=1, which is set
+ * by hand for the production deploy only. The same rule as sanityWritesAllowed in @zurichjs/integrations.
+ */
+export const agentWritesAllowed = (env: Env): boolean => (env.SANITY_DATASET ?? 'production') !== 'production' || env.SANITY_ALLOW_PRODUCTION_WRITES === '1';
+
 /** Sanity store for the agent: its own token (SANITY_AGENT_TOKEN, Editor role) so edits show as "ZurichJS Bot". */
 export function sanityStore(env: Env): ContentStore {
   const token = env.SANITY_AGENT_TOKEN;
   if (!token) throw new Error('SANITY_AGENT_TOKEN is not set');
+  // Reading works anywhere; changing production content does not.
+  const assertWritable = () => {
+    if (!agentWritesAllowed(env)) {
+      throw new Error('Writes to the production dataset are off here. Use another SANITY_DATASET, or set SANITY_ALLOW_PRODUCTION_WRITES=1 on the production deploy.');
+    }
+  };
   const client = createClient({
     projectId: env.SANITY_PROJECT_ID ?? 'viqjrovw',
     dataset: env.SANITY_DATASET ?? 'production',
@@ -47,18 +59,22 @@ export function sanityStore(env: Env): ContentStore {
     query: (groq, params = {}) => client.fetch(groq, params),
     getDocument: async (id) => ((await client.getDocument(id)) as SanityDoc | undefined) ?? null,
     saveDraft: async (doc) => {
+      assertWritable();
       assertDraft(doc._id);
       await client.createOrReplace(doc);
     },
     patchDraft: async (draftId, set) => {
+      assertWritable();
       assertDraft(draftId);
       await client.patch(draftId).set(set).commit();
     },
     publish: async (draftId, publishedId) => {
+      assertWritable();
       assertDraft(draftId);
       await client.action({ actionType: 'sanity.action.document.publish', draftId, publishedId });
     },
     discardDraft: async (draftId) => {
+      assertWritable();
       assertDraft(draftId);
       await client.action({ actionType: 'sanity.action.document.discard', draftId });
     },

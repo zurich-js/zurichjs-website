@@ -179,6 +179,25 @@ test.describe('the sponsorship page (/partners/account)', () => {
     expect(sent).toEqual([{ email: EMAIL, callbackURL: ACCOUNT, errorCallbackURL: `${ACCOUNT}?link=invalid` }]);
   });
 
+  test('announces the empty coverage result in the loading status', async ({ page }) => {
+    await mockMe(page, () => me(sponsor()));
+    let release!: () => void;
+    const pending = new Promise<void>((done) => {
+      release = done;
+    });
+    await page.route('**/api/sponsorship/coverage', async (route) => {
+      await pending;
+      await route.fulfill({ json: { ok: true, checked: true, meetups: [] } });
+    });
+    await page.goto(ACCOUNT);
+    const status = page.getByRole('region', { name: 'Meetups you sponsor' }).getByRole('status');
+    await expect(status).toHaveText('Loading your meetups…');
+    const original = await status.elementHandle();
+    release();
+    await expect(status).toContainText('No meetups are confirmed');
+    expect(await original!.evaluate((node) => node.isConnected && node.textContent?.includes('No meetups are confirmed'))).toBe(true);
+  });
+
   test('signed in: covered meetups load on their own, say their state in words, and retry after an error', async ({ page }) => {
     let calls = 0;
     await mockMe(page, () => me(sponsor()));
@@ -375,6 +394,50 @@ test.describe('the sponsorship page (/partners/account)', () => {
 });
 
 test.describe('the board’s sponsors (/admin/sponsors)', () => {
+  test('recovers coverage controls after a failed write and refreshes the history and lock after a change', async ({ page }) => {
+    await mockAdmin(page);
+    const meetup = { id: 'jan', title: 'January meetup', date: '2027-01-13' };
+    let writes = 0;
+    let ended = false;
+    await page.route(`**${ADMIN_API}/meetups`, (r) => r.fulfill({ json: { ok: true, meetups: [meetup] } }));
+    await page.route(`**${ADMIN_API}/${BOLT.id}/coverage`, (r) => {
+      if (r.request().method() === 'POST') {
+        if (++writes === 1) return r.abort('connectionreset');
+        ended = true; // A concurrent board change is visible on the next detail read.
+      }
+      return r.fulfill({ json: { ok: true, checked: true, coverage: [], locked: ended ? 'This sponsorship has ended. Its covered meetups stay as they were.' : null } });
+    });
+    await page.route(`**${ADMIN_API}/${BOLT.id}`, (r) =>
+      !ended
+        ? r.fallback()
+        : r.fulfill({
+            json: {
+              ok: true,
+              sponsor: { ...BOLT, status: 'ended', statusLabel: 'ended' },
+              attention: [],
+              contacts: [],
+              agreements: [],
+              logos: [],
+              contracts: [],
+              events: [{ id: 'first', type: 'meetup_covered', at: '2026-11-19T12:00:00Z', actor: { kind: 'board', id: 'admin' }, payload: {} }],
+              pendingChange: null,
+            },
+          }),
+    );
+    await page.goto(ADMIN + '?id=' + BOLT.id);
+    const panel = page.getByRole('region', { name: 'Covered meetups' });
+    await panel.getByLabel('Add a meetup').selectOption(meetup.id);
+    const add = panel.getByRole('button', { name: 'Add', exact: true });
+    await add.click();
+    await expect(panel.getByRole('alert')).toBeVisible();
+    await expect(add).toBeEnabled();
+    await add.click();
+    await expect(panel.getByText('This sponsorship has ended.', { exact: false })).toBeVisible();
+    await expect(add).toHaveCount(0);
+    await page.getByText('Agreements and history', { exact: true }).click();
+    await expect(page.getByRole('region', { name: 'History' })).toContainText('Meetup confirmed as covered.');
+  });
+
   test('the list shows each sponsor’s plan and status, filters by status, and opens one sponsor', async ({ page, isMobile }) => {
     const queries = await mockAdmin(page);
     await page.goto(ADMIN);

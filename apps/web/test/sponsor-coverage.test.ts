@@ -139,6 +139,14 @@ describe('covered meetups', () => {
     expect((await store.meetups(s.id)).map((m) => m.eventId)).toEqual(['event-dec']);
   });
 
+  it.each(['cancelled', 'postponed'] as const)('keeps past coverage when the display state is %s', async (status) => {
+    const { sponsor: s } = await store.create(sponsor(), { email: grace.email, name: 'Grace', role: 'primary' }, board);
+    await store.cover(s.id, { eventId: 'event-dec', title: 'December', date: '2026-12-09' }, board);
+    const moved: LiveLookup = async () => [{ id: 'event-dec', title: 'December', datetime: '2026-11-20T17:30:00Z', status }];
+    expect((await handleAdminCoverage(post(path(s.id), { action: 'remove', eventId: 'event-dec' }), s.id, admin(moved))).status).toBe(409);
+    expect(await store.meetups(s.id)).toHaveLength(1);
+  });
+
   it('keeps a meetup covered when its current date cannot be checked', async () => {
     const { sponsor: s } = await store.create(sponsor(), { email: grace.email, name: 'Grace', role: 'primary' }, board);
     await store.cover(s.id, { eventId: 'event-dec', title: 'ZurichJS Meetup December', date: '2026-12-09' }, board);

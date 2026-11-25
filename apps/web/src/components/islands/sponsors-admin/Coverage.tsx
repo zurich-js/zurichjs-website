@@ -15,7 +15,7 @@ import { BASE, Block, Notice, inputValue, useMeetups } from './shared.tsx';
 
 type Row = ReturnType<typeof coverageHistoryView>[number];
 
-export function Coverage({ id, sponsor: s, onSignedOut }: { id: string; sponsor: AdminSponsorView; onSignedOut: () => void }) {
+export function Coverage({ id, sponsor: s, onChanged, onSignedOut }: { id: string; sponsor: AdminSponsorView; onChanged: () => void; onSignedOut: () => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [locked, setLocked] = useState<string | null>(null);
   const [checked, setChecked] = useState(true);
@@ -30,31 +30,41 @@ export function Coverage({ id, sponsor: s, onSignedOut }: { id: string; sponsor:
 
   useEffect(() => {
     let current = true;
-    void api<{ coverage: Row[]; checked: boolean; locked: string | null }>(`${BASE}/${id}/coverage`).then(({ status, body }) => {
-      if (!current) return;
-      if (status === 401) return signedOut.current();
-      if (status !== 200) return setError(body.error ?? 'Could not load the covered meetups.');
-      setRows(body.coverage);
-      setChecked(body.checked);
-      setLocked(body.locked);
-    });
+    setRows(null);
+    setError('');
+    void api<{ coverage: Row[]; checked: boolean; locked: string | null }>(`${BASE}/${id}/coverage`)
+      .then(({ status, body }) => {
+        if (!current) return;
+        if (status === 401) return signedOut.current();
+        if (status !== 200) return setError(body.error ?? 'Could not load the covered meetups.');
+        setRows(body.coverage);
+        setChecked(body.checked);
+        setLocked(body.locked);
+      })
+      .catch(() => {
+        if (current) setError('Could not load the covered meetups. Reload the page to try again.');
+      });
     return () => {
       current = false;
     };
-  }, [id]);
+  }, [id, s.status]);
 
   const change = async (action: 'add' | 'remove', eventId: string, title: string) => {
     setBusy(`${action}:${eventId}`);
     setError('');
     setDone('');
-    const { status, body } = await post<{ coverage: Row[]; checked: boolean }>(`${BASE}/${id}/coverage`, { action, eventId });
-    setBusy('');
+    const response = await post<{ coverage: Row[]; checked: boolean }>(`${BASE}/${id}/coverage`, { action, eventId })
+      .catch(() => null)
+      .finally(() => setBusy(''));
+    if (!response) return setError('We couldn’t confirm this change. Reload the sponsor to check the covered meetups.');
+    const { status, body } = response;
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not change the covered meetups.');
     setRows(body.coverage);
     setChecked(body.checked);
     setPick('');
     setDone(action === 'add' ? `${title} is now covered.` : `${title} was taken off. It stays in the history.`);
+    onChanged();
   };
 
   const covered = (rows ?? []).filter((r) => !r.removedAt);

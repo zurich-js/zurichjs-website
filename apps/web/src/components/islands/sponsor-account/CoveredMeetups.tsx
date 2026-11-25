@@ -52,11 +52,14 @@ export function CoveredMeetups({ contactEmail, onSignedOut }: { contactEmail: st
       <Heading id="h-covered" size="subsection">
         Meetups you sponsor
       </Heading>
-      {load.kind === 'loading' && (
-        <p role="status" class="m-0 text-body text-ink-2">
-          Loading your meetups…
-        </p>
-      )}
+      <p role="status" class="m-0 text-body text-ink-2 text-pretty empty:hidden">
+        {load.kind === 'loading' && 'Loading your meetups…'}
+        {load.kind === 'ready' &&
+          !load.meetups.length &&
+          (load.once
+            ? 'The meetups in your plan show here once you have chosen them.'
+            : `No meetups are confirmed for your sponsorship yet. We agree each meetup with you, then it shows here. Questions: ${contactEmail}.`)}
+      </p>
       {load.kind === 'error' && (
         <>
           <Notice tone="danger" live title={load.message} />
@@ -66,13 +69,6 @@ export function CoveredMeetups({ contactEmail, onSignedOut }: { contactEmail: st
             </Button>
           </div>
         </>
-      )}
-      {load.kind === 'ready' && !load.meetups.length && (
-        <p class="m-0 text-body text-ink-2 text-pretty">
-          {load.once
-            ? 'The meetups in your plan show here once you have chosen them.'
-            : `No meetups are confirmed for your sponsorship yet. We agree each meetup with you, then it shows here. Questions: ${contactEmail}.`}
-        </p>
       )}
       {load.kind === 'ready' && load.meetups.length > 0 && (
         <>

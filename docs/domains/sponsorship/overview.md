@@ -1,9 +1,9 @@
 ---
 type: Domain
 title: Sponsorship
-description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
+description: Self-serve paid sponsorships, including tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
 tags: [sponsorship, stripe, postgres]
-timestamp: "2026-11-19T00:00:00Z"
+timestamp: '2026-11-25T00:00:00Z'
 ---
 
 # Sponsorship
@@ -58,7 +58,7 @@ A sponsorship covers the meetups recorded for it in `sponsor_meetups`, whatever 
 
 - **One-time:** the meetups in the plan (the sponsor picks one, or the board bundles several). They set the price and the end.
 - **Recurring:** the board confirms each covered meetup in `/admin/sponsors` (Covered meetups), from the upcoming published meetups. A meetup inside a billing period is not covered until it is confirmed.
-- **History:** a row is never deleted. Taking a meetup off records when and by whom (`removed_at`, `removed_by`); confirming it again records the new confirmation. A meetup that has happened cannot be taken off. Whether it has happened is decided on its current date in Sanity, the date the sponsor sees; when Sanity cannot be reached the row stays until the date can be checked. Each change is in `sponsor_events` (`meetup_covered`, `meetup_uncovered`, `meetups_set`).
+- **History:** a row is never deleted. Taking a meetup off records when and by whom (`removed_at`, `removed_by`); confirming it again records the new confirmation. The board cannot take a past meetup off recurring coverage. Whether it has happened is decided on its current date in Sanity, the date the sponsor sees; when Sanity cannot be reached the row stays until the date can be checked. Each change is in `sponsor_events` (`meetup_covered`, `meetup_uncovered`, `meetups_set`).
 - **The sponsor's dashboard** lists the covered meetups with title, Zurich date, a link to the meetup's page and a state in words: upcoming, happened, cancelled, postponed, or no longer listed. Title, date, link and state come from Sanity when the page loads; when Sanity cannot be reached, the stored title and date are shown without a link, the state comes from the date, and the page says so. They load apart from the rest of the account and still show when the sponsorship itself fails to load, so a billing problem never hides them.
 
 ## Status machine

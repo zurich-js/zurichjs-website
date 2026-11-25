@@ -155,6 +155,50 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('the sponsorship page (/partners/account)', () => {
+  test('a slow answer says so, and a failed one offers Try again instead of a signed-out or empty page', async ({ page }) => {
+    await page.clock.install();
+    let answered = false;
+    await page.route('**/api/sponsorship/me', (route) => (answered ? route.abort('connectionrefused') : undefined));
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship…');
+    // The clock also holds the frame that runs the island's effects: one step to schedule, one to pass 10 s.
+    await page.clock.runFor(1_000);
+    await page.clock.fastForward(11_000);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship… This is taking longer than usual.');
+    answered = true;
+    await page.reload();
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(page.getByLabel('Email')).toHaveCount(0);
+  });
+
+  test('a request that never answers ends with Try again after 20 seconds', async ({ page }) => {
+    await page.clock.install();
+    await page.route('**/api/sponsorship/me', () => undefined);
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship…');
+    await page.clock.runFor(1_000);
+    await page.clock.fastForward(20_000);
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  });
+
+  test('a platform 503 page offers Try again; only the site’s own 503 says accounts are not available', async ({ page }) => {
+    let html = true;
+    await page.route('**/api/sponsorship/me', (route) =>
+      html
+        ? route.fulfill({ status: 503, contentType: 'text/html', body: '<html>Service Unavailable</html>' })
+        : route.fulfill({ status: 503, json: { ok: false, error: 'Sponsorship pages are not available yet.' } }),
+    );
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(page.getByText(/not available yet/)).toHaveCount(0);
+    html = false;
+    await page.reload();
+    await expect(page.getByText(/Sponsor accounts are not available yet/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0);
+  });
+
   test('signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox', async ({ page }) => {
     const sent: Record<string, unknown>[] = [];
     await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 401, json: { ok: false, error: 'Sign in first.' } }));
@@ -292,6 +336,64 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await expect(card.getByRole('button', { name: 'Change tier or how often you pay' })).toHaveCount(0);
     const signed = { confirm: true, agreementVersion: AGREEMENT.version };
     expect(sent).toEqual([signed, signed]);
+  });
+
+  test('when Stripe could not be asked for a scheduled change, the page says so instead of showing none', async ({ page }) => {
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: true }));
+    await page.goto(ACCOUNT);
+    await expect(page.getByText('We couldn’t check for a change waiting for your renewal. Reload the page to see it.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Keep current plan' })).toHaveCount(0);
+  });
+
+  test('while the scheduled change is unknown, a change from the renewal waits for Check again', async ({ page }) => {
+    let unknown = true;
+    let plans = 0;
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: unknown }));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      plans++;
+      return route.fulfill({ json: { ok: true } });
+    });
+    await page.goto(ACCOUNT);
+    const card = page.getByRole('region', { name: 'Acme AG' });
+    await card.getByRole('button', { name: 'Change tier or how often you pay' }).click();
+    const form = page.locator('#panel-change');
+    await form.getByRole('radio', { name: 'Monthly' }).check();
+    await expect(form.getByText(/We couldn’t check whether you already have a change scheduled/)).toBeVisible();
+    await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+    unknown = false;
+    await form.getByRole('button', { name: 'Check again' }).click();
+    await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toBeVisible();
+    expect(plans).toBe(0);
+  });
+
+  test('a change link opened while the scheduled change is unknown cannot be confirmed yet', async ({ page }) => {
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: true }));
+    await page.goto(`${ACCOUNT}?change=friend-monthly`);
+    const linked = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    await expect(linked.getByText(/We couldn’t check whether you already have a change scheduled/)).toBeVisible();
+    await expect(linked.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+    await expect(linked.getByRole('button', { name: 'Check again' })).toBeVisible();
+  });
+
+  test('a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces', async ({ page }) => {
+    let unknown = true;
+    const requests: unknown[] = [];
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: unknown, pendingChange: unknown ? null : { tier: 'friend', cycle: 'monthly', from: '2027-11-02' } }));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      requests.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ok: true, timing: 'now', from: null } });
+    });
+    await page.goto(`${ACCOUNT}?change=builder-yearly`);
+    const form = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    await expect(form.getByRole('button', { name: 'Check again' })).toBeVisible();
+    await expect(form.getByRole('button', { name: 'Confirm the change' })).toHaveCount(0);
+    unknown = false;
+    await form.getByRole('button', { name: 'Check again' }).click();
+    await expect(form.getByText(/replaces Community Friend.*month.*2nd November 2027/)).toBeVisible();
+    expect(requests).toEqual([]);
+    await form.getByRole('checkbox').check();
+    await form.getByRole('button', { name: 'Confirm the change' }).click();
+    expect(requests).toEqual([expect.objectContaining({ tier: 'builder', cycle: 'yearly', replaces: 'friend-monthly@2027-11-02' })]);
   });
 
   test('a sponsorship that is ending can be kept: /end/undo is called and the page says it continues', async ({ page }) => {

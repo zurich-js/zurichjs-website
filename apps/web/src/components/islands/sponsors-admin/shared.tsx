@@ -65,6 +65,7 @@ const ATTENTION_TONE: Record<Attention, TagTone> = {
   manual_due_soon: 'black',
   invite_waiting: 'black',
   checkout_abandoned: 'black',
+  no_partner: 'black',
   new_logo: 'black',
 };
 

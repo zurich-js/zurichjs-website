@@ -33,6 +33,10 @@ down:
 reset:
     docker compose --profile '*' down --remove-orphans -v
 
+# Add the partners missing from the local database (from packages/content/src/partners.ts); never changes one that is there
+seed-partners:
+    pnpm -s partners:seed
+
 # Resolve and check the environment without starting anything (secrets are masked)
 env:
     pnpm exec varlock load

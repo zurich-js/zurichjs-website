@@ -3,7 +3,7 @@ type: Content Model
 title: Content model
 description: The Sanity singletons and shared document types (site settings, Meetup rating, conference module, announcement, stats, partner) and what the site does with them.
 tags: [content, sanity, schema]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-23T00:00:00Z'
 ---
 
 # Content model
@@ -20,11 +20,11 @@ Schema owner: `apps/studio/schemaTypes` ([Studio](/systems/studio.md)). Meetup t
 
 ## Other shared types
 
-| Type           | Fields                                                                                                                                                                                                                                                                           | Notes                                                                                                               |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `partner`      | `id`, `name`, `logo`, `logoBlack`, `logoBackground`, `url`, `kinds` (`sponsor`, `venue`, `food`, `community`, `conference`, `supporting`), `tier` (`champion`, `builder`, `friend`, `supporter`; only for sponsors), `current`, `since`, `until`, `description`, `allowReferrer` | The site never calls a partner "current" unless an organiser ticked it ([Partners](/domains/partners/overview.md)). |
-| `announcement` | `id`, `type` (`event`, `promotion`, `workshop`, `general`), `title`, `message`, `cta` (`text`, `href`), `conditions`, `startDate`, `endDate`, `requiresLogin`                                                                                                                    | Kept from the old site; it is in the publish webhook's filter.                                                      |
-| `stats`        | `members`, `totalAttendees`                                                                                                                                                                                                                                                      | Kept from the old site.                                                                                             |
+| Type           | Fields                                                                                                                                                                                                                                                                           | Notes                                                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `partner`      | `id`, `name`, `logo`, `logoBlack`, `logoBackground`, `url`, `kinds` (`sponsor`, `venue`, `food`, `community`, `conference`, `supporting`), `tier` (`champion`, `builder`, `friend`, `supporter`; only for sponsors), `current`, `since`, `until`, `description`, `allowReferrer` | Not the site's partner list any more: partners are records in the database, and these documents are read only when there is no such table to read ([Partners](/domains/partners/overview.md)). |
+| `announcement` | `id`, `type` (`event`, `promotion`, `workshop`, `general`), `title`, `message`, `cta` (`text`, `href`), `conditions`, `startDate`, `endDate`, `requiresLogin`                                                                                                                    | Kept from the old site; it is in the publish webhook's filter.                                                                                                                                 |
+| `stats`        | `members`, `totalAttendees`                                                                                                                                                                                                                                                      | Kept from the old site.                                                                                                                                                                        |
 
 ## Rebuild coverage
 
@@ -37,4 +37,4 @@ The publish webhook rebuilds the site for `events`, `talk`, `speaker`, `partner`
 
 # Related specs
 
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md)

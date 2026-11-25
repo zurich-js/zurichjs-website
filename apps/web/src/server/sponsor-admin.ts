@@ -255,7 +255,7 @@ export async function changeInvitedPlan(s: Sponsor, plan: { tier: Sponsor['tier'
 
 /* ------------------------------------------------------------------ what needs someone */
 
-export type Attention = 'payment_overdue' | 'manual_overdue' | 'manual_due_soon' | 'invite_waiting' | 'checkout_abandoned' | 'new_logo' | 'meetup_passed_unpaid';
+export type Attention = 'payment_overdue' | 'manual_overdue' | 'manual_due_soon' | 'invite_waiting' | 'checkout_abandoned' | 'no_partner' | 'new_logo' | 'meetup_passed_unpaid';
 
 export const ATTENTION_LABEL: Record<Attention, string> = {
   payment_overdue: 'Payment overdue',
@@ -263,6 +263,7 @@ export const ATTENTION_LABEL: Record<Attention, string> = {
   manual_due_soon: 'Bank transfer due soon',
   invite_waiting: 'Invitation not answered',
   checkout_abandoned: 'Started online, not paid',
+  no_partner: 'No logo on the site',
   new_logo: 'New logo for the partner record',
   meetup_passed_unpaid: 'Meetup passed, unpaid',
 };
@@ -284,6 +285,8 @@ export function attention(s: Sponsor, facts: Pick<SponsorSummary, 'meetups' | 'l
     // A company that started on its own was never invited: there is no invitation to send again.
     if (days(s.createdAt.slice(0, 10), today) >= 7) out.push(s.source === 'self_serve' ? 'checkout_abandoned' : 'invite_waiting');
   }
+  // Running without a partner record: the site lists them by name only, without a logo.
+  if (isRunning(s.status) && !s.partnerId) out.push('no_partner');
   // A logo goes on the site only while the sponsorship runs.
   if (isRunning(s.status)) {
     const logo = facts.latestLogo;

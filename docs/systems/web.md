@@ -3,7 +3,7 @@ type: System
 title: Web app
 description: The Astro 7 site in apps/web, how it renders (static pages, islands, server endpoints, Netlify Functions), its routes, redirects, headers and share images.
 tags: [astro, netlify, frontend, routes]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-23T00:00:00Z'
 ---
 
 # Web app
@@ -43,7 +43,8 @@ Source: `apps/web` (`@zurichjs/web`). Configuration: `apps/web/astro.config.mjs`
 | `/partners/account`, `/partners/agreement`                                                    | static shell; noindex          | [Sponsorship frontend](/domains/sponsorship/frontend.md)                                                         |
 | `/donate`, `/donate/thanks`                                                                   | static, island; thanks noindex | [Donations](/domains/donations/overview.md)                                                                      |
 | `/membership`, `/membership/terms`, `/membership/account`                                     | static; account noindex        | [Membership frontend](/domains/membership/frontend.md)                                                           |
-| `/admin`, `/admin/memberships`, `/admin/sponsors`                                             | static shell, noindex          | [Membership frontend](/domains/membership/frontend.md), [Sponsorship frontend](/domains/sponsorship/frontend.md) |
+| `/admin`, `/admin/memberships`, `/admin/sponsors`, `/admin/partners`                          | static shell, noindex          | [Membership frontend](/domains/membership/frontend.md), [Sponsorship frontend](/domains/sponsorship/frontend.md) |
+| `/partner-logos/<id>.<ext>`                                                                   | static files from the database | [Partners](/domains/partners/overview.md)                                                                        |
 | `/about`, `/about/why-zurichjs`                                                               | static                         | [Content](/domains/content/overview.md)                                                                          |
 | `/meetups/javascript-zurich`, `/meetups/ai-ml-zurich`, `/conferences/tech-conferences-zurich` | static landing pages           | [SEO](/systems/seo.md)                                                                                           |
 | `/ai-context`, `/llms.txt`, `/llms-full.txt`, `/sitemap.xml`, `/robots.txt`                   | static                         | [SEO](/systems/seo.md)                                                                                           |

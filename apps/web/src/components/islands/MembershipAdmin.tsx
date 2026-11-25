@@ -20,6 +20,7 @@ import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.
 import type { CertificateView } from '../../server/membership.ts';
 import { UNREACHABLE, api } from './admin-api.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
+import { PartnersAdmin } from './PartnersAdmin.tsx';
 import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
 type Status = AdminMember['status'];
@@ -48,11 +49,12 @@ const dateTime = shortDateTime;
 /** paid_until is the first unpaid day: show the last paid one. */
 const paidThrough = (iso: string | null) => (iso ? shortDate(lastDay(iso)) : '–');
 
-export type AdminSection = 'memberships' | 'sponsors';
+export type AdminSection = 'memberships' | 'sponsors' | 'partners';
 
 const SECTIONS: { key: AdminSection; label: string; href: string }[] = [
   { key: 'memberships', label: 'Memberships', href: '/admin/memberships' },
   { key: 'sponsors', label: 'Sponsors', href: '/admin/sponsors' },
+  { key: 'partners', label: 'Partners', href: '/admin/partners' },
 ];
 
 export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
@@ -99,7 +101,13 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
           Sign out
         </Button>
       </div>
-      {section === 'sponsors' ? <SponsorsAdmin onSignedOut={() => setState('signed-out')} /> : <Admin onSignedOut={() => setState('signed-out')} />}
+      {section === 'sponsors' ? (
+        <SponsorsAdmin onSignedOut={() => setState('signed-out')} />
+      ) : section === 'partners' ? (
+        <PartnersAdmin onSignedOut={() => setState('signed-out')} />
+      ) : (
+        <Admin onSignedOut={() => setState('signed-out')} />
+      )}
     </div>
   );
 }

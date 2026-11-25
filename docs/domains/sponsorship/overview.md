@@ -3,7 +3,7 @@ type: Domain
 title: Sponsorship
 description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
 tags: [sponsorship, stripe, postgres]
-timestamp: "2026-11-24T00:00:00Z"
+timestamp: "2026-11-25T00:00:00Z"
 ---
 
 # Sponsorship
@@ -12,7 +12,7 @@ Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle 
 
 Sponsors get the same self-serve system as [members](/domains/membership/overview.md): the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays by card, and from then on the sponsor manages tier, billing, payment details, logo and colleagues themselves. Changes the board agrees with a sponsor in conversation are sent as a link that fills the change in, and apply only once the sponsor confirms (owner, 18th November 2026).
 
-**This page owns paid sponsorships.** The public side (who is listed and thanked, the `/partners` page, the enquiry form) is in [Partners and sponsorship](/domains/partners/overview.md). A running sponsorship decides who is shown as a current sponsor and at which tier ("On the public site" below); the logo, hover colour and link still come from the partner record. Slack says when a sponsor uploads a logo; an uploaded logo is not shown on the site by itself.
+**This page owns paid sponsorships.** The public side (who is listed and thanked, the `/partners` page, the enquiry form) is in [Partners and sponsorship](/domains/partners/overview.md). A running sponsorship decides who is shown as a current sponsor and at which tier ("On the public site" below); the logos, hover colour and link still come from the partner record, which the board edits in `/admin/partners`. Slack says when a sponsor uploads a logo; an uploaded logo is not shown on the site until the board uses it as the partner's logo.
 
 ## Decisions (owner, 18th November 2026)
 
@@ -25,7 +25,7 @@ Sponsors get the same self-serve system as [members](/domains/membership/overvie
 | Payment              | Card only (Stripe Checkout, or a single-use Stripe payment link for a bundle with a contract on file). Invoices were removed. A sponsorship paid by bank transfer is recorded by the board                |
 | Agreement            | Signed once on the site by a named person with their role; later changes and ends are confirmed with one tick under the same agreement. A contract signed outside the site can be attached instead        |
 | Changes by the board | A pre-filled link (`/partners/account?change=builder-yearly` or `?change=end`) emailed to the confirmed contacts; nothing changes until a contact confirms. The board can still end one outright (logged) |
-| Logos                | Uploaded and announced in Slack, with no review step                                                                                                                                                      |
+| Logos                | Uploaded and announced in Slack; on the public site only once the board uses one as the partner's logo (owner, 20th November 2026)                                                                        |
 | Board notices        | Slack only, no board emails                                                                                                                                                                               |
 
 Assumed, not asked (change if wrong): no minimum term, so a sponsor can end at any time with effect at the end of the paid period; one email belongs to one sponsor.
@@ -75,25 +75,26 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 
 ## On the public site
 
-The sponsorships database overrides the partner list for who is a current sponsor and at which tier (owner, 19th November 2026). Nothing else: the logo, hover colour, link and words stay the partner record's ([Partners and sponsorship](/domains/partners/overview.md)).
+The sponsorships database overrides the partner list for who is a current sponsor and at which tier (owner, 19th November 2026). Nothing else: the logos, hover colour, link and words stay the partner record's ([Partners and sponsorship](/domains/partners/overview.md)).
 
-- **The link is the sponsor's partner id** (`sponsors.partner_id`, "Partner id" under Edit details in `/admin/sponsors`): the `id` of the partner record, for example `gyff`. Names are never used to link.
+- **The link is the sponsor's partner id** (`sponsors.partner_id`, "Partner record" under Edit details in `/admin/sponsors`): the `id` of the partner record, for example `gyff`. It is chosen from the partner records, and a link that changes must point at a record that exists, so a mistyped id cannot list a sponsor twice. Names are never used to link.
 - **Running** (`active`, `past_due` or `ending`) and linked: that partner is a current sponsor at the sponsorship's tier, whatever the partner record says. With several running sponsorships on one partner the highest tier counts.
 - **Ended** and linked, with none running: the partner becomes a past sponsor without a tier. A partner who is also a host or another kind keeps its own current flag and only loses the tier.
-- **Running without a partner record** (no partner id, or one that matches nothing): listed as a current sponsor at its tier by company name and website, without a logo. If the company name equals a partner record's, nothing is added (so no company is listed twice) and the build log says to set the partner id.
+- **Running without a partner record** (no partner id, or one that matches nothing): listed as a current sponsor at its tier by company name and website, without a logo. The admin area flags it as "No logo on the site" until a partner record is chosen. If the company name equals a partner record's, nothing is added and the build log says to choose the partner record. A company whose sponsorship carries another name than its partner record (FIN and "Trust FIN GmbH") is listed twice until it is linked.
 - **Pending** sponsorships, and partners no sponsorship is linked to, change nothing. A partner withdrawn from promotion is never brought back.
 - **One-time** (a sponsor of one or more meetups, running only through one-time sponsorships): current for its paid term like any other (until the day after its last meetup, when the daily check ends it), but thanked on the meetups it sponsors rather than as a season sponsor: those events list it as a sponsor, and other upcoming events leave it out of "this season". The partner carries the meetups as `coverage`: the meetups it covers now (a meetup taken off it, kept as history with `removed_at` once covered meetups (#98) are in, is not one). A recurring sponsorship next to it makes it a season sponsor. How long a one-time sponsor stays listed beyond its meetups is an open owner question.
 
-**Where it is read:** at build time. `apps/web/src/lib/content.ts` hands `loadContent` the reader `publicSponsorships` (one short-lived connection, the same database URL as the functions), and `applySponsorships` applies the rows to the partners from Sanity or from the code-side record. The build never fails because of it:
+**Where it is read:** at build time. `apps/web/src/lib/content.ts` hands `loadContent` the reader `publicSponsorships` (one short-lived connection, the same database URL as the functions), and `applySponsorships` applies the rows to the partner records ([Partners and sponsorship](/domains/partners/overview.md)). The build never fails because of it:
 
-| Build                                                    | What it shows                                                                                  |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Production                                               | the production database's sponsorships                                                         |
-| Deploy preview                                           | its own database `pr_<number>`, which starts empty: the partner list alone                     |
-| Local with `MEMBERSHIP_DB_URL` (`just up`)               | the local database's sponsorships, when content comes from Sanity                              |
-| No database URL                                          | the partner list alone                                                                         |
-| The database is unreachable or silent for 15 seconds     | the partner list alone, with a warning in the build log                                        |
-| Sample content (`CONTENT_SOURCE=sample`: tests, e2e, CI) | the partner list alone; the database is never read, so the visual baselines never depend on it |
+| Build                                                   | What it shows                                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Production                                              | the production database's sponsorships                                                         |
+| Deploy preview                                          | its own database `pr_<number>`, which starts empty: the partner list alone                     |
+| Local with `MEMBERSHIP_DB_URL` (`just up`)              | the local database's sponsorships, when content comes from Sanity                              |
+| No database URL                                         | the partner list alone                                                                         |
+| The database is unreachable or silent for 15 seconds    | the partner list alone, with a warning in the build log                                        |
+| Tests, e2e and CI (sample content, no database URL)     | the partner list alone; the database is never read, so the visual baselines never depend on it |
+| Sample content with a database (the local Docker stack) | the local database's partners and sponsorships                                                 |
 
 **Rebuilds:** the store every writer uses is wrapped (`apps/web/src/server/sponsor-rebuild.ts`), so a sponsorship that starts, ends, changes tier, or has its partner id, company name or website changed queues a rebuild, as does moving the meetups a running one-time sponsorship covers (they decide which event pages thank it), debounced like a Sanity publish ([Rebuilds](/systems/operations/rebuilds.md)). The site follows a few minutes later.
 
@@ -103,7 +104,7 @@ The sponsorships database overrides the partner list for who is a current sponso
 
 ## Data and files
 
-The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events handled Stripe event ids, and the notices (emails and Slack notes) still to send. Logos and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
+The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events, handled Stripe event ids, the notices (emails and Slack notes) still to send, and the partner records with their logo files ([Partners and sponsorship](/domains/partners/overview.md)). The logos sponsors upload and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
 
 ## Emails and Slack
 

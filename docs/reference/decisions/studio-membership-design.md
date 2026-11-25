@@ -223,6 +223,12 @@ None.
 - When a linked sponsorship has ended, the partner is shown as a past sponsor.
 - A running sponsor with no partner record is listed by company name, without a logo.
 
+## Partners live in the database (owner, 20th November 2026)
+
+- Sponsors are not defined in code: every sponsor, host and partner, current and past, is a record in the database, edited in the admin area. The list in code stays only as the seed and for builds without a database.
+- A partner has two logo files, a colour one and a one-colour one, and a hover colour. Only the board sets what is shown on the site; a sponsor's own upload goes live when the board uses it.
+- For now this is local only: nothing is written to the production database, which is seeded later by the owner.
+
 ## Web Zurich is shown again (owner, 25th November 2026)
 
 - Web Zurich is a community partner on the site again: nothing is lost by listing it. This replaces its removal of 19th November 2026.

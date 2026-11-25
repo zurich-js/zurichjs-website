@@ -1,12 +1,14 @@
 /**
  * One sponsor for the admin area.
  *   GET → { ok, sponsor, attention, contacts, agreements, logos, contracts, events, pendingChange }
- *   POST { companyName?, legalName?, billingAddress?, vatId?, website?, notes?, partnerId? } → { ok, sponsor } (details; synced to Stripe)
+ *   POST { companyName?, legalName?, billingAddress?, vatId?, website?, notes?, partnerId? } → { ok, sponsor } (details; synced to Stripe).
+ *        `partnerId` is the id of a partner record (/admin/partners), or null to unlink.
  */
 import type { SponsorPatch } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../../../../server/http.ts';
 import { adminSponsorView, agreementView, contactView, documentView, logoView, zurichDay } from '../../../../../../server/sponsor.ts';
+import { partnerStore, type PartnerDeps } from '../../../../../../server/partner-admin.ts';
 import { BOARD, attention, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { parseDetails } from '../../../../../../server/sponsor-input.ts';
 import { ensureCustomer, pendingChange } from '../../../../../../server/sponsor-stripe.ts';
@@ -48,11 +50,11 @@ export const handleAdminSponsor = (request: Request, id: string, deps: SponsorAd
     'load the sponsor',
   );
 
-export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorAdminDeps = {}) =>
+export const handleUpdateSponsor = (request: Request, id: string, deps: PartnerDeps = {}) =>
   sponsorAdminRoute(
     request,
     deps,
-    async ({ store, lifecycle }) => {
+    async ({ store, lifecycle, env }) => {
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
       const body = await readJsonObject(request);
@@ -66,9 +68,11 @@ export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorA
         patch.notes = notes ?? null;
       }
       if ('partnerId' in body) {
-        const pid = typeof body.partnerId === 'string' && /^[\w.-]{1,128}$/.test(body.partnerId) ? body.partnerId : body.partnerId ? false : null;
-        if (pid === false) return fail(400, 'Use the id of the partner record: letters, numbers, dots and hyphens.', { field: 'partnerId' });
-        if (pid?.startsWith('drafts.')) return fail(400, 'Use the published partner’s id, without drafts.', { field: 'partnerId' });
+        const pid = typeof body.partnerId === 'string' && body.partnerId.trim() ? body.partnerId.trim() : null;
+        if (body.partnerId && !pid) return fail(400, 'Choose a partner record.', { field: 'partnerId' });
+        // A link that changes has to point at a record that exists: a mistyped id listed a sponsor twice.
+        if (pid && pid !== s.partnerId && !(await (deps.partners ?? partnerStore(env)).get(pid)))
+          return fail(400, 'There is no partner record with that id. Choose one from the list, or create it first.', { field: 'partnerId' });
         patch.partnerId = pid;
       }
       // The form sends every field: save and log only the ones that changed.

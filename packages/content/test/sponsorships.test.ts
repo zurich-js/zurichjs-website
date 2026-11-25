@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { eventThanks, groupPartners, type Event, type Partner } from '@zurichjs/events';
-import { PARTNERS, applySponsorships, loadContent, resetContentCache, withSponsorships, type SiteContent, type SponsorshipRow } from '../src/index.ts';
+import { PARTNERS, applySponsorships, loadContent, resetContentCache, withPartners, withSponsorships, type SiteContent, type SponsorshipRow } from '../src/index.ts';
 
 const row = (over: Partial<SponsorshipRow> = {}): SponsorshipRow => ({
   id: '0b0e4c1e-0000-4000-8000-000000000001',
@@ -104,7 +104,7 @@ describe('applySponsorships', () => {
   it('a sponsor named like a partner but not linked is not added a second time, and never matched by name', () => {
     const { partners, notes } = applySponsorships(PARTNERS, [row({ partnerId: null, tier: 'champion' })]);
     expect(partners).toEqual(PARTNERS);
-    expect(notes[0]).toContain('Partner id');
+    expect(notes[0]).toContain('partner record');
   });
 
   it('ignores a tier it does not know', () => {
@@ -182,36 +182,84 @@ describe('withSponsorships (the fallback)', () => {
   });
 });
 
-describe('loadContent with sponsorships', () => {
-  it('sample content never reads the database', async () => {
+describe('withPartners (the partner records of the database)', () => {
+  const logs: string[] = [];
+  const log = (m: string) => logs.push(m);
+  const acme = { id: 'acme', name: 'Acme', kinds: ['sponsor' as const], current: true, logo: '/partner-logos/1.svg' };
+
+  it('replaces the list in code with the records of the database', async () => {
+    const c = await withPartners(content(), {}, async () => [acme], { log });
+    expect(c.partners).toEqual([acme]);
+  });
+
+  it('keeps the list in code without a reader, without a database, and while the table is empty', async () => {
+    logs.length = 0;
+    const c = content();
+    expect(await withPartners(c, {}, undefined)).toBe(c);
+    expect(await withPartners(c, {}, async () => null)).toBe(c);
+    expect(await withPartners(c, {}, async () => [], { log })).toBe(c);
+    expect(logs.join()).toContain('empty');
+  });
+
+  it('keeps the list in code and warns when the database cannot be read', async () => {
+    logs.length = 0;
+    const c = content();
+    expect(await withPartners(c, {}, async () => Promise.reject(new Error('connect ECONNREFUSED')), { log })).toBe(c);
+    expect(logs.join()).toContain('ECONNREFUSED');
+  });
+
+  it('never brings back a partner withdrawn from promotion', async () => {
+    const c = await withPartners(content(), {}, async () => [{ ...acme, id: 'ginetta', name: 'Ginetta' }], { log });
+    expect(c.partners[0]).toMatchObject({ current: false, delisted: true });
+  });
+});
+
+describe('loadContent with the database', () => {
+  it('reads nothing without readers (tests, a build without a database)', async () => {
     resetContentCache();
-    let read = false;
-    const c = await loadContent({ CONTENT_SOURCE: 'sample' }, undefined, async () => {
-      read = true;
-      return [row({ tier: 'champion' })];
-    });
-    expect(read).toBe(false);
+    const c = await loadContent({ CONTENT_SOURCE: 'sample' });
     expect(find(c.partners, 'gyff').tier).toBe('friend');
+    resetContentCache();
+  });
+
+  it('applies the partner records, then the sponsorships, to sample content too (the local stack)', async () => {
+    resetContentCache();
+    const c = await loadContent({ CONTENT_SOURCE: 'sample' }, undefined, {
+      partners: async () => [{ id: 'gyff', name: 'GYFF from the database', kinds: ['sponsor'], current: false }],
+      sponsorships: async () => [row({ tier: 'champion' })],
+    });
+    expect(c.partners).toHaveLength(1);
+    expect(find(c.partners, 'gyff')).toMatchObject({ name: 'GYFF from the database', tier: 'champion', current: true });
+    resetContentCache();
+  });
+
+  it('reads the database once per build, and again after refreshMs on the dev server', async () => {
+    resetContentCache();
+    let reads = 0;
+    const db = (refreshMs?: number) => ({
+      sponsorships: async () => {
+        reads++;
+        return [row({ tier: 'champion' })];
+      },
+      refreshMs,
+    });
+    await loadContent({ CONTENT_SOURCE: 'sample' }, undefined, db());
+    await loadContent({ CONTENT_SOURCE: 'sample' }, undefined, db());
+    expect(reads).toBe(1);
+    await loadContent({ CONTENT_SOURCE: 'sample' }, undefined, db(0));
+    expect(reads).toBe(2);
     resetContentCache();
   });
 
   it('applies the database to content from Sanity, and a failing database does not fail the build', async () => {
     resetContentCache();
-    const viaDb = await loadContent(
-      { CONTEXT: 'production' },
-      async () => content(),
-      async () => [row({ tier: 'champion' })],
-    );
+    const viaDb = await loadContent({ CONTEXT: 'production' }, async () => content(), { sponsorships: async () => [row({ tier: 'champion' })] });
     expect(find(viaDb.partners, 'gyff').tier).toBe('champion');
     resetContentCache();
     const warn = console.warn;
     console.warn = () => undefined;
     try {
-      const without = await loadContent(
-        { CONTEXT: 'production' },
-        async () => content(),
-        async () => Promise.reject(new Error('down')),
-      );
+      const without = await loadContent({ CONTEXT: 'production' }, async () => content(), { sponsorships: async () => Promise.reject(new Error('down')) });
       expect(find(without.partners, 'gyff').tier).toBe('friend');
     } finally {
       console.warn = warn;

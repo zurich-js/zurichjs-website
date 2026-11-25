@@ -3,7 +3,7 @@ type: System
 title: Local development
 description: Setting up the workspace, the commands CI runs, the Docker stack behind just up, and running donations and the Slack bots on a laptop.
 tags: [setup, commands, docker]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-23T00:00:00Z'
 ---
 
 # Local development
@@ -37,6 +37,7 @@ pnpm speaker-link <speaker-id>             # a speaker's private profile link (3
 | `e2e`                       | Playwright                                                                                                   |
 | `seo:snapshot`, `seo:check` | `tools/seo/snapshot.mjs` and `tools/seo/compare.mjs`                                                         |
 | `membership:*`              | the member import, the Stripe setup and the signature upload ([Membership](/domains/membership/overview.md)) |
+| `partners:seed`             | adds the partners missing from a local database ([Partners](/domains/partners/overview.md), "Seeding")       |
 
 The Studio has its own commands ([Studio](/systems/studio.md)).
 
@@ -59,6 +60,7 @@ just logs             # follow the logs (just logs web stripe: only those)
 just ps               # what is running
 just down             # stop (the local database keeps its data)
 just reset            # stop and delete the local database, the inbox and the container installs
+just seed-partners    # add the partners missing from the local database (it also runs when the site starts)
 just env              # resolve and check the environment only (secrets are masked)
 just run <command>    # any command with the checked environment, e.g. just run pnpm membership:stripe-setup --apply
 just compose <args>   # docker compose with the checked environment, e.g. just compose restart web
@@ -67,13 +69,13 @@ just compose <args>   # docker compose with the checked environment, e.g. just c
 | Where                       | What                                                                                                                                                             |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | http://localhost:4321       | the site, with online membership (`/membership`, `/membership/account`) and sponsorship (`/partners/account`)                                                    |
-| http://localhost:4321/admin | the board's admin area (memberships and sponsors); the password is `ADMIN_PASSWORD` from `.env`, else the default in `docker-compose.yml`                        |
+| http://localhost:4321/admin | the board's admin area (memberships, sponsors and partners); the password is `ADMIN_PASSWORD` from `.env`, else the default in `docker-compose.yml`              |
 | http://localhost:8025       | Mailpit: every email the site sends (sign-in links, certificates); SMTP on `localhost:1025`                                                                      |
 | http://localhost:3333       | the Sanity Studio (`just studio`), against the real project: sign in with your Sanity account                                                                    |
 | `localhost:54322`           | Postgres (`postgres` / `postgres`, database `zurichjs`), migrated when the site starts by `apps/web/scripts/db-migrate.mjs`, the script every Netlify build runs |
 
 - **Settings:** `.env.schema` (committed) names every variable the stack takes, its shape, and the two it requires. Values go in `.env`, then `.env.local` (which wins); both are git-ignored. A value is plain (`KEY=value`) or a 1Password reference, `KEY=op("op://vault/item/section/field")`, which varlock resolves through the signed-in `op` CLI with the desktop app integration on. Nothing resolved is written to disk. A missing or malformed value stops `just up` before a container starts, with the variable's name. `docker-compose.yml` passes each schema variable to the `web` service by name and sets the local services' own (`MEMBERSHIP_DB_URL`, `BETTER_AUTH_*`, `MAILPIT_URL`); `tools/env-schema.test.ts` fails when a schema variable is not passed.
-- **Content:** sample content by default. For real content put `CONTENT_SOURCE=sanity` in `.env.local`: the `production` dataset is public, so reading it needs no token. Writing to `production` is refused without `SANITY_ALLOW_PRODUCTION_WRITES=1`, which belongs on the production deploy and not in `.env.local` ([Environment variables](/systems/operations/environment.md)): a form sent on localhost is not stored, and the dev Slack bot answers a change with an error. To store and edit locally, point `SANITY_DATASET` at another dataset; the project has none yet (`v2-preview` is still to be created, an owner action: [Studio](/systems/studio.md)).
+- **Content:** sample content by default, with the partners and sponsorships of the local database (seeded from the list in code when the site starts; the dev server reads the database again every few seconds, so a change in `/admin` shows on a reload). For real content put `CONTENT_SOURCE=sanity` in `.env.local`: the `production` dataset is public, so reading it needs no token. Writing to `production` is refused without `SANITY_ALLOW_PRODUCTION_WRITES=1`, which belongs on the production deploy and not in `.env.local` ([Environment variables](/systems/operations/environment.md)): a form sent on localhost is not stored, and the dev Slack bot answers a change with an error. To store and edit locally, point `SANITY_DATASET` at another dataset; the project has none yet (`v2-preview` is still to be created, an owner action: [Studio](/systems/studio.md)).
 - **Email:** with `MAILPIT_URL` set, every email goes to Mailpit and no Resend key is needed. `MAILPIT_URL` is ignored in production. `just reset` clears the inbox.
 - **Stripe:** always Stripe's test mode, never the mock. `.env.local` needs the sandbox's `STRIPE_SECRET_KEY` (`sk_test_…`; the schema refuses a live key) and `STRIPE_MEMBER_PORTAL_CONFIG` from `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --apply`. `STRIPE_SUPPORT_PRODUCT_ID` is optional, for `/donate`. The `stripe-secret` service asks Stripe for the listener's signing secret and the site reads it at start; the `stripe` service runs `stripe listen`, forwarding the events production gets to the site's one webhook (`/api/stripe/webhook`: memberships, sponsorships, donations). Plain `docker compose up` has no key, so `stripe-secret` stops with a message: start the stack with `just up`.
 - **Test cards:** `4242 4242 4242 4242` pays, `4000 0000 0000 0341` attaches but declines later charges (a failed renewal), `4000 0027 6000 3184` needs 3D Secure. To play renewals and retries without waiting, give the customer a test clock in the Stripe dashboard and advance it.

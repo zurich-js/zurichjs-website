@@ -1,3 +1,3 @@
 # Partners specs
 
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md) (planned, needs the owner's review)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md) (in progress, needs the owner's review)

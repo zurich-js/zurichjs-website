@@ -1,4 +1,4 @@
-/** A sponsor's uploaded logo, to preview and download for Sanity. GET → the file (sandboxed headers) · 404. */
+/** A sponsor's uploaded logo, to preview and download. GET → the file (sandboxed headers) · 404. */
 import type { APIRoute } from 'astro';
 import { fail, methodNotAllowed } from '../../../../../../../server/http.ts';
 import { sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../../server/sponsor-admin.ts';

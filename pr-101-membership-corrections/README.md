@@ -33,3 +33,7 @@ The published application tree is identical to the tested source tree; only sign
 ## Current-main integration
 
 The follow-up application `325ae7299398a12e2a9592d6ab1574d0ee8b3ef2` integrates main `7a0ad93809b7aa025d0860f566fee34cf08cdf27`. Its full repository suite passed 797 tests with disposable PostgreSQL. The top of the stack passed 32 selected browser checks and ten additional mocked flow replays. Merge commits ran signing, formatting, lint and repository typecheck hooks.
+
+## Request-budget main integration
+
+Application `8537d4b584d74887c5ec8ee2fc82fc4fecc0d7fa` incorporates main `4d88284041cc13763f15c0021941f23707daeec9` after #96 landed. Its full repository suite passed 846 tests, including disposable PostgreSQL. The built stack passed 32 selected browser checks and ten mocked flow replays. All merge commits ran signing and commit hooks. Independent review remains open.

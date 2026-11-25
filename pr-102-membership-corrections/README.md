@@ -115,3 +115,9 @@ The published merge preserves the colleague’s account merge. Compared with the
 The follow-up application `21f1aa9d4215f3a78b4d816d573f06a456d7ea7b` integrates main `7a0ad93809b7aa025d0860f566fee34cf08cdf27`. Its full repository suite passed 806 tests with disposable PostgreSQL. The top of the stack passed 32 selected browser checks and ten additional mocked flow replays. Merge commits ran signing, formatting, lint and repository typecheck hooks.
 
 [Fresh captures from the merged build](current-main/README.md). These supplement the original candidate captures above.
+
+## Request-budget main integration
+
+Application `eedcc8207950fcb23326011a9738975082f2243b` incorporates main `4d88284041cc13763f15c0021941f23707daeec9` after #96 landed. Its full repository suite passed 855 tests, including disposable PostgreSQL. The built stack passed 32 selected browser checks and ten mocked flow replays. All merge commits ran signing and commit hooks. Independent review remains open.
+
+[Latest merged-build captures](deadline-main/README.md).

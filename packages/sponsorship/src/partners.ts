@@ -177,11 +177,16 @@ export function postgresPartners(db: Queryable): PartnerStore {
     },
     async setLogo(id, variant, l) {
       // A new id with every upload: the file's address on the site changes, so no cache shows the old one.
+      // One statement cannot delete a row and insert its key again (the unique check still sees the old row),
+      // so the variant's row is replaced in place and given a new id.
       const rows = await q(
-        `with gone as (delete from partner_logos where partner_id = $1 and variant = $2),
-              touched as (update partners set updated_at = now() where id = $1 returning id)
+        `with touched as (update partners set updated_at = now() where id = $1 returning id)
          insert into partner_logos (partner_id, variant, content_type, filename, bytes, data, ratio, opaque)
-         select id, $2, $3, $4, $5, $6, $7, $8 from touched returning ${LOGO_META}`,
+         select id, $2, $3, $4, $5, $6, $7, $8 from touched
+         on conflict (partner_id, variant) do update set
+           id = gen_random_uuid(), content_type = excluded.content_type, filename = excluded.filename, bytes = excluded.bytes,
+           data = excluded.data, ratio = excluded.ratio, opaque = excluded.opaque, uploaded_at = now()
+         returning ${LOGO_META}`,
         [id, variant, l.contentType, l.filename, l.data.length, Buffer.from(l.data), l.ratio, l.opaque],
       );
       if (!rows[0]) throw new NotFound('partner');

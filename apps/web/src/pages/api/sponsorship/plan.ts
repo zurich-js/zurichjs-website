@@ -37,7 +37,7 @@ export const handlePlan = (request: Request, deps: SponsorRouteDeps = {}) =>
         if (!signer) return fail(400, 'Confirm the change under the sponsorship agreement.', { field: 'agreement' });
       }
       const r = await changePlan(sponsor, plan.value, { kind: 'sponsor', id: user.id }, lifecycle, signer);
-      return json(200, { ok: true, sponsor: sponsorView(r.sponsor), timing: r.timing, from: r.from });
+      return json(200, { ok: true, sponsor: sponsorView(r.sponsor), timing: r.timing, from: r.from, droppedChange: r.droppedChange ?? null });
     },
     'change the sponsorship',
   );

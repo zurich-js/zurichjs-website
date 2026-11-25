@@ -29,7 +29,7 @@ export const MEETUPS = [
   { id: 'event-dec', title: 'ZurichJS Meetup December', date: '2026-12-09' },
   { id: 'event-jan', title: 'ZurichJS Meetup January', date: '2027-01-13' },
 ];
-const unix = (iso: string) => Math.floor(Date.parse(iso) / 1000);
+export const unix = (iso: string) => Math.floor(Date.parse(iso) / 1000);
 
 export interface Delivered {
   to: string[];
@@ -47,12 +47,18 @@ export function world() {
   const activeLinks = new Set<string>();
   const openSessions = new Set<string>();
   const failures: { method: string; re: RegExp; n: number; status: number }[] = [];
+  const subscriptionStatus = new Map<string, string>();
+  let emailFailures = 0;
   const losses: { method: string; re: RegExp; n: number }[] = [];
   const stripeIdem = new Map<string, { body: string; status: number; text: string }>();
   let n = 0;
 
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
+      if (emailFailures > 0) {
+        emailFailures--;
+        return new Response('{"name":"internal_server_error"}', { status: 500 });
+      }
       const body = String(init.body);
       const key = (init.headers as Record<string, string> | undefined)?.['idempotency-key'] ?? null;
       if (key && idem.has(key)) {
@@ -96,6 +102,7 @@ export function world() {
     const ok = (b: unknown) => new Response(JSON.stringify(b));
     const subscription = (id: string) => ({
       id,
+      status: subscriptionStatus.get(id) ?? (live.has(id) ? 'active' : 'canceled'),
       cancel_at: unix('2027-02-18T00:00:00Z'),
       metadata: { source: 'zurichjs.com/partners' },
       items: { data: [{ id: 'si_1', price: { id: 'price_sponsor_friend_quarterly', lookup_key: 'sponsor_friend_quarterly' }, current_period_end: unix('2027-02-18T00:00:00Z') }] },
@@ -135,6 +142,7 @@ export function world() {
       return ok(subscription(id));
     }
     if (path === 'subscription_schedules') return ok({ id: 'sub_sched_1', phases: [] });
+    if (path.startsWith('charges/')) return ok({ id: path.split('/')[1], customer: 'cus_acme', amount: 84000, amount_refunded: 0 });
     throw new Error(`unexpected ${method} ${path}`);
   }
 
@@ -163,6 +171,10 @@ export function world() {
     activeLinks,
     openSessions,
     failNext: (method: string, re: RegExp, count = 1, status = 500) => failures.push({ method, re, n: count, status }),
+    /** The next n emails fail at Resend (500). */
+    failEmails: (count = 1) => void (emailFailures = count),
+    /** What Stripe reports as the subscription's status (default: active while live). */
+    subscriptionStatus,
     loseNext: (method: string, re: RegExp, count = 1) => losses.push({ method, re, n: count }),
   };
 }
@@ -205,8 +217,8 @@ export const asAdminForm = (path: string, form: FormData) =>
 
 export const pdf = () => new TextEncoder().encode('%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF');
 
-export function stripeEvent(id: string, type: string, object: unknown) {
-  const payload = JSON.stringify({ id, type, created: Math.floor(NOW.getTime() / 1000), data: { object } });
+export function stripeEvent(id: string, type: string, object: unknown, created = Math.floor(NOW.getTime() / 1000)) {
+  const payload = JSON.stringify({ id, type, created, data: { object } });
   const t = Math.floor(NOW.getTime() / 1000);
   const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(`${t}.${payload}`).digest('hex');
   return new Request('https://zurichjs.com/api/stripe/webhook', { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${sig}` }, body: payload });

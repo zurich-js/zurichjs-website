@@ -462,6 +462,7 @@ describe('sponsorship flow', () => {
     await webhook(
       stripeEvent('evt_m', 'checkout.session.completed', {
         mode: 'subscription',
+        id: (await store.get(sponsor.id))!.checkoutSessionId,
         subscription: 'sub_globex',
         metadata: { source: 'zurichjs.com/partners', sponsorId: sponsor.id },
       }),
@@ -519,11 +520,32 @@ describe('sponsorship flow', () => {
     expect(list.sponsors.find((s) => s.companyName === 'Manual AG')!.attention).toContain('manual_due_soon');
 
     const deps = { ...lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack }), now: () => NOW };
-    expect(await dailyCheck(deps)).toEqual({ completed: 1, ended: 0, closed: 1, reminded: 1, stripeClosed: 0, linksClosed: 0 });
+    expect(await dailyCheck(deps)).toEqual({
+      completed: 1,
+      ended: 0,
+      closed: 1,
+      reminded: 1,
+      stripeClosed: 0,
+      linksClosed: 0,
+      notices: { sent: 4, failed: 0, waiting: 0, unrecorded: 0 },
+      deferred: [],
+      stripeOpen: [],
+    });
     expect(await store.get(unpaid.sponsor.id)).toMatchObject({ status: 'ended', endedReason: 'withdrawn' });
     expect(await store.get(done.sponsor.id)).toMatchObject({ status: 'ended', endedReason: 'completed' });
     expect(w.emails.at(-1)!.text).toContain('November, 10th November 2026 is behind us');
-    expect(await dailyCheck(deps)).toEqual({ completed: 0, ended: 0, closed: 0, reminded: 1, stripeClosed: 0, linksClosed: 0 });
+    // The same day again: the reminder was sent once, and nothing is left to send.
+    expect(await dailyCheck(deps)).toEqual({
+      completed: 0,
+      ended: 0,
+      closed: 0,
+      reminded: 0,
+      stripeClosed: 0,
+      linksClosed: 0,
+      notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 },
+      deferred: [],
+      stripeOpen: [],
+    });
   });
 
   it('guards writes, files, the board’s end and the webhook', async () => {

@@ -26,15 +26,34 @@ import {
   feeLabel,
   tierInfo,
   type Actor,
+  type Agreement,
   type Contact,
   type Cycle,
   type EndedReason,
+  type NewNotice,
   type Sponsor,
+  type SponsorDocument,
   type SponsorMeetup,
+  type SponsorStore,
   type Tier,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
-import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, note, planLabel, slackText, tierBenefits, who, zurichDay, type NotifyDeps } from './sponsor.ts';
+import {
+  accountUrl,
+  afterLastMeetup,
+  agreementUrl,
+  emailSponsor,
+  meetupLabel,
+  note,
+  planLabel,
+  slackText,
+  sponsorProps,
+  tierBenefits,
+  who,
+  zurichDay,
+  type NotifyDeps,
+} from './sponsor.ts';
+import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
 import {
   cancelAtPeriodEnd,
   cancelNow,
@@ -80,25 +99,46 @@ export interface Signer {
 const zurichMoment = (iso: string) =>
   `${longDate(zurichDay(new Date(iso)))}, ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso))} (Zurich time)`;
 
+/** Sends what this sponsorship's changes owe (queued with them); anything that fails is sent by the daily check. */
+const deliver = (s: Pick<Sponsor, 'id'>, deps: LifecycleDeps) => sendNotices(deps, { sponsorId: s.id });
+
 const today = (deps: LifecycleDeps) => zurichDay(deps.now?.() ?? new Date());
 const nowIso = (deps: LifecycleDeps) => (deps.now?.() ?? new Date()).toISOString();
 const summary = (s: Pick<Sponsor, 'tier' | 'cycle' | 'paymentMode'>) =>
   `${tierInfo(s.tier).name}, ${cycleInfo(s.cycle).label.toLowerCase()}, ${{ card: 'by card', manual: 'by bank transfer' }[s.paymentMode]}`;
 
-/** Records the acceptance (start or change). A contract on file stands in for the start. */
-async function sign(s: Sponsor, signer: Signer, context: 'start' | 'change', actor: Actor, deps: LifecycleDeps, what: string) {
+/**
+ * Records the acceptance (start or change). A contract on file stands in for the start. With
+ * `notices`, what the signature owes is written in the same step (the signed copy of a start).
+ */
+async function sign(s: Sponsor, signer: Signer, context: 'start' | 'change', actor: Actor, deps: LifecycleDeps, what: string, notices?: (saved: Agreement) => NewNotice[]) {
   if (signer.kind === 'contract' && context === 'start') return null;
   return deps.store.acceptAgreement(
     s.id,
     { version: AGREEMENT.version, signerName: signer.name, signerTitle: signer.title, signerEmail: signer.email, context, summary: what.slice(0, 300) },
     actor,
+    notices,
   );
 }
 
 /**
+ * The signatures and contracts that cover the sponsorship as it is offered now. Sponsoring again
+ * after it ended is a new offer: an agreement signed or a contract attached before it was started
+ * again covered other terms (another plan, other meetups), so neither counts for it. The agreement
+ * text itself is unchanged; the sponsor signs it again.
+ */
+export async function offerCover(s: Sponsor, store: SponsorStore): Promise<{ agreements: Agreement[]; contracts: SponsorDocument[] }> {
+  if (s.status === 'ended') return { agreements: [], contracts: [] };
+  const [events, agreements, contracts] = await Promise.all([store.events(s.id), store.agreements(s.id), store.documents(s.id)]);
+  const since = events.filter((e) => e.type === 'status_changed' && e.fromStatus === 'ended' && e.toStatus === 'pending').at(-1)?.at;
+  const current = (at: string) => !since || at >= since;
+  return { agreements: agreements.filter((a) => current(a.acceptedAt)), contracts: contracts.filter((d) => current(d.uploadedAt)) };
+}
+
+/**
  * The signer for a request. A full signature (name, role, current version) always works. A
- * one-tick confirmation works once the sponsorship has an agreement on the current version. With
- * a contract on file, neither is needed. Returns null when a signature is still missing.
+ * one-tick confirmation works once the current offer has an agreement on the current version. With
+ * a contract on file for it, neither is needed. Returns null when a signature is still missing.
  */
 export async function resolveSigner(
   s: Sponsor | null,
@@ -109,9 +149,9 @@ export async function resolveSigner(
 ): Promise<Signer | null> {
   if (input.name && input.title) return { name: input.name, title: input.title, email, kind: 'full' };
   if (!s) return null;
-  if ((await deps.store.documents(s.id)).length) return { name: contact?.name ?? email, title: 'Under the signed contract', email, kind: 'contract' };
+  const { agreements, contracts } = await offerCover(s, deps.store);
+  if (contracts.length) return { name: contact?.name ?? email, title: 'Under the signed contract', email, kind: 'contract' };
   if (!input.confirm) return null;
-  const agreements = await deps.store.agreements(s.id);
   if (!agreements.some((a) => a.version === AGREEMENT.version)) return null;
   const mine = agreements.find((a) => a.signerEmail === email);
   return { name: mine?.signerName ?? contact?.name ?? email, title: mine?.signerTitle ?? 'Contact', email, kind: 'confirm' };
@@ -138,22 +178,18 @@ export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor,
   const contacts = await deps.store.contacts(s.id);
   const sponsor = s.paymentMode === 'card' || switching ? s : await deps.store.update(s.id, { paymentMode: 'card' }, actor);
   const what = s.cycle === 'once' ? `${tierInfo(s.tier).name}, ${bundleLabel(s.tier, meetups.length, s.pricePerMeetup)}, by card` : summary({ ...sponsor, paymentMode: 'card' });
-  const agreement = signer.kind === 'full' ? await sign(sponsor, signer, 'start', actor, deps, what) : null;
-  const checkoutUrl = await startCardCheckout(sponsor, contacts, meetups, deps.store, deps.origin, deps.stripe);
-  if (agreement)
-    await emailSponsor(
-      sponsor,
-      'sponsor-agreement',
-      (base) => ({
-        ...base,
+  // The signed copy is written with the agreement, so it is owed whatever happens with Stripe after it.
+  if (signer.kind === 'full')
+    await sign(sponsor, signer, 'start', actor, deps, what, (agreement) => [
+      emailNotice(`sponsor-agreement:${agreement.id}`, 'sponsor-agreement', {
         signerName: signer.name,
         signerTitle: signer.title,
         acceptedAt: zurichMoment(agreement.acceptedAt),
         agreementVersion: longDate(agreement.version),
         agreementUrl: agreementUrl(deps.origin),
       }),
-      { ...deps, key: `sponsor-agreement:${agreement.id}`, contacts, meetups },
-    );
+    ]);
+  const checkoutUrl = await startCardCheckout(sponsor, contacts, meetups, deps.store, deps.origin, deps.stripe).finally(() => deliver(sponsor, deps));
   return { checkoutUrl, sponsor };
 }
 
@@ -187,7 +223,7 @@ export async function changePlan(
   actor: Actor,
   deps: LifecycleDeps,
   signer: Signer | null,
-): Promise<{ sponsor: Sponsor; timing: 'none' | 'now' | 'renewal'; from: string | null }> {
+): Promise<{ sponsor: Sponsor; timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }> {
   if (s.cycle === 'once' || to.cycle === 'once') {
     if (s.status !== 'pending' || s.source !== 'self_serve')
       throw new SponsorshipError('A one-time sponsorship cannot be changed here. To sponsor more meetups, write to hello@zurichjs.com.');
@@ -203,28 +239,44 @@ export async function changePlan(
   }
   if (signer && s.status !== 'pending') await sign(s, signer, 'change', actor, deps, `${summary({ ...s, ...to })} (from ${previous})`);
 
+  // An upgrade now replaces a change that was waiting for the renewal: the sponsor is told.
+  let dropped: { tier: Tier; cycle: Cycle } | null = null;
   if (timing === 'now') {
     if (s.status === 'pending') await closeCheckout(s, deps.store, deps.stripe);
-    else if (s.stripeSubscriptionId) await upgradeNow(s.stripeSubscriptionId, to, deps.stripe);
+    else if (s.stripeSubscriptionId) ({ droppedChange: dropped } = await upgradeNow(s.stripeSubscriptionId, to, deps.stripe));
     sponsor = await deps.store.update(s.id, { tier: to.tier, cycle: to.cycle }, actor);
   } else {
     await scheduleChange(s.stripeSubscriptionId!, to, deps.stripe);
   }
 
   if (s.status !== 'pending') {
-    await emailSponsor({ ...sponsor, ...to }, 'sponsor-change', (base) => ({ ...base, timing, from: from ? longDate(from) : null, previous, manual: s.paymentMode === 'manual' }), {
-      ...deps,
-      key: `sponsor-change:${s.id}:${to.tier}-${to.cycle}:${today(deps)}`,
-    });
+    const key = `sponsor-change:${s.id}:${to.tier}-${to.cycle}:${today(deps)}`;
+    const { tierName, cycleLabel, feeLabel, price, per, benefits } = sponsorProps({ ...sponsor, ...to }, [], { name: '' }, deps.origin);
     const manual = s.paymentMode === 'manual' ? ' They pay by bank transfer: bill the difference by hand.' : '';
-    await note(
-      timing === 'now'
-        ? `:arrows_counterclockwise: ${who(s)} is now ${planLabel(to)}.${manual} Update the tier in Sanity if the logo size changes.`
-        : `:arrows_counterclockwise: ${who(s)} moves to ${planLabel(to)} on ${from ? longDate(from) : 'the renewal'}.`,
-      deps,
-    );
+    await deps.store.queueNotices(s.id, [
+      emailNotice(key, 'sponsor-change', {
+        tierName,
+        cycleLabel,
+        feeLabel,
+        price,
+        per,
+        benefits,
+        timing,
+        from: from ? longDate(from) : null,
+        previous,
+        manual: s.paymentMode === 'manual',
+        droppedChange: dropped ? planLabel(dropped) : null,
+      }),
+      slackNotice(
+        `${key}:slack`,
+        timing === 'now'
+          ? `:arrows_counterclockwise: ${who(s)} is now ${planLabel(to)}.${manual}${dropped ? ` The change to ${planLabel(dropped)} waiting for the renewal is cancelled.` : ''} Update the tier in Sanity if the logo size changes.`
+          : `:arrows_counterclockwise: ${who(s)} moves to ${planLabel(to)} on ${from ? longDate(from) : 'the renewal'}.`,
+      ),
+    ]);
+    await deliver(s, deps);
   }
-  return { sponsor, timing, from };
+  return { sponsor, timing, from, droppedChange: dropped ? planLabel(dropped) : null };
 }
 
 /* ------------------------------------------------------------------ ending */
@@ -232,20 +284,30 @@ export async function changePlan(
 /** Ends with the paid period. Returns the sponsorship, now `ending`. */
 export async function endSponsorship(s: Sponsor, actor: Actor, deps: LifecycleDeps, signer: Signer | null): Promise<Sponsor> {
   if (s.cycle === 'once') throw new SponsorshipError('A one-time sponsorship ends by itself after its meetups.');
-  if (s.status === 'ending') return s;
+  if (s.status === 'ending') {
+    // The same request again after it was saved: send what is still owed.
+    await deliver(s, deps);
+    return s;
+  }
   if (s.status !== 'active' && s.status !== 'past_due') throw new SponsorshipError('Only a running sponsorship can be ended.');
   let endsAt: string | null;
   let dropped = false;
   if (s.stripeSubscriptionId) ({ endsAt, droppedChange: dropped } = await cancelAtPeriodEnd(s.stripeSubscriptionId, nowIso(deps), deps.stripe));
   else endsAt = s.paidUntil && s.paidUntil > today(deps) ? s.paidUntil : today(deps);
   if (signer) await sign(s, signer, 'change', actor, deps, `End of the sponsorship (${planLabel(s)})${endsAt ? `, last day ${lastDay(endsAt)}` : ''}`);
-  const ending = await deps.store.transition(s.id, { from: s.status, to: 'ending', actor, endsAt });
-  const last = ending.endsAt ? longDate(lastDay(ending.endsAt)) : 'the end of the paid period';
-  await emailSponsor(ending, 'sponsor-ending', (base) => ({ ...base, lastDay: last, droppedChange: dropped ? 'the plan you scheduled' : null }), {
-    ...deps,
-    key: `sponsor-ending:${s.id}:${ending.endRequestedAt}`,
+  const last = endsAt ? longDate(lastDay(endsAt)) : 'the end of the paid period';
+  const key = `sponsor-ending:${s.id}:${nowIso(deps)}`;
+  const ending = await deps.store.transition(s.id, {
+    from: s.status,
+    to: 'ending',
+    actor,
+    endsAt,
+    notices: [
+      emailNotice(key, 'sponsor-ending', { lastDay: last, droppedChange: dropped ? 'the plan you scheduled' : null }),
+      slackNotice(`${key}:slack`, `:wave: ${who(s)} ends with the paid period (last day ${last}).`),
+    ],
   });
-  await note(`:wave: ${who(s)} ends with the paid period (last day ${last}).`, deps);
+  await deliver(s, deps);
   return ending;
 }
 
@@ -253,14 +315,16 @@ export async function endSponsorship(s: Sponsor, actor: Actor, deps: LifecycleDe
 export async function undoEnd(s: Sponsor, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
   if (s.status !== 'ending') throw new SponsorshipError('This sponsorship is not ending.');
   if (s.stripeSubscriptionId) await resumeSubscription(s.stripeSubscriptionId, s.endRequestedAt ?? nowIso(deps), deps.stripe);
-  const back = await deps.store.transition(s.id, { from: 'ending', to: 'active', actor });
-  await emailSponsor(back, 'sponsor-resumed', (base) => base, { ...deps, key: `sponsor-resumed:${s.id}:${s.endRequestedAt}` });
-  await note(`:leftwards_arrow_with_hook: ${who(s)} continues; the end is taken back.`, deps);
+  const key = `sponsor-resumed:${s.id}:${s.endRequestedAt}`;
+  const back = await deps.store.transition(s.id, {
+    from: 'ending',
+    to: 'active',
+    actor,
+    notices: [emailNotice(key, 'sponsor-resumed', {}), slackNotice(`${key}:slack`, `:leftwards_arrow_with_hook: ${who(s)} continues; the end is taken back.`)],
+  });
+  await deliver(s, deps);
   return back;
 }
-
-/** Stripe pages or a subscription an ended sponsorship still points at: a close that failed half-way. */
-export const leftInStripe = (s: Sponsor) => !!(s.stripeSubscriptionId || s.checkoutSessionId || s.paymentLinkId);
 
 /**
  * After any end: Stripe stops and nothing points at it any more (a later restart starts clean).
@@ -270,7 +334,8 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
   if (s.stripeSubscriptionId) await cancelNow(s.stripeSubscriptionId, deps.stripe);
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
-  if (s.stripeSubscriptionId) await deps.store.linkStripe(s.id, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
+  if (s.stripeSubscriptionId)
+    await deps.store.linkStripeIf(s.id, { subscriptionId: s.stripeSubscriptionId }, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
 }
 
 /**
@@ -280,22 +345,31 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
  * emails and posts as the first attempt would have.
  */
 export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'terminated' | 'withdrawn'>, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
+  // The email and note are written with the end, so a request that fails at Stripe still owes them.
+  // They say Stripe stopped ("Nothing more is charged"), so they wait until it has: they are sent
+  // by this request, its retry or the daily check, once nothing is left open in Stripe.
+  const key = `sponsor-ended:${s.id}:${reason}`;
+  const afterStripe = { after: 'stripe-closed' } as const;
+  const notices = [
+    ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason }, undefined, afterStripe)] : []),
+    slackNotice(
+      `${key}:slack`,
+      reason === 'withdrawn'
+        ? `:no_entry: Invitation to ${who(s)} withdrawn.`
+        : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. Mark them as a past sponsor in Sanity.`,
+      afterStripe,
+    ),
+  ];
   let ended = s;
   if (s.status === 'ended') {
-    if (s.endedReason !== reason || !leftInStripe(s)) return s;
+    if (s.endedReason !== reason) return s;
   } else {
     if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
     if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
-    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason });
+    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason, notices });
   }
   await closeStripe(ended, deps);
-  if (reason === 'terminated') await emailSponsor(ended, 'sponsor-ended', (base) => ({ ...base, reason }), { ...deps, key: `sponsor-ended:${s.id}:${reason}` });
-  await note(
-    reason === 'withdrawn'
-      ? `:no_entry: Invitation to ${who(s)} withdrawn.`
-      : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. Mark them as a past sponsor in Sanity.`,
-    deps,
-  );
+  await deliver(s, deps);
   return ended;
 }
 
@@ -362,36 +436,55 @@ export interface RecordedPayment {
  * sponsorships paid that way or not started yet; card sponsorships are paid in Stripe. Moves paid
  * through on, starts a sponsorship that had not started, emails the sponsor a confirmation.
  */
-export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
+export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<{ sponsor: Sponsor; alreadyRecorded: boolean }> {
+  const events = await deps.store.events(s.id);
+  const offerStart = events.findLastIndex((e) => e.fromStatus === 'ended' && e.toStatus === 'pending');
+  const onDate = events.slice(offerStart + 1).filter((e) => e.payload.paidUntil === p.paidUntil);
+  const completed = onDate.findLast((e) => e.type === 'payment_recorded');
+  const sameTransfer = (payload: Record<string, unknown>) => (payload.amount ?? null) === p.amount && (payload.reference ?? null) === p.reference;
+  if (completed) {
+    if (!sameTransfer(completed.payload)) throw new SponsorshipError('A transfer with different details was recorded for this date. Check the payment history.', 409, 'paidUntil');
+    return { sponsor: s, alreadyRecorded: true };
+  }
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
-  // The same payment again after a failure half-way: an earlier attempt started recording this date
-  // (`payment_recording`) and did not finish (`payment_recorded`). Only that is resumed; any other
-  // request for the current date is refused as before (an imported sponsorship's own date included).
-  const events = await deps.store.events(s.id);
-  const started = (type: string) => events.some((e) => e.type === type && e.payload.paidUntil === p.paidUntil);
-  const resume = s.paidUntil === p.paidUntil && started('payment_recording') && !started('payment_recorded');
+  const recording = onDate.findLast((e) => e.type === 'payment_recording');
+  const resume = s.paidUntil === p.paidUntil && !!recording;
+  if (resume && 'amount' in recording.payload && !sameTransfer(recording.payload))
+    throw new SponsorshipError('A transfer with different details is being recorded for this date. Check the payment history.', 409, 'paidUntil');
   if (!resume) {
     if (s.paidUntil && p.paidUntil <= s.paidUntil) throw new SponsorshipError(`It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.`, 400, 'paidUntil');
     if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
   }
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
-  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { paidUntil: p.paidUntil });
+  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { ...p });
   let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
   await closeCheckout(updated, deps.store, deps.stripe);
   await closePaymentLink(updated, deps.store, deps.stripe);
-  await deps.store.log(s.id, 'payment_recorded', actor, { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) });
   const paidThrough = longDate(lastDay(p.paidUntil));
-  await emailSponsor(updated, 'sponsor-payment-recorded', (base) => ({ ...base, amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }), {
-    ...deps,
-    to: 'billing',
-    key: `sponsor-payment-recorded:${s.id}:${p.paidUntil}`,
-  });
-  await note(`:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. They were emailed a confirmation.`, deps);
-  return updated;
+  const key = `sponsor-payment-recorded:${s.id}:${p.paidUntil}`;
+  // The receipt and the note are written with the mark that the payment is recorded: a failure
+  // before or in this write is resumed by the same form again, and nothing after it can lose them.
+  await deps.store.queueNotices(
+    s.id,
+    [
+      emailNotice(key, 'sponsor-payment-recorded', { amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }, 'billing'),
+      slackNotice(
+        `${key}:slack`,
+        `:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. They were emailed a confirmation.`,
+      ),
+    ],
+    {
+      type: 'payment_recorded',
+      actor,
+      payload: { ...p },
+    },
+  );
+  await deliver(s, deps);
+  return { sponsor: updated, alreadyRecorded: false };
 }
 
 /* ------------------------------------------------------------------ one-time bundles */

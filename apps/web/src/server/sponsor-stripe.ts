@@ -19,6 +19,7 @@
  * site's one webhook (STRIPE_WEBHOOK_SECRET, server/stripe-webhook.ts).
  */
 import {
+  currentOfferId,
   fromLookupKey,
   isRecurring,
   meetupPrice,
@@ -154,7 +155,9 @@ async function onceLineItem(s: Sponsor, meetups: SponsorMeetup[], deps: StripeDe
  * Stripe's answer when the page is already gone: no such object, or a session that is no longer
  * open (expired or paid). Anything else (an outage, a timeout) leaves the page payable.
  */
-const alreadyClosed = (e: unknown) => /HTTP 404|No such|status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test((e as Error).message ?? '');
+const resourceMissing = (e: unknown) => e instanceof StripeRequestError && e.status === 404 && e.code === 'resource_missing';
+const alreadyClosed = (e: unknown) =>
+  resourceMissing(e) || (e instanceof StripeRequestError && e.status === 400 && /status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test(e.message));
 
 /**
  * Closes the sponsor's last Checkout session, so an old tab can never be paid as well. The id is
@@ -178,12 +181,13 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
   const customer = await ensureCustomer(s, contacts, store, deps);
   await closeCheckout(s, store, deps);
   const account = new URL('/partners/account', origin).toString();
+  const metadata = { ...meta(s), offerId: currentOfferId(s.id, await store.events(s.id)) };
   const common = {
     customer,
     success_url: `${account}?checkout=done`,
     cancel_url: `${account}?checkout=cancelled`,
     client_reference_id: s.id,
-    metadata: meta(s),
+    metadata,
     payment_method_types: ['card'],
     locale: 'en',
   };
@@ -213,7 +217,7 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
         ...common,
         mode: 'subscription',
         line_items: [{ price: (await priceFor(s.tier, s.cycle, deps)).id, quantity: 1 }],
-        subscription_data: { metadata: meta(s), ...(trial ? { trial_end: trial } : {}) },
+        subscription_data: { metadata, ...(trial ? { trial_end: trial } : {}) },
       }),
     );
   }
@@ -281,7 +285,7 @@ const askForLink = (a: Pick<LinkAttempt, 'key' | 'request'>, deps: StripeDeps) =
 
 const deactivateLink = (id: string, deps: StripeDeps) =>
   api(deps, 'POST', `payment_links/${encodeURIComponent(id)}`, stripeForm({ active: false })).catch((e: unknown) => {
-    if (!(e instanceof StripeRequestError && e.status === 404 && e.code === 'resource_missing')) throw e;
+    if (!resourceMissing(e)) throw e;
   });
 
 // Stripe retains keys for at least 24 hours. Reserve twice the 15-second HTTP timeout for delivery.
@@ -351,6 +355,9 @@ export async function recoverPaymentLinks(
   return out;
 }
 
+/** Stripe pages or a subscription a sponsorship still points at (after an end: a close that failed half-way). */
+export const leftInStripe = (s: Sponsor) => !!(s.stripeSubscriptionId || s.checkoutSessionId || s.paymentLinkId);
+
 /**
  * Switches off the sponsor's payment link (paid, replaced or withdrawn). The id is forgotten only
  * once Stripe confirms; a failure throws and keeps it, so a retry switches it off.
@@ -396,6 +403,12 @@ const getSub = (id: string, deps: StripeDeps, expand = false) =>
 const scheduleId = (s: StripeSubscription) => (typeof s.schedule === 'string' ? s.schedule : (s.schedule?.id ?? null));
 const nowUnix = (deps: StripeDeps) => Math.floor((deps.now ?? (() => new Date()))().getTime() / 1000);
 
+/** Stripe has the subscription paid up again (nothing open, so it is active or trialing). */
+export async function subscriptionPaidUp(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
+  const status = (await getSub(subscriptionId, deps)).status;
+  return status === 'active' || status === 'trialing';
+}
+
 /** The first day after the current term. */
 export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promise<string | null> {
   const end = (await getSub(subscriptionId, deps)).items?.data?.[0]?.current_period_end;
@@ -421,17 +434,23 @@ export async function cancelPendingChange(subscriptionId: string, deps: StripeDe
   return true;
 }
 
-/** A higher tier on the same cycle, now: Stripe charges the prorated difference at once. */
-export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<void> {
+/**
+ * A higher tier on the same cycle, now: Stripe charges the prorated difference at once. A change
+ * that was waiting for the renewal is released first and returned, so the sponsor can be told.
+ */
+export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ droppedChange: { tier: Tier; cycle: Cycle } | null }> {
   let sub = await getSub(subscriptionId, deps);
+  let droppedChange: { tier: Tier; cycle: Cycle } | null = null;
   if (scheduleId(sub)) {
+    const waiting = await pendingChange(subscriptionId, deps);
+    droppedChange = waiting && { tier: waiting.tier, cycle: waiting.cycle };
     await cancelPendingChange(subscriptionId, deps);
     sub = await getSub(subscriptionId, deps);
   }
   const item = sub.items?.data?.[0];
   if (!item) throw new Error(`Subscription ${subscriptionId} has no item.`);
   const price = (await priceFor(plan.tier, plan.cycle, deps)).id;
-  if (item.price?.id === price) return;
+  if (item.price?.id === price) return { droppedChange };
   await api(
     deps,
     'POST',
@@ -439,6 +458,7 @@ export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cyc
     stripeForm({ items: [{ id: item.id, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
     `sponsor-upgrade:${subscriptionId}:${price}`,
   );
+  return { droppedChange };
 }
 
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */
@@ -501,7 +521,7 @@ export async function resumeSubscription(subscriptionId: string, reference: stri
 /** Ends a subscription now (the board ending a sponsorship outright, or a duplicate). Already ended is fine. */
 export async function cancelNow(subscriptionId: string, deps: StripeDeps): Promise<void> {
   await api(deps, 'DELETE', `subscriptions/${encodeURIComponent(subscriptionId)}`).catch((e: Error) => {
-    if (!/No such subscription|canceled/i.test(e.message)) throw e;
+    if (!resourceMissing(e)) throw e;
   });
 }
 

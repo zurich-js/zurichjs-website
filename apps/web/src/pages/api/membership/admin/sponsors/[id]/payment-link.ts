@@ -8,6 +8,7 @@ import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed } from '../../../../../../server/http.ts';
 import { note, who, zurichDay } from '../../../../../../server/sponsor.ts';
 import { sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
+import { offerCover } from '../../../../../../server/sponsor-lifecycle.ts';
 import { createPaymentLink } from '../../../../../../server/sponsor-stripe.ts';
 
 export const prerender = false;
@@ -21,7 +22,7 @@ export const handlePaymentLink = (request: Request, id: string, deps: SponsorAdm
       if (!s) return fail(404, 'No such sponsor.');
       if (s.cycle !== 'once') return fail(409, 'Payment links are for one-time sponsorships. Recurring ones pay on their sponsorship page.');
       if (s.status !== 'pending') return fail(409, 'This sponsorship is already paid or has ended.');
-      if (!(await store.documents(s.id)).length) return fail(409, 'Attach the signed contract first: without it they sign and pay on their sponsorship page.');
+      if (!(await offerCover(s, store)).contracts.length) return fail(409, 'Attach the signed contract first: without it they sign and pay on their sponsorship page.');
       const meetups = await store.meetups(s.id);
       if (!meetups.length) return fail(409, 'Choose the meetups first.');
       const today = zurichDay(deps.now === undefined ? new Date() : new Date(deps.now));

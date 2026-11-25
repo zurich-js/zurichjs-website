@@ -1,6 +1,5 @@
 # Knowledge updates
 
-
 ## 2026-11-25
 
 - **Update**: Web Zurich is a current community partner again (owner, 25th November 2026); it had been removed from every list on 19th November ([Partners](/domains/partners/overview.md)).

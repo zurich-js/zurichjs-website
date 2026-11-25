@@ -31,8 +31,10 @@ import {
   type SponsorStore,
   type Tier,
   type Quote,
+  type FeePlanChange,
+  type RecurringCycle,
 } from '@zurichjs/sponsorship';
-import { SURCHARGE_NAME, stripeRecurring } from './sponsor-fees.ts';
+import { INTERVAL_OF, SURCHARGE_NAME, stripeRecurring } from './sponsor-fees.ts';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
@@ -243,6 +245,9 @@ export async function startCardCheckout(
   } else {
     if ((await liveSubscriptions(customer, deps)).length) throw new AlreadySubscribed('Payment is already set up for this sponsorship.');
     const trial = trialEnd(s, deps);
+    const base = await priceFor(s.tier, s.cycle, deps);
+    if (fee && (base.unitAmount !== fee.quote.baseMinor || base.currency !== fee.quote.currency || INTERVAL_OF[s.cycle] !== fee.quote.interval))
+      throw new StripeUnavailable('The Stripe price differs from the offer. Ask the board for a fresh quote.');
     session = await api(
       deps,
       'POST',
@@ -250,10 +255,7 @@ export async function startCardCheckout(
       stripeForm({
         ...common,
         mode: 'subscription',
-        line_items: [
-          { price: (await priceFor(s.tier, s.cycle, deps)).id, quantity: 1 },
-          ...(fee?.quote.surchargeMinor ? [{ price: await recurringFeePrice(fee.quote, deps), quantity: 1 }] : []),
-        ],
+        line_items: [{ price: base.id, quantity: 1 }, ...(fee?.quote.surchargeMinor ? [{ price: await recurringFeePrice(fee.quote, deps), quantity: 1 }] : [])],
         subscription_data: { metadata: meta(s), ...(trial ? { trial_end: trial } : {}) },
       }),
     );
@@ -459,7 +461,13 @@ interface StripeSubscription {
   cancel_at?: number | null;
   metadata?: Record<string, string>;
   items?: {
-    data?: { id: string; price?: { id: string; lookup_key?: string | null; metadata?: Record<string, string> }; metadata?: Record<string, string>; current_period_end?: number }[];
+    data?: {
+      id: string;
+      quantity?: number;
+      price?: { id: string; product?: string; unit_amount?: number; currency?: string; lookup_key?: string | null; metadata?: Record<string, string> };
+      metadata?: Record<string, string>;
+      current_period_end?: number;
+    }[];
   };
 }
 interface StripeSchedule {
@@ -500,6 +508,20 @@ export async function pendingChange(subscriptionId: string, deps: StripeDeps): P
   // After the switch the schedule stays attached for one more term: not "waiting" any more.
   if (from <= nowUnix(deps) || sched.metadata?.plan === baseItem(s).price?.lookup_key) return null;
   return { ...plan, from: day(from) };
+}
+
+/** Cancel only the schedule this signed quote created. A lost response is recoverable by its id. */
+export async function releaseFeePlan(schedule: string, quote: Quote, deps: StripeDeps) {
+  const terms = quote.planChange;
+  if (!terms || nowUnix(deps) >= terms.periodEnd) throw new StripeUnavailable('The renewal is taking effect. Reload the sponsorship.');
+  const path = 'subscription_schedules/' + encodeURIComponent(schedule);
+  const current = await api<{ status: string; metadata?: Record<string, string>; subscription?: string; released_subscription?: string }>(deps, 'GET', path);
+  if (current.metadata?.feeQuote !== quote.id || (current.subscription ?? current.released_subscription) !== terms.subscription)
+    throw new StripeUnavailable('The scheduled offer needs reconciliation.');
+  if (current.status === 'released') return;
+  if (current.status !== 'active') throw new StripeUnavailable('The schedule is no longer active. Reload the sponsorship.');
+  const released = await api<{ status: string }>(deps, 'POST', path + '/release', undefined, 'release-fee-plan:' + quote.id);
+  if (released.status !== 'released') throw new StripeUnavailable('Stripe has not confirmed cancellation of the scheduled offer.');
 }
 
 export async function cancelPendingChange(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
@@ -615,8 +637,34 @@ function feeItem(s: StripeSubscription) {
   return fees[0] ?? null;
 }
 
+export async function checkoutFeeItem(subscription: string, quote: Quote, deps: StripeDeps) {
+  const sub = await getSub(subscription, deps);
+  const base = baseItem(sub);
+  const plan = fromLookupKey(base.price?.lookup_key);
+  if (
+    !plan ||
+    !isRecurring(plan.cycle) ||
+    INTERVAL_OF[plan.cycle] !== quote.interval ||
+    base.quantity !== 1 ||
+    base.price?.currency !== quote.currency ||
+    base.price.unit_amount !== quote.baseMinor
+  )
+    return null;
+  const surcharge = feeItem(sub);
+  if (quote.surchargeMinor === 0) return sub.items?.data?.length === 1 ? { id: null } : null;
+  return sub.items?.data?.length === 2 &&
+    surcharge?.quantity === 1 &&
+    surcharge.price?.metadata?.quoteId === quote.id &&
+    surcharge.price.unit_amount === quote.surchargeMinor &&
+    surcharge.price.currency === quote.currency
+    ? { id: surcharge.id }
+    : null;
+}
+
 export async function confirmedFeeItem(subscriptionId: string, quote: Quote, deps: StripeDeps): Promise<string | null> {
-  const item = feeItem(await getSub(subscriptionId, deps));
+  const sub = await getSub(subscriptionId, deps);
+  if (quote.planChange && baseItem(sub).price?.id !== quote.planChange.basePrice) return null;
+  const item = feeItem(sub);
   return item?.price?.metadata?.quoteId === quote.id ? item.id : null;
 }
 
@@ -630,7 +678,7 @@ async function recurringFeePrice(quote: Quote, deps: StripeDeps): Promise<string
       currency: 'chf',
       unit_amount: quote.surchargeMinor,
       recurring: stripeRecurring(quote.interval),
-      product_data: { name: SURCHARGE_NAME },
+      ...(quote.planChange ? { product: quote.planChange.feeProduct } : { product_data: { name: SURCHARGE_NAME } }),
       metadata: { source: SPONSOR_SOURCE, role: 'processing_fee', quoteId: quote.id },
     }),
     `sponsor-surcharge-price:${quote.id}`,
@@ -650,4 +698,185 @@ export async function setSurchargeItem(subscriptionId: string, quote: Quote, dep
   if (price ? saved?.price?.id !== price || saved?.price?.metadata?.quoteId !== quote.id : !!saved)
     throw new Error('Stripe has not confirmed the quoted subscription items. Retry this offer.');
   return saved?.id ?? null;
+}
+
+function planFeeItems(s: StripeSubscription) {
+  const base = baseItem(s);
+  const surcharge = feeItem(s);
+  if (!base.price || !surcharge?.price || s.items?.data?.length !== 2 || s.items.data.some((i) => i.quantity !== 1)) {
+    throw new StripeUnavailable('The plan and its processing fee must both be identifiable before offering a change.');
+  }
+  return { base, surcharge, basePrice: base.price.id, feePrice: surcharge.price.id };
+}
+
+async function invoicePreview(subscription: string, items: object[], at: number, deps: StripeDeps) {
+  const invoice = await api<{ currency: string; amount_due: number }>(
+    deps,
+    'POST',
+    'invoices/create_preview',
+    stripeForm({ subscription, subscription_details: { items, proration_behavior: 'always_invoice', proration_date: at } }),
+  );
+  if (invoice.currency !== 'chf' || !Number.isSafeInteger(invoice.amount_due) || invoice.amount_due < 0)
+    throw new StripeUnavailable('Stripe returned no CHF amount for this change.');
+  return invoice.amount_due;
+}
+
+export async function previewFeePlan(
+  subscription: string,
+  previousQuote: string,
+  target: { tier: Tier; cycle: RecurringCycle },
+  baseMinor: number,
+  surchargeMinor: number,
+  timing: 'now' | 'renewal',
+  deps: StripeDeps,
+): Promise<FeePlanChange> {
+  const policy = deps.env.SPONSOR_FEE_PRORATION_POLICY_VERSION?.trim();
+  if (timing === 'now' && (!policy || deps.env.SPONSOR_FEE_PRORATION_MODE !== 'stripe_items'))
+    throw new StripeUnavailable('The board has not approved how to charge the processing fee on a prorated upgrade.');
+  const sub = await getSub(subscription, deps);
+  const items = planFeeItems(sub);
+  const product = items.surcharge.price?.product;
+  const periodEnd = items.base.current_period_end;
+  if (sub.schedule || !product || !periodEnd || periodEnd <= nowUnix(deps) || items.surcharge.price?.metadata?.quoteId !== previousQuote)
+    throw new StripeUnavailable('The current subscription or its renewal needs review before a fee offer.');
+  const price = await priceFor(target.tier, target.cycle, deps);
+  if (price.currency !== 'chf' || price.unitAmount !== baseMinor) throw new StripeUnavailable('The target Stripe price differs from the offered plan.');
+  const at = nowUnix(deps);
+  const terms = {
+    subscription,
+    previousQuote,
+    ...target,
+    basePrice: price.id,
+    previousBasePrice: items.basePrice,
+    previousFeePrice: items.feePrice,
+    feeProduct: product,
+    periodEnd,
+  };
+  if (timing === 'renewal') return { ...terms, charge: { timing } };
+  const dueMinor = await invoicePreview(
+    subscription,
+    [
+      { id: items.base.id, price: price.id },
+      { id: items.surcharge.id, price_data: { currency: 'chf', product, unit_amount: surchargeMinor, recurring: stripeRecurring(INTERVAL_OF[target.cycle]) } },
+    ],
+    at,
+    deps,
+  );
+  return { ...terms, charge: { timing, at, dueMinor, policy: policy! } };
+}
+
+export async function applyFeePlan(quote: Quote, terms: FeePlanChange, deps: StripeDeps, claim: () => Promise<void>): Promise<{ schedule: string } | { item: string }> {
+  const sub = await getSub(terms.subscription, deps);
+  const items = planFeeItems(sub);
+  if (quote.applyingBy && items.basePrice === terms.basePrice && items.surcharge.price?.metadata?.quoteId === quote.id) return { item: items.surcharge.id };
+  if (
+    items.basePrice !== terms.previousBasePrice ||
+    items.feePrice !== terms.previousFeePrice ||
+    items.base.current_period_end !== terms.periodEnd ||
+    nowUnix(deps) >= terms.periodEnd
+  ) {
+    throw new StripeUnavailable('The subscription changed. Ask the board for a fresh offer.');
+  }
+  const charge = terms.charge;
+  if (charge.timing === 'now' && (sub.schedule || deps.env.SPONSOR_FEE_PRORATION_MODE !== 'stripe_items' || deps.env.SPONSOR_FEE_PRORATION_POLICY_VERSION !== charge.policy))
+    throw new StripeUnavailable('The renewal or the approved proration policy changed. Review a new offer.');
+  if (terms.charge.timing === 'renewal' && quote.stripeRef) {
+    const saved = await api<{ status: string; metadata?: Record<string, string>; phases?: { start_date: number; items: { price: string; quantity: number }[] }[] }>(
+      deps,
+      'GET',
+      'subscription_schedules/' + encodeURIComponent(quote.stripeRef),
+    );
+    const phase = saved.phases?.[1];
+    const feePrice = phase?.items.find((i) => i.quantity === 1 && i.price !== terms.basePrice)?.price;
+    if (
+      scheduleId(sub) !== quote.stripeRef ||
+      saved.status !== 'active' ||
+      saved.metadata?.feeQuote !== quote.id ||
+      phase?.start_date !== terms.periodEnd ||
+      phase.items.length !== 2 ||
+      !phase.items.some((i) => i.quantity === 1 && i.price === terms.basePrice) ||
+      !feePrice
+    )
+      throw new StripeUnavailable('The scheduled renewal changed. Reload the sponsorship.');
+    const price = await api<{ unit_amount: number; currency: string; metadata?: Record<string, string> }>(deps, 'GET', 'prices/' + encodeURIComponent(feePrice));
+    if (
+      price.currency !== quote.currency ||
+      price.unit_amount !== quote.surchargeMinor ||
+      price.metadata?.quoteId !== quote.id ||
+      price.metadata.role !== 'processing_fee' ||
+      price.metadata.source !== SPONSOR_SOURCE
+    )
+      throw new StripeUnavailable('The scheduled fee differs from this offer.');
+    return { schedule: quote.stripeRef };
+  }
+  const price = await recurringFeePrice(quote, deps);
+  const target = [
+    { id: items.base.id, price: terms.basePrice },
+    { id: items.surcharge.id, price },
+  ];
+  if (charge.timing === 'now') {
+    if ((await invoicePreview(terms.subscription, target, charge.at, deps)) !== charge.dueMinor)
+      throw new StripeUnavailable('The invoice preview changed. Ask the board for a new offer.');
+    await claim();
+    await api(
+      deps,
+      'POST',
+      'subscriptions/' + encodeURIComponent(terms.subscription),
+      stripeForm({ metadata: { feePlanQuote: quote.id }, items: target, proration_behavior: 'always_invoice', proration_date: charge.at, payment_behavior: 'error_if_incomplete' }),
+      'sponsor-plan:' + quote.id,
+    );
+    const saved = planFeeItems(await getSub(terms.subscription, deps));
+    if (saved.basePrice !== terms.basePrice || saved.surcharge.price?.id !== price || saved.surcharge.price.metadata?.quoteId !== quote.id)
+      throw new StripeUnavailable('Stripe has not confirmed the quoted plan and fee yet.');
+    return { item: saved.surcharge.id };
+  }
+  const path = 'subscription_schedules';
+  type Schedule = { id: string; metadata?: Record<string, string>; phases: { start_date: number; end_date: number; items: { price: string; quantity: number }[] }[] };
+  const existing = scheduleId(sub);
+  const schedule = existing ? await api<Schedule>(deps, 'GET', path + '/' + encodeURIComponent(existing)) : null;
+  const matches = (s: Schedule) =>
+    s.metadata?.feeQuote === quote.id &&
+    s.phases[1]?.start_date === terms.periodEnd &&
+    s.phases[1].items.length === 2 &&
+    [terms.basePrice, price].every((p) => s.phases[1]!.items.some((i) => i.price === p && i.quantity === 1));
+  if (schedule && quote.applyingBy && matches(schedule)) return { schedule: schedule.id };
+  if (quote.stripeRef || (schedule && !quote.applyingBy)) throw new StripeUnavailable('The renewal changed. Ask the board for a new offer.');
+  await claim();
+  const owned = await api<Schedule>(deps, 'POST', path, stripeForm({ from_subscription: terms.subscription }), 'sponsor-plan-schedule:' + quote.id);
+  if (schedule && schedule.id !== owned.id) throw new StripeUnavailable('A different schedule owns the renewal.');
+  const phase = owned.phases[0];
+  if (!phase || phase.end_date !== terms.periodEnd) throw new StripeUnavailable('The renewal date changed.');
+  const saved = await api<Schedule>(
+    deps,
+    'POST',
+    path + '/' + encodeURIComponent(owned.id),
+    stripeForm({
+      end_behavior: 'release',
+      metadata: { plan: priceLookupKey(terms.tier, terms.cycle), feeQuote: quote.id },
+      phases: [
+        {
+          start_date: phase.start_date,
+          end_date: terms.periodEnd,
+          items: [
+            { price: items.basePrice, quantity: 1 },
+            { price: items.feePrice, quantity: 1 },
+          ],
+          metadata: sub.metadata,
+          proration_behavior: 'none',
+        },
+        {
+          duration: stripeRecurring(INTERVAL_OF[terms.cycle]),
+          items: [
+            { price: terms.basePrice, quantity: 1 },
+            { price, quantity: 1 },
+          ],
+          metadata: { ...sub.metadata, feePlanQuote: quote.id },
+          proration_behavior: 'none',
+        },
+      ],
+    }),
+    'sponsor-plan-phases:' + quote.id,
+  );
+  if (!matches(saved)) throw new StripeUnavailable('Stripe has not confirmed the quoted renewal yet.');
+  return { schedule: saved.id };
 }

@@ -156,6 +156,70 @@ d('fee store on Postgres', () => {
     const fees = postgresFeeStore(pool);
     const id = await quotes(fees, sponsor.id);
     const one = await recurring(fees, sponsor.id);
+    const store = postgresStore(pool);
+    const { sponsor: running } = await store.create(
+      {
+        companyName: 'Running sponsor',
+        legalName: null,
+        billingAddress: null,
+        vatId: null,
+        website: null,
+        tier: 'builder',
+        cycle: 'yearly',
+        paymentMode: 'card',
+        status: 'active',
+        source: 'imported',
+        startedAt: '2026-01-01',
+        paidUntil: '2027-01-01',
+        pricePerMeetup: null,
+        notes: null,
+      },
+      { email: 'test@running.example', name: 'Grace', role: 'primary' },
+      board,
+    );
+    await store.linkStripe(running.id, { subscriptionId: 'sub_test' }, board);
+    const current = (
+      await fees.createQuote({
+        ...quoteFigures(500000, 'pass_through', feeGate(await fees.latestTariff(), 'p-1')),
+        sponsorId: running.id,
+        subject: 'sponsorship',
+        subjectId: null,
+        interval: 'year',
+        purpose: 'Current plan',
+        createdBy: 'board',
+      })
+    ).quote;
+    await fees.acceptQuote(current.id, 'prior', 'si_current');
+    const next = {
+      ...current,
+      purpose: 'Offered plan',
+      planChange: {
+        subscription: 'sub_test',
+        previousQuote: current.id,
+        tier: 'friend' as const,
+        cycle: 'yearly' as const,
+        basePrice: 'target',
+        previousBasePrice: 'source',
+        previousFeePrice: 'fee',
+        feeProduct: 'prod_fee',
+        periodEnd: 1900000000,
+        charge: { timing: 'renewal' as const },
+      },
+    };
+    const { quote } = await fees.createQuote(next);
+    expect(quote.planChange).toEqual(next.planChange);
+    const signature = { version: '2026-11-01', name: 'Grace', title: 'Director', email: 'g@example.test' };
+    const claims = await Promise.all(['a', 'b'].map((c) => fees.claimRecurring(quote.id, c, signature)));
+    expect(claims.filter(Boolean)).toHaveLength(1);
+    const winner = claims[0] ? 'a' : 'b';
+    expect(await fees.claimRecurring(quote.id, winner, signature)).toBe(true);
+    expect((await pool.query('select count(*)::int as n from sponsor_agreements where id=$1', [quote.id])).rows[0].n).toBe(1);
+    await expect(fees.createQuote(next)).rejects.toThrow(/confirming/);
+    expect(pgdb.fails(`update payment_quotes set plan_change='{}' where id='${quote.id}'`)).toMatch(/frozen/);
+    expect(await fees.savePlanSchedule(quote.id, 'sched_one')).toBe(true);
+    expect(await fees.retirePlanSchedule(quote.id, 'other')).toBe(false);
+    expect(await fees.acceptQuote(quote.id, winner, 'si_next')).toMatchObject({ status: 'accepted' });
+    await expect(fees.createQuote(next)).rejects.toThrow(/current fee changed/);
     expect(pgdb.fails(`update payment_quotes set status = 'accepted' where id = '${one}'`)).toMatch(/only moves forward/);
     expect(pgdb.fails(`update payment_quotes set interval = 'month' where id = '${one}'`)).toMatch(/frozen/);
     expect(pgdb.fails(`update fee_tariffs set rate_ppm = 1`)).toMatch(/append-only/);

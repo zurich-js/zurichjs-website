@@ -47,7 +47,17 @@ import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
 import { adminUrl, afterLastMeetup, planLabel, slackText, sponsorFee, sponsorStore, termLabel, tierBenefits, who, zurichDay, zurichDayOf, type NotifyDeps } from './sponsor.ts';
 import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
-import { SPONSOR_SOURCE, confirmedFeeItem, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription, subscriptionPaidUp, type StripeDeps } from './sponsor-stripe.ts';
+import {
+  SPONSOR_SOURCE,
+  checkoutFeeItem,
+  confirmedFeeItem,
+  cancelNow,
+  closePaymentLink,
+  liveSubscriptions,
+  planOfSubscription,
+  subscriptionPaidUp,
+  type StripeDeps,
+} from './sponsor-stripe.ts';
 import { stripeApi } from './stripe.ts';
 import type { StripeEvent } from './stripe-webhook.ts';
 
@@ -342,8 +352,9 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if (meta?.source === SPONSOR_SOURCE && meta?.quoteId && meta.acceptedBy) {
           const fees = deps.fees ?? feeStore(env);
           const offer = await fees.quote(meta.quoteId);
-          const item = offer?.sponsorId === s.id && offer.subject === 'sponsorship' && offer.interval ? await confirmedFeeItem(subscriptionId, offer, stripeDeps) : null;
-          const q = offer && item ? await fees.acceptQuote(offer.id, meta.acceptedBy, item) : null;
+          const item =
+            offer?.sponsorId === s.id && offer.subject === 'sponsorship' && offer.interval && !offer.planChange ? await checkoutFeeItem(subscriptionId, offer, stripeDeps) : null;
+          const q = offer && item ? await fees.acceptQuote(offer.id, meta.acceptedBy, item.id) : null;
           if (!q) await anomaly(s, 'Recurring fee offer requires review.', String(o.id), notify);
         }
         break;
@@ -442,6 +453,17 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if ((sub.status === 'past_due' || sub.status === 'unpaid') && s.status === 'active' && !(await paidSince(store, s.id, event.created)))
           s = (await moveTo(store, s, 'past_due', event.id, { payload: { subscriptionStatus: sub.status } })).sponsor;
         const plan = planOfSubscription(sub);
+        const planRef = sub.metadata?.feePlanQuote;
+        if (planRef && plan) {
+          const fees = deps.fees ?? feeStore(env);
+          const q = await fees.quote(planRef);
+          if (q?.sponsorId === s.id && q.planChange?.subscription === sub.id && q.planChange.tier === plan.tier && q.planChange.cycle === plan.cycle) {
+            if (q.status === 'void' || q.status === 'superseded') break;
+            const item = await confirmedFeeItem(sub.id, q, stripeDeps);
+            if (!item || (q.status === 'open' && (!q.applyingBy || !(await fees.acceptQuote(q.id, q.applyingBy, item)))))
+              throw new Error('The confirmed plan and fee could not be verified.');
+          }
+        }
         if (!plan || (plan.tier === s.tier && plan.cycle === s.cycle) || s.status === 'pending') break;
         const previous = planLabel(s);
         const before = who(s);

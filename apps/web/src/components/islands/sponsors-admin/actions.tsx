@@ -145,7 +145,7 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
           if (same) return setError({ field: 'tier', message: 'That is the plan they have now. Choose another tier or billing.' });
           setBusy(true);
           setError(null);
-          const { status, body } = await post<{ url?: string; emailed?: number }>(
+          const { status, body } = await post<{ url?: string; emailed?: number; invitationQueued?: boolean }>(
             `${BASE}/${id}/suggest`,
             kind === 'plan' ? { kind, tier, cycle, message: message || undefined } : { kind, message: message || undefined },
           );
@@ -153,7 +153,7 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.url) return setError({ field: body.field, message: body.error ?? 'Could not send the change.' });
           onDone({
-            text: `${body.emailed ? `Emailed to ${body.emailed === 1 ? 'their contact' : `${body.emailed} contacts`}.` : 'The email was not sent.'} Nothing changes until they confirm it on their sponsorship page.`,
+            text: `${body.invitationQueued ? 'The plan offer is saved and its invitation is queued for delivery.' : body.emailed ? `Emailed to ${body.emailed === 1 ? 'their contact' : `${body.emailed} contacts`}.` : 'The email was not sent.'} Nothing changes until they confirm it on their sponsorship page.`,
             url: body.url,
             urlLabel: 'Or send them this link',
           });

@@ -18,6 +18,10 @@
  */
 import {
   AGREEMENT,
+  fee,
+  isRecurring,
+  quoteFigures,
+  chfMinor,
   bundleLabel,
   canChange,
   changeTiming,
@@ -69,10 +73,12 @@ import {
   scheduleChange,
   startCardCheckout,
   upgradeNow,
+  previewFeePlan,
+  releaseFeePlan,
   type StripeDeps,
   type CheckoutFee,
 } from './sponsor-stripe.ts';
-import { feeStore } from './sponsor-fees.ts';
+import { INTERVAL_OF, currentGate, feeStore } from './sponsor-fees.ts';
 
 export interface LifecycleDeps extends NotifyDeps {
   stripe: StripeDeps;
@@ -235,6 +241,17 @@ export async function appliesLabel(
   return { timing, text: from ? `from ${longDate(from)} (your next renewal)` : 'from your next renewal', from };
 }
 
+async function cancelQuotedRenewal(s: Sponsor, deps: LifecycleDeps) {
+  if (!s.stripeSubscriptionId) return false;
+  const fees = feesOf(deps);
+  const open = await fees?.openQuote(s.id, 'sponsorship', null);
+  if (!fees || !open?.planChange || !open.applyingBy) return false;
+  if (!open.stripeRef) throw new SponsorshipError('The plan change is being confirmed. Retry the confirmation before changing the renewal.');
+  await releaseFeePlan(open.stripeRef, open, deps.stripe);
+  await fees.retirePlanSchedule(open.id, open.stripeRef);
+  return true;
+}
+
 /**
  * Changes tier and/or how often they pay. Not started yet or paid outside Stripe: at once (an open
  * Checkout is closed so the next one has the new price). Card: by changeTiming. Choosing the
@@ -256,12 +273,11 @@ export async function changePlan(
   let sponsor = s;
 
   if (timing === 'none') {
-    if (s.stripeSubscriptionId && (await cancelPendingChange(s.stripeSubscriptionId, deps.stripe)))
+    if (s.stripeSubscriptionId && ((await cancelQuotedRenewal(s, deps)) || (await cancelPendingChange(s.stripeSubscriptionId, deps.stripe))))
       await note(`:leftwards_arrow_with_hook: ${who(s)} keeps ${previous}; the change waiting for the renewal is cancelled.`, deps);
     return { sponsor, timing, from };
   }
-  // A processing fee in force was worked out for the current plan: how it follows a new plan is not
-  // decided yet, so the change waits for the board (docs/domains/sponsorship/fees.md).
+  // A fee-bearing plan change needs the board's frozen plan quote and an explicit confirmation.
   if (s.cycle !== 'once' && (await feesOf(deps)?.acceptedQuote(s.id))?.feeChoice === 'pass_through')
     throw new SponsorshipError(`This sponsorship includes a processing fee worked out for its current plan. To change the plan, write to us first.`);
   // An offer not paid yet was for the old plan: it no longer applies, the board sends a new one.
@@ -327,8 +343,12 @@ export async function endSponsorship(s: Sponsor, actor: Actor, deps: LifecycleDe
   if (s.status !== 'active' && s.status !== 'past_due') throw new SponsorshipError('Only a running sponsorship can be ended.');
   let endsAt: string | null;
   let dropped = false;
-  if (s.stripeSubscriptionId) ({ endsAt, droppedChange: dropped } = await cancelAtPeriodEnd(s.stripeSubscriptionId, nowIso(deps), deps.stripe));
-  else endsAt = s.paidUntil && s.paidUntil > today(deps) ? s.paidUntil : today(deps);
+  if (s.stripeSubscriptionId) {
+    const quoted = await cancelQuotedRenewal(s, deps);
+    const cancelled = await cancelAtPeriodEnd(s.stripeSubscriptionId, nowIso(deps), deps.stripe);
+    endsAt = cancelled.endsAt;
+    dropped = quoted || cancelled.droppedChange;
+  } else endsAt = s.paidUntil && s.paidUntil > today(deps) ? s.paidUntil : today(deps);
   if (signer) await sign(s, signer, 'change', actor, deps, `End of the sponsorship (${planLabel(s)})${endsAt ? `, last day ${lastDay(endsAt)}` : ''}`);
   const last = endsAt ? longDate(lastDay(endsAt)) : 'the end of the paid period';
   const key = `sponsor-ending:${s.id}:${nowIso(deps)}`;
@@ -426,7 +446,13 @@ export function parseChange(v: string | null): Suggestion | null {
  * Emails a change agreed in conversation (owner, 18th November 2026): the link opens the
  * sponsorship page with it filled in, and their confirmation there is the approval.
  */
-export async function suggestChange(s: Sponsor, c: Suggestion, message: string | null, actor: Actor, deps: LifecycleDeps): Promise<{ url: string; emailed: number }> {
+export async function suggestChange(
+  s: Sponsor,
+  c: Suggestion,
+  message: string | null,
+  actor: Actor,
+  deps: LifecycleDeps,
+): Promise<{ url: string; emailed: number } | { url: string; invitationQueued: true }> {
   if (s.cycle === 'once') throw new SponsorshipError('A one-time sponsorship is changed by editing its meetups and price.');
   if (c.kind === 'end' && s.status !== 'active' && s.status !== 'past_due') throw new SponsorshipError('Only a running sponsorship can be ended.');
   if (c.kind === 'plan') {
@@ -436,6 +462,33 @@ export async function suggestChange(s: Sponsor, c: Suggestion, message: string |
   }
   const url = changeUrl(deps.origin, c);
   const applies = c.kind === 'plan' ? await appliesLabel(s, c, deps) : null;
+  const fees = feesOf(deps);
+  const prior = c.kind === 'plan' ? await fees?.acceptedQuote(s.id) : null;
+  if (fees && prior?.feeChoice === 'pass_through' && c.kind === 'plan') {
+    if (!s.stripeSubscriptionId || !isRecurring(c.cycle) || !applies || applies.timing === 'none') throw new SponsorshipError('Choose a different recurring plan.');
+    const figures = quoteFigures(fee(c.tier, c.cycle) * 100, prior.feeChoice, await currentGate(fees, deps.env));
+    const plan = await previewFeePlan(s.stripeSubscriptionId, prior.id, { tier: c.tier, cycle: c.cycle }, figures.baseMinor, figures.surchargeMinor, applies.timing, deps.stripe);
+    const purpose = planLabel(c) + ', ' + chfMinor(figures.totalMinor) + ' per payment';
+    const notice = emailNotice('', 'sponsor-change-request', {
+      kind: 'plan',
+      newPlan: {
+        tierName: tierInfo(c.tier).name,
+        feeLabel: chfMinor(figures.totalMinor),
+        applies: plan.charge.timing === 'now' ? chfMinor(plan.charge.dueMinor) + ' due on confirmation' : 'at renewal',
+        benefits: tierBenefits(c.tier),
+      },
+      lastDay: null,
+      message,
+      url,
+    });
+    const { quote } = await fees.createQuote(
+      { ...figures, subject: 'sponsorship', subjectId: null, sponsorId: s.id, interval: INTERVAL_OF[c.cycle], purpose, createdBy: actor.id, planChange: plan },
+      { invitation: notice.body },
+    );
+    await deps.store.queueNotices(s.id, [{ ...notice, key: 'fee-invitation:' + quote.id }]);
+    await sendNotices(deps, { sponsorId: s.id });
+    return { url, invitationQueued: true };
+  }
   const last = c.kind === 'end' ? (s.stripeSubscriptionId ? await periodEnd(s.stripeSubscriptionId, deps.stripe).catch(() => null) : s.paidUntil) : null;
   const emailed = await emailSponsor(
     s,

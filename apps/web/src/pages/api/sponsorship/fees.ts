@@ -27,6 +27,7 @@ export const handleConfirmFee = (request: Request, deps: SponsorRouteDeps = {}) 
       const fees = deps.fees ?? feeStore(env);
       const q = typeof body.quoteId === 'string' ? await fees.quote(body.quoteId) : null;
       if (!q || q.sponsorId !== s.id || q.subject !== 'sponsorship' || !q.interval) return fail(404, 'No such offer.');
+      if (q.planChange) return fail(409, 'Review and confirm this plan change on the sponsorship page.');
       if (q.status === 'accepted') return json(200, { ok: true, inForce: quoteView(q) });
       if (q.status !== 'open') throw new SponsorshipError('This offer was replaced or already confirmed. Reload the page.');
       if (!isRecurring(s.cycle) || !s.stripeSubscriptionId || (s.status !== 'active' && s.status !== 'past_due'))

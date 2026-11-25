@@ -85,11 +85,12 @@ Functions variables unless noted. Live and test Stripe values are scoped by depl
 
 It also uses the membership database, sign-in, Resend and Slack variables, and `STRIPE_MEMBER_PORTAL_CONFIG`.
 
-| Variable                       | What it does                                                                                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `STRIPE_SPONSOR_PORTAL_CONFIG` | Optional; a sponsor-only billing portal configuration (default: `STRIPE_MEMBER_PORTAL_CONFIG`).                                                                      |
-| `SLACK_SPONSORSHIP_CHANNEL_ID` | Optional; the channel for sponsor notes (falls back to the membership channel).                                                                                      |
-| `SPONSOR_FEE_POLICY_VERSION`   | Optional; owner only. The surcharge policy version the owner approved. Without it, ZurichJS covers every card fee ([Processing fees](/domains/sponsorship/fees.md)). |
+| Variable                                                             | What it does                                                                                                                                                         |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STRIPE_SPONSOR_PORTAL_CONFIG`                                       | Optional; a sponsor-only billing portal configuration (default: `STRIPE_MEMBER_PORTAL_CONFIG`).                                                                      |
+| `SLACK_SPONSORSHIP_CHANNEL_ID`                                       | Optional; the channel for sponsor notes (falls back to the membership channel).                                                                                      |
+| `SPONSOR_FEE_PRORATION_MODE`, `SPONSOR_FEE_PRORATION_POLICY_VERSION` | Optional, owner only. Enable immediate fee-bearing upgrades only for the approved [proration treatment](/domains/sponsorship/fees.md).                               |
+| `SPONSOR_FEE_POLICY_VERSION`                                         | Optional; owner only. The surcharge policy version the owner approved. Without it, ZurichJS covers every card fee ([Processing fees](/domains/sponsorship/fees.md)). |
 
 ## The organisers' Slack content agent
 

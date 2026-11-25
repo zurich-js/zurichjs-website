@@ -20,7 +20,7 @@ export function Fees({ fees, onSignedOut, onChanged }: { fees: FeesView; onSigne
   const [acceptedId, setAcceptedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const q = fees.toConfirm;
+  const q = fees.toConfirm?.plan ? null : fees.toConfirm;
   const agree = !!q && q.id === acceptedId;
   const current = fees.inForce?.feeChoice === 'pass_through' ? fees.inForce : null;
   if (!q && !current) return null;

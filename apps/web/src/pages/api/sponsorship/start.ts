@@ -46,8 +46,8 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
         );
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');
-      const feeOffer = offer?.interval && offer.feeChoice === 'pass_through' ? offer : null;
-      if (feeOffer && body.acceptFee !== true) return fail(400, 'Tick the box to agree to the processing fee, or write to us.', { field: 'acceptFee' });
+      const feeOffer = offer?.interval ? offer : null;
+      if (feeOffer && body.acceptFee !== true) return fail(400, 'Confirm the amount and processing fee shown in the offer.', { field: 'acceptFee' });
       if ((feeOffer || body.quoteId !== undefined) && feeOffer?.id !== body.quoteId) return fail(409, 'The offer changed. Reload to review the current fee.');
       const sig = parseSignature(body);
       if (!sig.ok) return fail(400, sig.error, { field: sig.field });

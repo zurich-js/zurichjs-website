@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-25
+
+- Sponsors can confirm a [plan change with a processing fee](/domains/sponsorship/fees.md). Immediate upgrades require an approved proration policy and a matching CHF invoice preview.
+
 ## 2026-11-24
 
 - Recurring [fee offers](/domains/sponsorship/fees.md) queue an invitation for either fee choice and record the sponsor’s confirmation against the specific quote and subscription item.

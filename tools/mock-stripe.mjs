@@ -35,7 +35,7 @@ export const MEMBER_FEES = { member_basic_quarterly: 5000, member_basic_yearly: 
 const html = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 /** Starts the mock. Resolves to { url, sessions, requests, close }. Port 0 picks a free port. */
-export function startMockStripe(port = 0) {
+export function startMockStripe(port = 0, routeFixture) {
   /** @type {Map<string, Record<string, any>>} */
   const sessions = new Map();
   /** @type {{ method: string, path: string, auth: string | undefined, idempotencyKey: string | undefined, version: string | undefined, form: Record<string, string> }[]} */
@@ -66,6 +66,14 @@ export function startMockStripe(port = 0) {
           return send(401, { error: { message: 'Invalid API Key provided (the mock accepts sk_test_ keys only)' } });
       }
 
+      if (routeFixture && url.pathname.startsWith('/v1/')) {
+        try {
+          const response = await routeFixture(url.href, { method: req.method, headers: req.headers, ...(req.method === 'POST' && { body: raw }) });
+          return send(response.status, await response.text());
+        } catch (error) {
+          return send(500, { error: { message: String(error) } });
+        }
+      }
       const member = membershipRoute(req.method ?? 'GET', url, form);
       if (member) return send(member.status, member.body);
 

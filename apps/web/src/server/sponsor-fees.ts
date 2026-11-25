@@ -51,6 +51,16 @@ export const quoteView = (q: Quote) => ({
   id: q.id,
   subject: q.subject,
   purpose: q.purpose,
+  plan: q.planChange
+    ? {
+        tier: q.planChange.tier,
+        cycle: q.planChange.cycle,
+        timing: q.planChange.charge.timing,
+        dueNow: chfMinor(q.planChange.charge.timing === 'now' ? q.planChange.charge.dueMinor : 0),
+        from: new Date((q.planChange.charge.timing === 'now' ? q.planChange.charge.at : q.planChange.periodEnd) * 1000).toISOString(),
+        scheduled: q.status === 'open' && !!q.stripeRef,
+      }
+    : null,
   interval: q.interval,
   /** "a year" for a recurring quote, else null. */
   per: q.interval ? INTERVAL_WORD[q.interval] : null,

@@ -1,4 +1,4 @@
-import { dateLong, type Event, type Partner, type Speaker } from '@zurichjs/events';
+import { dateLong, eventEndsAt, eventSpeakerIds, type Event, type Partner, type Speaker } from '@zurichjs/events';
 
 export const SITE_URL = 'https://zurichjs.com';
 /** The generated default share card (apps/web/src/lib/og.ts); pages normally pass their own card. */
@@ -187,7 +187,8 @@ const STATUS: Record<Event['status'], string> = {
 export function eventSchema(ev: Event, speakers: Speaker[], hosts: Partner[] = []): JsonLd | null {
   if (!ev.startsAt) return null;
   const url = canonicalUrl(`/events/${ev.slug}`);
-  const performers = [...new Set(ev.agenda.flatMap((a) => a.talk?.speakerIds ?? []))]
+  const endDate = ev.endsAt ?? eventEndsAt(ev)?.toISOString();
+  const performers = eventSpeakerIds(ev)
     .map((id) => speakers.find((s) => s.id === id))
     .filter((s): s is Speaker => !!s)
     .map((s) => ({ '@type': 'Person', name: s.name, url: canonicalUrl(`/speakers/${s.id}`) }));
@@ -197,7 +198,7 @@ export function eventSchema(ev: Event, speakers: Speaker[], hosts: Partner[] = [
     name: ev.title,
     description: ev.description || `ZurichJS meetup on ${dateLong(ev.startsAt)}.`,
     startDate: ev.startsAt,
-    ...(ev.endsAt ? { endDate: ev.endsAt } : {}),
+    ...(endDate ? { endDate } : {}),
     eventStatus: STATUS[ev.status],
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     url,

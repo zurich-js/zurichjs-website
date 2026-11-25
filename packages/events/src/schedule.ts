@@ -94,6 +94,11 @@ export function buildSchedule({ agenda, talks, startsAt }: ScheduleInput): Agend
 /** The talks of an event, in running order. */
 export const eventTalks = (ev: Pick<Event, 'agenda'>): TalkRef[] => ev.agenda.flatMap((a) => (a.talk ? [a.talk] : []));
 
+export function eventSpeakerIds(ev: Pick<Event, 'agenda' | 'recap'>): string[] {
+  const talks = [...eventTalks(ev), ...(ev.recap?.talks ?? [])];
+  return [...new Set(talks.flatMap((talk) => talk.speakerIds))];
+}
+
 /** The instant a programme line starts, on the event's day in Zurich; undefined without a time. */
 export function itemStartsAt(ev: Pick<Event, 'startsAt'>, item: Pick<AgendaItem, 'time'>): Date | undefined {
   if (!ev.startsAt || !item.time) return undefined;
@@ -118,8 +123,10 @@ export interface ScheduleFacts {
 /** The instant the evening ends: `endsAt`, else the agenda's timed close line. Undefined when nobody said. */
 export function eventEndsAt(ev: Pick<Event, 'agenda' | 'startsAt' | 'endsAt'>): Date | undefined {
   if (ev.endsAt) return new Date(ev.endsAt);
-  const close = ev.agenda.find((a) => a.kind === 'close' && a.time);
-  return close ? itemStartsAt(ev, close) : undefined;
+  const close = ev.agenda.find((a) => a.kind === 'close' && !a.estimated && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(a.time));
+  if (!close || !ev.startsAt) return undefined;
+  const end = itemStartsAt(ev, close);
+  return end && end.getTime() >= Date.parse(ev.startsAt) ? end : undefined;
 }
 
 export function scheduleFacts(ev: Pick<Event, 'agenda' | 'startsAt'> & { endsAt?: string }): ScheduleFacts {

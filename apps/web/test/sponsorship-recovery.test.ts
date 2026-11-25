@@ -209,6 +209,33 @@ describe('sponsorship board actions that fail half-way', () => {
       expect(await daily()).toMatchObject({ linksClosed: 0 });
     });
 
+    it('makes zero provider calls with an expired budget and recovers the outstanding link on the next run', async () => {
+      const id = await pendingBundle();
+      fs.failNext('linkStripeIf');
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      const before = w.calls.length;
+      const lifecycle = lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW });
+      const result = await dailyCheck({ ...lifecycle, deadline: { remaining: () => 0 } });
+      expect(w.calls).toHaveLength(before);
+      expect(result).toMatchObject({ linksClosed: 0, notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 } });
+      expect(await attempts(id)).toHaveLength(1);
+      expect(await daily()).toMatchObject({ linksClosed: 1 });
+      expect(w.activeLinks.size).toBe(0);
+    });
+
+    it('delivers notices before recovering payment links and leaves the link open when delivery uses the remaining time', async () => {
+      const id = await pendingBundle();
+      fs.failNext('linkStripeIf');
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      await store.queueNotices(id, [{ key: 'board-reminder', body: { kind: 'slack', text: 'Board reminder' } }]);
+      const deadline = { remaining: () => (w.slackPosts.includes('Board reminder') ? 0 : 25_000) };
+      const lifecycle = lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW });
+      expect(await dailyCheck({ ...lifecycle, deadline })).toMatchObject({ linksClosed: 0, notices: { sent: 1, failed: 0, waiting: 0, unrecorded: 0 } });
+      expect(w.activeLinks.size).toBe(1);
+      expect(await daily()).toMatchObject({ linksClosed: 1, notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 } });
+      expect(w.activeLinks.size).toBe(0);
+    });
+
     it('the losing request of two could not switch its link off: the daily check does, and keeps the saved one', async () => {
       const id = await pendingBundle();
       w.failNext('POST', /^payment_links\/plink_/);

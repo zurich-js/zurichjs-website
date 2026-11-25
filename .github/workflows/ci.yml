@@ -116,6 +116,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # The SEO gate crawls the build with Playwright's Chromium (tools/seo/snapshot.mjs).
+      - run: pnpm exec playwright install --with-deps chromium
       - name: SEO and LLM parity
         run: |
           node tools/serve-dist.mjs 4321 &

@@ -225,5 +225,7 @@ export interface LinkAttempt {
   request: string;
   linkId: string | null;
   state: 'open' | 'kept' | 'closing' | 'closed';
+  /** Elapsed time on the store's clock when the attempt was read. */
+  ageMs: number;
   createdAt: string;
 }

@@ -220,13 +220,16 @@ describe('sponsorship board actions that fail half-way', () => {
     });
 
     it('reconciles an expired create by its event before allowing a replacement', async () => {
+      let clock = NOW.getTime();
+      store = memoryStore({ now: () => new Date(clock) });
       const id = await pendingBundle();
       w.loseNext('POST', /^payment_links$/);
       expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
       const [original] = w.activeLinks;
       const [attempt] = await attempts(id);
       expect(w.calls.find((c) => c.path === 'payment_links')?.params.get('metadata[attemptId]')).toBe(attempt!.key);
-      const late = { ...deps(), now: NOW.getTime() + 25 * 3_600_000 };
+      clock += 25 * 3_600_000;
+      const late = { ...deps(), now: clock };
       const retry = (events: object[]) =>
         handlePaymentLink(asAdmin('/x', {}), id, {
           ...late,

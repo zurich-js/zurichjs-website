@@ -86,6 +86,8 @@ export interface SponsorStore {
   byStripeCustomer(id: string): Promise<Sponsor | null>;
   /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
+  /** How many sponsorships there are in each status, over every row (statuses with none are left out). */
+  statusCounts(): Promise<Partial<Record<Status, number>>>;
   /**
    * A sponsor with its first contact (and its meetups), all or nothing. Fails with DuplicateContact
    * when the email belongs to a sponsor already.
@@ -356,6 +358,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .reverse()
         .slice(0, limit)
         .map((s) => ({ ...s }));
+    },
+    statusCounts: async () => {
+      const counts: Partial<Record<Status, number>> = {};
+      for (const s of sponsors.values()) counts[s.status] = (counts[s.status] ?? 0) + 1;
+      return counts;
     },
     async create(input, c, actor, opts = {}) {
       const email = normaliseEmail(c.email);

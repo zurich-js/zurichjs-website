@@ -68,6 +68,7 @@ d('sponsorship database', () => {
     expect(await store.search({ q: 'Ada' })).toHaveLength(0);
     expect(await store.search({ q: 'switzerland' })).toHaveLength(1);
     expect(await store.search({ q: 'nobody' })).toHaveLength(0);
+    expect(await store.statusCounts()).toEqual({ pending: 1 });
     expect(await store.get('not-a-uuid')).toBeNull();
   });
 

@@ -3,7 +3,7 @@ type: Reference
 title: Components
 description: The design system's component catalogue, with the rules for buttons, cards, choices and logos.
 tags: [design-system, components]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Components
@@ -37,6 +37,7 @@ Visual variants are props of these components, defined once ([UI rules](/systems
 | `ProofSentence`, `AwardSection`                | The rating and award sentence, and the home page's award section ([Brand](/systems/design-system/brand.md)).                                                        |
 | `HostsSection`, `SpeakCta`, `ConferenceModule` | Home page sections: the companies behind ZurichJS, the yellow "Speak at a meetup" block, and the conference module.                                                 |
 | `landing/*`                                    | Parts of the landing pages: `LandingEvents`, `LandingFaq`, `LandingCta`, `PointList`, `TopicGroups`.                                                                |
+| `Loading`, `LoadFailed` (islands)              | The one loading line for islands that fetch (`role="status"`, says after 10 s that it is slow), and a failed load: an announced error with Try again.               |
 | `Field`, `Check` (islands)                     | Form controls for islands (labels wrap controls, errors are announced), and the check mark as SVG.                                                                  |
 | `Modal`, `RatingSheet` (islands)               | A native modal `<dialog>` that rises in, and the rating form shown in it.                                                                                           |
 | `StarRating` (island)                          | Five choices, 1 to 5, on native radios, filled yellow up to the selection.                                                                                          |

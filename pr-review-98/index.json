@@ -298,5 +298,120 @@
     "file": "flow-sponsor-dashboard.gif",
     "caption": "Sponsor dashboard: meetups load apart from billing; an error retries (MOCK API)",
     "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "coverage-retry-320.png",
+    "caption": "Board can retry after a lost coverage response (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "coverage-retry-375.png",
+    "caption": "Board can retry after a lost coverage response (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "coverage-retry-390.png",
+    "caption": "Board can retry after a lost coverage response (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "coverage-retry-1280.png",
+    "caption": "Board can retry after a lost coverage response (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "coverage-retry-1440.png",
+    "caption": "Board can retry after a lost coverage response (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "refreshed-history-320.png",
+    "caption": "Refreshed board history and ended sponsorship lock (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "refreshed-history-375.png",
+    "caption": "Refreshed board history and ended sponsorship lock (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "refreshed-history-390.png",
+    "caption": "Refreshed board history and ended sponsorship lock (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "refreshed-history-1280.png",
+    "caption": "Refreshed board history and ended sponsorship lock (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "refreshed-history-1440.png",
+    "caption": "Refreshed board history and ended sponsorship lock (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "empty-coverage-status-320.png",
+    "caption": "Empty result in the account coverage status (320px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "empty-coverage-status-375.png",
+    "caption": "Empty result in the account coverage status (375px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "empty-coverage-status-390.png",
+    "caption": "Empty result in the account coverage status (390px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "empty-coverage-status-1280.png",
+    "caption": "Empty result in the account coverage status (1280px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "empty-coverage-status-1440.png",
+    "caption": "Empty result in the account coverage status (1440px, full page, original header, MOCK API)",
+    "figtree": true,
+    "horizontalScroll": false,
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "retry-coverage-and-refresh-history.mp4",
+    "caption": "Lost response, board retry and updated history (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
+  },
+  {
+    "file": "retry-coverage-and-refresh-history.gif",
+    "caption": "Lost response, board retry and updated history (MOCK API)",
+    "label": "Visible mock-data strip outside the page or video frame."
   }
 ]

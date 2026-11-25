@@ -1,3 +1,4 @@
+import { deadline, REQUEST_BUDGET_MS } from '../../../server/deadline.ts';
 /**
  * The one Stripe webhook: memberships, sponsorships and donations. Stripe › Developers › Webhooks:
  * https://zurichjs.com/api/stripe/webhook with the events in STRIPE_WEBHOOK_EVENTS; its signing
@@ -7,11 +8,14 @@
  *   POST (signed by Stripe) → 200 · 400 bad signature or JSON · 503 not configured · 500 retry
  */
 import type { MemberStore } from '@zurichjs/membership';
-import type { SponsorStore } from '@zurichjs/sponsorship';
+import type { RaffleStore } from '@zurichjs/raffle';
+import type { FeeStore, SponsorStore } from '@zurichjs/sponsorship';
 import type { DonationEvents } from '../../../server/donation-events.ts';
 import type { APIRoute } from 'astro';
 import { methodNotAllowed, type Env } from '../../../server/http.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
+import type { LiveLookup } from '../../../server/sponsor-coverage.ts';
+import { processRaffleEvent } from '../../../server/raffle-webhook.ts';
 import { processSponsorEvent } from '../../../server/sponsor-webhook.ts';
 import { dispatchStripeEvent, isDonationEvent, readStripeEvent } from '../../../server/stripe-webhook.ts';
 import { processDonationEvent } from '../donate/webhook.ts';
@@ -23,6 +27,9 @@ export interface StripeWebhookDeps {
   env?: Env;
   memberStore?: MemberStore;
   sponsorStore?: SponsorStore;
+  fees?: FeeStore;
+  raffles?: RaffleStore;
+  raffleHosts?: LiveLookup;
   donationEvents?: DonationEvents | null;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
@@ -35,11 +42,12 @@ export async function handleStripeWebhook(request: Request, deps: StripeWebhookD
   const env = deps.env ?? process.env;
   const read = await readStripeEvent(request, env, 'STRIPE_WEBHOOK_SECRET', 'stripe', deps);
   if ('response' in read) return read.response;
-  const shared = { env, fetch: deps.fetch, slack: deps.slack, now: deps.now, log: deps.log };
+  const shared = { env, fetch: deadline(REQUEST_BUDGET_MS).fetch(deps.fetch), slack: deps.slack, now: deps.now, log: deps.log };
   if (isDonationEvent(read.event)) return processDonationEvent(read.event, { ...shared, events: deps.donationEvents });
   return dispatchStripeEvent(read.event, [
     (e) => processMembershipEvent(e, { ...shared, store: deps.memberStore, signature: deps.signature }),
-    (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore }),
+    (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore, fees: deps.fees }),
+    (e) => processRaffleEvent(e, { ...shared, raffles: deps.raffles, hosts: deps.raffleHosts, sponsors: deps.sponsorStore, fees: deps.fees }),
   ]);
 }
 

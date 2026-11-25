@@ -50,7 +50,7 @@ export function world() {
   const subscriptionStatus = new Map<string, string>();
   let emailFailures = 0;
   const losses: { method: string; re: RegExp; n: number }[] = [];
-  const stripeIdem = new Map<string, { body: string; status: number; text: string }>();
+  const stripeIdem = new Map<string, { body: string; status: number; text: Promise<string> }>();
   let n = 0;
 
   const f = (async (url: string, init: RequestInit = {}) => {
@@ -86,10 +86,10 @@ export function world() {
     const seen = key ? stripeIdem.get(key) : undefined;
     if (seen)
       return seen.body === String(init.body ?? '')
-        ? new Response(seen.text, { status: seen.status, headers: { 'idempotent-replayed': 'true' } })
+        ? new Response(await seen.text, { status: seen.status, headers: { 'idempotent-replayed': 'true' } })
         : new Response(JSON.stringify({ error: { message: 'Keys for idempotent requests can only be used with the same parameters' } }), { status: 400 });
     const res = stripe(method, path, params);
-    if (key) stripeIdem.set(key, { body: String(init.body ?? ''), status: res.status, text: await res.clone().text() });
+    if (key) stripeIdem.set(key, { body: String(init.body ?? ''), status: res.status, text: res.clone().text() });
     const loss = losses.find((x) => x.n > 0 && x.method === method && x.re.test(path));
     if (loss) {
       loss.n--;

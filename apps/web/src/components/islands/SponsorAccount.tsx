@@ -28,6 +28,10 @@ import { zurichDay } from '@zurichjs/events';
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
+import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
+import { Fees, type FeesView } from './sponsor-account/Fees.tsx';
+import { Offer, type OfferView } from './sponsor-account/Offer.tsx';
+import { Raffles } from './sponsor-account/Raffles.tsx';
 import { READ_DEADLINE_MS, timeoutSignal } from './read-deadline.ts';
 
 type ContactView = ReturnType<typeof contactView>;
@@ -59,6 +63,10 @@ interface Me {
   signedCurrent?: boolean;
   signer?: { name: string; title: string } | null;
   invitation?: { company: string; tierName: string } | null;
+  /** Waiting for payment: the board's open offer, with base, fee and total. */
+  offer?: OfferView | null;
+  /** Recurring: the processing fee in force, and one the board offered to confirm. */
+  fees?: FeesView;
 }
 
 interface Meetup {
@@ -506,15 +514,19 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
       </p>
     );
 
+  // The covered meetups load on their own, so they still show when the sponsorship could not be loaded.
   if (view.kind === 'error')
     return (
-      <div class="flex max-w-form flex-col gap-4">
-        <Notice tone="danger" live title={view.message} />
-        <Actions>
-          <Button variant="secondary" onClick={() => location.reload()}>
-            Try again
-          </Button>
-        </Actions>
+      <div class="flex flex-col gap-6">
+        <div class="flex max-w-form flex-col gap-4">
+          <Notice tone="danger" live title={view.message} />
+          <Actions>
+            <Button variant="secondary" onClick={() => location.reload()}>
+              Try again
+            </Button>
+          </Actions>
+        </div>
+        <CoveredMeetups contactEmail={contactEmail} onSignedOut={signedOut} />
       </div>
     );
 
@@ -677,6 +689,8 @@ function Invitation({ ctx, company, tierName, onAnswered }: { ctx: Ctx; company:
 function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; link: Link | null; cancelled: boolean }) {
   const [again, setAgain] = useState(false);
   const recurring = s.cycle !== 'once';
+  const offeredPlan = ctx.me.fees?.toConfirm?.plan;
+  const review = link ?? (offeredPlan && !offeredPlan.scheduled && canChange(s) ? { kind: 'plan' as const, tier: offeredPlan.tier, cycle: offeredPlan.cycle } : null);
   return (
     <>
       {s.status === 'past_due' && (
@@ -697,9 +711,14 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
           )}
         </Notice>
       )}
-      {link && <LinkedChange ctx={ctx} s={s} link={link} />}
-      <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
-      {s.status === 'pending' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
+      {review && <LinkedChange key={ctx.me.fees?.toConfirm?.id} ctx={ctx} s={s} link={review} />}
+      <SponsorCard ctx={ctx} s={s} linkOpen={!!review} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
+      {recurring && s.status !== 'pending' && ctx.me.fees && <Fees fees={ctx.me.fees} onSignedOut={ctx.onSignedOut} onChanged={() => void ctx.reload()} />}
+      <CoveredMeetups contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
+      {s.status !== 'pending' && <Raffles contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />}
+      {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
+      {/* The board's offer is paid through its link only (the server refuses a second payment page). */}
+      {s.status === 'pending' && (!ctx.me.offer || ctx.me.offer.quote.interval) && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}
@@ -926,8 +945,15 @@ function ChangePlan({
   const errorOf = (k: string) => errs.errorOf(sig.local, k);
   const plan = planName(tier, cycle);
 
-  const effect =
-    timing === 'none'
+  const offer = ctx.me.fees?.toConfirm;
+  const quote = offer?.plan?.tier === tier && offer.plan.cycle === cycle ? offer : null;
+  const [acceptedQuote, setAcceptedQuote] = useState<string | null>(null);
+  const needsOffer = ctx.me.fees?.inForce?.feeChoice === 'pass_through' && !unchanged;
+  const effect = needsOffer
+    ? quote?.plan
+      ? `${plan}. ${quote.base} plus ${quote.surcharge} processing fee, totalling ${quote.total} ${quote.per}. ${quote.plan.dueNow} due on confirmation. ${quote.plan.timing === 'renewal' ? 'The new price starts on ' + longDate(quote.plan.from) + '.' : 'The new plan starts immediately.'}`
+      : 'Ask the board for a quote for this plan, including its processing fee.'
+    : timing === 'none'
       ? 'This is your current plan.'
       : unchecked
         ? `We couldn’t check whether you already have a change scheduled for renewal. Check again before confirming ${plan}.`
@@ -941,7 +967,7 @@ function ChangePlan({
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (busy || unchanged) return;
+    if (busy || unchanged || (needsOffer && (!quote || acceptedQuote !== quote.id))) return;
     if (!sig.valid) {
       errs.setTried(true);
       focusError();
@@ -952,7 +978,7 @@ function ChangePlan({
     result.set(null);
     const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }>(
       '/api/sponsorship/plan',
-      { json: { tier, cycle, replaces: renewalReference(pending), ...sig.payload } },
+      { json: { tier, cycle, replaces: renewalReference(pending), ...sig.payload, ...(quote && { quoteId: quote.id, acceptFee: acceptedQuote === quote.id }) } },
       ctx,
     );
     setBusy(false);
@@ -988,11 +1014,18 @@ function ChangePlan({
         {effect}
         {!unchanged && pending && ` This replaces ${planName(pending.tier, pending.cycle)}, scheduled for ${longDate(pending.from)}.`}
       </p>
-      {!unchanged && <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />}
+      {!unchanged && quote?.plan && (
+        <Checkbox
+          label={`I agree to ${quote.total} ${quote.per} and ${quote.plan.dueNow} due now.`}
+          checked={acceptedQuote === quote.id}
+          onChange={(e) => setAcceptedQuote(e.currentTarget.checked ? quote.id : null)}
+        />
+      )}
+      {!unchanged && (!needsOffer || quote) && <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />}
       <ResultNotice result={result} />
       <Actions>
-        {!unchanged && (
-          <Button type="submit" variant="primary" disabled={busy}>
+        {!unchanged && (!needsOffer || quote) && (
+          <Button type="submit" variant="primary" disabled={busy || (!!quote && acceptedQuote !== quote.id)}>
             {busy ? 'Changing…' : signedLabel(sig, 'Sign and change', 'Confirm the change')}
           </Button>
         )}
@@ -1221,6 +1254,10 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
   const [eventId, setEventId] = useState(pendingNow ? (s.meetups.at(0)?.eventId ?? '') : '');
   const [meetups, setMeetups] = useState<Meetup[] | 'error' | null>(null);
   const [busy, setBusy] = useState(false);
+  /** A recurring offer where they cover the processing fee: they agree to it here, before Stripe. */
+  const feeOffer = pendingNow && ctx.me.offer?.quote.interval ? ctx.me.offer.quote : null;
+  const [acceptedFeeId, setAcceptedFeeId] = useState<string | null>(null);
+  const acceptFee = !!feeOffer && acceptedFeeId === feeOffer.id;
   const sig = useSignature(ctx, s);
   const errs = useErrors();
   const result = useResult();
@@ -1259,7 +1296,11 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
     errs.setServer(null);
     result.set(null);
     const plan = bundle ? {} : { tier, cycle, eventId: cycle === 'once' ? eventId : undefined };
-    const r = await call<{ checkoutUrl: string }>('/api/sponsorship/start', { json: { ...details, ...plan, ...sig.payload } }, ctx);
+    const r = await call<{ checkoutUrl: string }>(
+      '/api/sponsorship/start',
+      { json: { ...details, ...plan, ...sig.payload, ...(feeOffer ? { acceptFee, quoteId: feeOffer.id } : {}) } },
+      ctx,
+    );
     if (!r) return;
     if (!r.ok) {
       setBusy(false);
@@ -1353,6 +1394,17 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
         <fieldset class={fieldset}>
           <legend class={legend}>Payment</legend>
           <p class={body}>You pay by card on Stripe’s secure page.</p>
+          {feeOffer && (
+            <Checkbox
+              label={
+                feeOffer.surcharge
+                  ? `I agree to pay the card processing fee of ${feeOffer.surcharge} ${feeOffer.per}, a separate line on every renewal (${feeOffer.total} ${feeOffer.per} in total).`
+                  : `I agree to pay ${feeOffer.total} ${feeOffer.per}. ZurichJS covers the processing fee.`
+              }
+              checked={acceptFee}
+              onChange={(e) => setAcceptedFeeId((e.target as HTMLInputElement).checked ? feeOffer.id : null)}
+            />
+          )}
         </fieldset>
 
         <Signature sig={sig} ctx={ctx} company={company} errorOf={errorOf} />

@@ -1,5 +1,5 @@
 import net from 'node:net';
-import { memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { memoryFeeStore, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
 import { handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
@@ -85,6 +85,7 @@ describe('sponsorship route callbacks', () => {
     } as unknown as SponsorStore;
     const stripe = vi.fn(async () => Response.json({}));
     const res = await handleSponsorMe(new Request(`${SITE}/api/sponsorship/me`), {
+      fees: memoryFeeStore(),
       store,
       env: { STRIPE_SECRET_KEY: 'sk_test_x' },
       fetch: stripe as unknown as typeof fetch,

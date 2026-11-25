@@ -223,6 +223,74 @@ test.describe('the sponsorship page (/partners/account)', () => {
     expect(sent).toEqual([{ email: EMAIL, callbackURL: ACCOUNT, errorCallbackURL: `${ACCOUNT}?link=invalid` }]);
   });
 
+  test('announces the empty coverage result in the loading status', async ({ page }) => {
+    await mockMe(page, () => me(sponsor()));
+    let release!: () => void;
+    const pending = new Promise<void>((done) => {
+      release = done;
+    });
+    await page.route('**/api/sponsorship/coverage', async (route) => {
+      await pending;
+      await route.fulfill({ json: { ok: true, checked: true, meetups: [] } });
+    });
+    await page.goto(ACCOUNT);
+    const status = page.getByRole('region', { name: 'Meetups you sponsor' }).getByRole('status');
+    await expect(status).toHaveText('Loading your meetups…');
+    const original = await status.elementHandle();
+    release();
+    await expect(status).toContainText('No meetups are confirmed');
+    expect(await original!.evaluate((node) => node.isConnected && node.textContent?.includes('No meetups are confirmed'))).toBe(true);
+  });
+
+  test('signed in: covered meetups load on their own, say their state in words, and retry after an error', async ({ page }) => {
+    let calls = 0;
+    await mockMe(page, () => me(sponsor()));
+    await page.route('**/api/sponsorship/coverage', (route) =>
+      ++calls === 1
+        ? route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t load your meetups right now.' } })
+        : route.fulfill({
+            json: {
+              ok: true,
+              checked: true,
+              meetups: [
+                { eventId: 'e-dec', title: 'ZurichJS Meetup December', date: '2026-12-09', state: 'cancelled', url: '/events/zurichjs-december' },
+                { eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming', url: '/events/zurichjs-january' },
+              ],
+            },
+          }),
+    );
+    await page.goto(ACCOUNT);
+    const section = page.getByRole('region', { name: 'Meetups you sponsor' });
+    await expect(section.getByText('We couldn’t load your meetups right now.')).toBeVisible();
+    // The rest of the account still shows.
+    await expect(page.getByText(`Signed in as ${EMAIL}`)).toBeVisible();
+    await section.getByRole('button', { name: 'Try again' }).click();
+    await expect(section.getByText('ZurichJS Meetup January')).toBeVisible();
+    await expect(section.getByText('Cancelled')).toBeVisible();
+    await expect(section.getByText('Upcoming')).toBeVisible();
+    await expect(section.getByRole('link', { name: 'ZurichJS Meetup January' })).toHaveAttribute('href', '/events/zurichjs-january');
+    expect(await axe(page)).toEqual([]);
+  });
+
+  test('signed in: the covered meetups still show when the sponsorship itself fails to load', async ({ page }) => {
+    await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t load your billing right now.' } }));
+    await page.route('**/api/sponsorship/coverage', (route) =>
+      route.fulfill({
+        json: {
+          ok: true,
+          once: false,
+          checked: true,
+          meetups: [{ eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming', url: '/events/zurichjs-january' }],
+        },
+      }),
+    );
+    await page.goto(ACCOUNT);
+    await expect(page.getByText('We couldn’t load your billing right now.')).toBeVisible();
+    const section = page.getByRole('region', { name: 'Meetups you sponsor' });
+    await expect(section.getByRole('link', { name: 'ZurichJS Meetup January' })).toBeVisible();
+    expect(await axe(page)).toEqual([]);
+  });
+
   test('without accounts configured (503) the page says so and offers no form', async ({ page }) => {
     await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 503, json: { ok: false } }));
     await page.goto(ACCOUNT);
@@ -443,12 +511,57 @@ test.describe('the board’s sponsors (/admin/sponsors)', () => {
 
     await page.unrouteAll();
     await mockAdmin(page);
+    await page.route('**/api/membership/admin/fees', (route) => route.fulfill({ json: { gate: { open: false, reason: 'ZurichJS covers the fees.' }, tariffs: [] } }));
     await page.route(/\/api\/membership\/admin\/sponsors(\?.*)?$/, (route) => (list++ === 0 ? route.abort('connectionrefused') : route.fallback()));
     await page.goto(ADMIN);
     await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
     await page.getByRole('button', { name: 'Try again' }).click();
     await expect(page.getByRole('heading', { name: 'Sponsors' })).toBeVisible();
     await expect(page.getByText('Acme AG').first()).toBeAttached();
+  });
+
+  test('recovers coverage controls after a failed write and refreshes the history and lock after a change', async ({ page }) => {
+    await mockAdmin(page);
+    const meetup = { id: 'jan', title: 'January meetup', date: '2027-01-13' };
+    let writes = 0;
+    let ended = false;
+    await page.route(`**${ADMIN_API}/meetups`, (r) => r.fulfill({ json: { ok: true, meetups: [meetup] } }));
+    await page.route(`**${ADMIN_API}/${BOLT.id}/coverage`, (r) => {
+      if (r.request().method() === 'POST') {
+        if (++writes === 1) return r.abort('connectionreset');
+        ended = true; // A concurrent board change is visible on the next detail read.
+      }
+      return r.fulfill({ json: { ok: true, checked: true, coverage: [], locked: ended ? 'This sponsorship has ended. Its covered meetups stay as they were.' : null } });
+    });
+    await page.route(`**${ADMIN_API}/${BOLT.id}`, (r) =>
+      !ended
+        ? r.fallback()
+        : r.fulfill({
+            json: {
+              ok: true,
+              sponsor: { ...BOLT, status: 'ended', statusLabel: 'ended' },
+              attention: [],
+              contacts: [],
+              agreements: [],
+              logos: [],
+              contracts: [],
+              events: [{ id: 'first', type: 'meetup_covered', at: '2026-11-19T12:00:00Z', actor: { kind: 'board', id: 'admin' }, payload: {} }],
+              pendingChange: null,
+            },
+          }),
+    );
+    await page.goto(ADMIN + '?id=' + BOLT.id);
+    const panel = page.getByRole('region', { name: 'Covered meetups' });
+    await panel.getByLabel('Add a meetup').selectOption(meetup.id);
+    const add = panel.getByRole('button', { name: 'Add', exact: true });
+    await add.click();
+    await expect(panel.getByRole('alert')).toBeVisible();
+    await expect(add).toBeEnabled();
+    await add.click();
+    await expect(panel.getByText('This sponsorship has ended.', { exact: false })).toBeVisible();
+    await expect(add).toHaveCount(0);
+    await page.getByText('Agreements and history', { exact: true }).click();
+    await expect(page.getByRole('region', { name: 'History' })).toContainText('Meetup confirmed as covered.');
   });
 
   test('the list shows each sponsor’s plan and status, filters by status, and opens one sponsor', async ({ page, isMobile }) => {
@@ -551,4 +664,45 @@ test('the sponsorship agreement: one h1, every tier with the fees of the fees mo
   }
   // The literal the page must show for one tier, so a change to the fees module is noticed here too.
   await expect(tiers.filter({ hasText: 'Community Champion' })).toContainText('CHF 750 a month, CHF 2’100 a quarter, CHF 7’500 a year, CHF 1’000 for one meetup.');
+});
+
+test('a raffle entry page: entering needs a name, an email and the rules; the answer never says whether the email entered before; no axe violations', async ({ page }) => {
+  const sent: Record<string, unknown>[] = [];
+  await page.route('**/api/raffle/info?*', (route) =>
+    route.fulfill({
+      json: {
+        ok: true,
+        raffle: {
+          id: 'r-1',
+          prize: 'Mechanical keyboard',
+          quantity: 1,
+          eventTitle: 'ZurichJS Meetup December',
+          eventDateLabel: '9th December 2026',
+          sponsorName: 'Acme AG',
+          state: 'open',
+          closesAt: '2026-12-09T19:30:00.000Z',
+          rulesUrl: 'https://zurichjs.com/raffle-rules',
+          winningCodes: [],
+        },
+      },
+    }),
+  );
+  await page.route('**/api/raffle/entries', async (route) => {
+    sent.push(route.request().postDataJSON());
+    await route.fulfill({ json: { ok: true } });
+  });
+  await page.goto('/raffle?r=r-1');
+  await expect(page.getByRole('heading', { name: 'Mechanical keyboard' })).toBeVisible();
+  await expect(page.getByText('Raffle supported by Acme AG.')).toBeVisible();
+  const submit = page.getByRole('button', { name: 'Enter', exact: true });
+  await submit.click();
+  await expect(page.getByText('Accept the raffle rules to enter.', { exact: true })).toBeVisible();
+  expect(sent).toEqual([]);
+  expect(await axe(page)).toEqual([]);
+  await page.getByLabel('Name or nickname').fill('Kim');
+  await page.getByLabel('Email', { exact: true }).fill('kim@example.com');
+  await page.getByRole('checkbox').check();
+  await submit.click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  expect(sent).toEqual([{ raffleId: 'r-1', name: 'Kim', email: 'kim@example.com', rules: true, share: false, company: '' }]);
 });

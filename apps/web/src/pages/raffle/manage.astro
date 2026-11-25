@@ -1,0 +1,14 @@
+---
+/** An entrant's own link (/raffle/manage#t=…): see the entry and confirm the email, without an account. Not indexed. */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import RaffleManage from '~/components/islands/RaffleManage';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+---
+
+<BaseLayout title="Your raffle entry" description="See your ZurichJS raffle entry and confirm your email." noindex>
+  <PageOpening slot="opening" title="Your raffle entry" sub="Your entry and your claim code. Confirm that this email is yours." />
+  <div class="px-gut py-section">
+    <RaffleManage client:load contactEmail={SITE.email} />
+  </div>
+</BaseLayout>

@@ -25,15 +25,40 @@
  * a sponsorship that has ended, or a second payment for a one-time one, changes nothing and is
  * flagged in Slack.
  */
-import { currentOfferId, TransitionError, fromLookupKey, label, paymentEvidence, type NewNotice, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { feeStore } from './sponsor-fees.ts';
+import { reconcileFee, settleSponsorPayment, closeStaleLinks } from './sponsor-offers.ts';
+import {
+  currentOfferId,
+  TransitionError,
+  chfMinor,
+  type FeeStore,
+  fromLookupKey,
+  label,
+  paymentEvidence,
+  type NewNotice,
+  type Sponsor,
+  type SponsorStore,
+  type Status,
+} from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { longDate } from './dates.ts';
 import { fail, json, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
+import { RAFFLE_SOURCE } from './raffle.ts';
 import { adminUrl, afterLastMeetup, planLabel, slackText, sponsorFee, sponsorStore, termLabel, tierBenefits, who, zurichDay, zurichDayOf, type NotifyDeps } from './sponsor.ts';
 import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
-import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription, subscriptionPaidUp, type StripeDeps } from './sponsor-stripe.ts';
+import {
+  SPONSOR_SOURCE,
+  checkoutFeeItem,
+  confirmedFeeItem,
+  cancelNow,
+  closePaymentLink,
+  liveSubscriptions,
+  planOfSubscription,
+  subscriptionPaidUp,
+  type StripeDeps,
+} from './sponsor-stripe.ts';
 import { stripeApi } from './stripe.ts';
 import type { StripeEvent } from './stripe-webhook.ts';
 
@@ -73,6 +98,7 @@ interface Subscription {
 }
 
 export interface SponsorWebhookDeps {
+  fees?: FeeStore;
   env?: Env;
   store?: SponsorStore;
   fetch?: typeof fetch;
@@ -94,7 +120,10 @@ function sourceOf(inv: Invoice): { subscription: string | null; metadata: Record
 }
 
 function termOf(inv: Invoice) {
-  return (inv.lines?.data ?? []).map((l) => l.period).reduce<{ start: number; end: number } | undefined>((best, p) => (p && (!best || p.end > best.end) ? p : best), undefined);
+  const lines = inv.lines?.data ?? [];
+  const planLines = lines.filter((line) => fromLookupKey(line.price?.lookup_key));
+  const line = planLines.length === 1 ? planLines[0] : lines.length === 1 ? lines[0] : null;
+  return line?.period;
 }
 
 async function sponsorOf(store: SponsorStore, ids: { sponsorId?: string; subscriptionId?: string | null; paymentLinkId?: string | null }): Promise<Sponsor | null> {
@@ -182,7 +211,7 @@ async function welcomeNotices(s: Sponsor, ref: string, term: string | null, next
  * what is left: the payment link switched off. A different card payment for a sponsorship that
  * is already paid is flagged.
  */
-async function startOnce(s: Sponsor, paid: { session?: string; invoice?: string | null }, eventId: string, today: string, deps: NotifyDeps & { stripe: StripeDeps }) {
+export async function startOnce(s: Sponsor, paid: { session?: string; invoice?: string | null }, eventId: string, today: string, deps: NotifyDeps & { stripe: StripeDeps }) {
   const ref = paid.session ?? paid.invoice ?? eventId;
   if (s.status === 'ended') return anomaly(s, `A one-time payment arrived for ${who(s)}, which has ended. Check it in Stripe and refund if needed.`, ref, deps);
   if (s.status === 'pending') {
@@ -203,6 +232,69 @@ const anomaly = (s: Sponsor, text: string, ref: string, deps: NotifyDeps) =>
   deps.store.queueNotices(s.id, [slackNotice(`sponsor-anomaly:${s.id}:${ref}`, `:rotating_light: ${text} ${adminUrl(deps.origin, s.id)}`)]);
 
 /** The CHF amount of a Stripe amount in cents, as "CHF 840". */
+async function settleOnce(
+  s: Sponsor,
+  session: Record<string, unknown>,
+  quoteId: string | null,
+  paymentLink: string | null,
+  deps: NotifyDeps,
+  fees: FeeStore | null,
+  stripe: StripeDeps,
+) {
+  if (!fees) {
+    deps.log?.('[sponsorship] no database for quotes; payment not recorded against a quote');
+    return true;
+  }
+  if (
+    typeof session.id !== 'string' ||
+    !session.id ||
+    typeof session.currency !== 'string' ||
+    !/^[a-z]{3}$/.test(session.currency) ||
+    typeof session.amount_total !== 'number' ||
+    !Number.isSafeInteger(session.amount_total) ||
+    session.amount_total < 0
+  )
+    throw new Error('Incomplete Checkout payment.');
+  const r = await settleSponsorPayment(
+    s,
+    {
+      sessionId: session.id,
+      quoteId,
+      paymentLinkId: paymentLink,
+      paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+      currency: session.currency,
+      amountMinor: session.amount_total,
+    },
+    fees,
+  );
+  if (r.fresh && r.payment.outcome === 'review') {
+    await deps.store.log(
+      s.id,
+      'payment_review',
+      { kind: 'stripe', id: r.payment.sessionId },
+      { sessionId: r.payment.sessionId, reason: r.payment.reason, amountMinor: r.payment.amountMinor },
+    );
+    await anomaly(
+      s,
+      `A payment of ${chfMinor(r.payment.amountMinor)} from ${who(s)} needs a decision: ${r.payment.reason} Nothing started. Accept or dismiss it on their page.`,
+      session.id,
+      deps,
+    );
+  }
+  if (r.fresh && r.payment.outcome !== 'review') await reconcileFee(r.payment, fees, stripe).catch(() => false);
+  return r.go;
+}
+
+/** The fee store, or null where there is no database. */
+const feesOf = (deps: SponsorWebhookDeps, env: Env): FeeStore | null => {
+  try {
+    return deps.fees ?? feeStore(env);
+  } catch (cause) {
+    if (cause instanceof MembershipUnavailable) return null;
+    throw cause;
+  }
+};
+
 const chfOf = (cents: number | undefined) => `CHF ${((cents ?? 0) / 100).toLocaleString('de-CH')}`;
 
 /** One verified Stripe event for sponsorships; events that are not a sponsor's are skipped. */
@@ -232,15 +324,25 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const meta = o.metadata as Record<string, string> | undefined;
         const paymentLink = typeof o.payment_link === 'string' ? o.payment_link : null;
         if (meta?.source !== SPONSOR_SOURCE && !paymentLink) break;
+        // A raffle add-on is paid apart from the sponsorship (raffle-webhook.ts): never a sponsorship payment.
+        if (meta?.source === RAFFLE_SOURCE) break;
         let s = await sponsorOf(store, { sponsorId: meta?.source === SPONSOR_SOURCE ? meta.sponsorId : undefined, paymentLinkId: paymentLink });
+        if (!s && paymentLink) {
+          const old = await feesOf(deps, env)?.quoteByLink(paymentLink);
+          if (old?.subject === 'sponsorship') s = await store.get(old.sponsorId);
+        }
         if (!s) break;
         touched = s.id;
-        if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         if (o.mode === 'payment') {
-          if (o.payment_status === 'paid' && s.cycle === 'once')
+          if (o.payment_status === 'paid' && (await settleOnce(s, o, meta?.quoteId ?? null, paymentLink, notify, feesOf(deps, env), stripeDeps)) && s.cycle === 'once') {
+            if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
             await startOnce(s, { session: String(o.id), invoice: typeof o.invoice === 'string' ? o.invoice : null }, event.id, today, notify);
+          }
+          const feeDb = feesOf(deps, env);
+          if (feeDb) await closeStaleLinks(s, 'sponsorship', null, feeDb, store, stripeDeps);
           break;
         }
+        if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         const subscriptionId = typeof o.subscription === 'string' ? o.subscription : null;
         if (!subscriptionId) break;
         // Never two live subscriptions: an old tab paid after another payment was set up.
@@ -265,6 +367,14 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
           s = bound;
         }
         if (s.paymentMode === 'manual') s = await store.update(s.id, { paymentMode: 'card' }, actor);
+        if (meta?.source === SPONSOR_SOURCE && meta?.quoteId && meta.acceptedBy) {
+          const fees = deps.fees ?? feeStore(env);
+          const offer = await fees.quote(meta.quoteId);
+          const item =
+            offer?.sponsorId === s.id && offer.subject === 'sponsorship' && offer.interval && !offer.planChange ? await checkoutFeeItem(subscriptionId, offer, stripeDeps) : null;
+          const q = offer && item ? await fees.acceptQuote(offer.id, meta.acceptedBy, item.id) : null;
+          if (!q) await anomaly(s, 'Recurring fee offer requires review.', String(o.id), notify);
+        }
         break;
       }
 
@@ -278,11 +388,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
           break;
         }
         touched = s.id;
-        if (!src.subscription) {
-          // A one-time payment's receipt (Checkout was handled above).
-          if (s.cycle === 'once') await startOnce(s, { invoice: inv.id }, event.id, today, notify);
-          break;
-        }
+        if (!src.subscription) break;
         if (s.status === 'ended') {
           await anomaly(s, `A payment arrived for ${who(s)}, which has ended. Check the subscription in Stripe and refund if needed.`, inv.id, notify);
           break;
@@ -293,7 +399,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const newTerm = !inv.billing_reason || inv.billing_reason === 'subscription_create' || inv.billing_reason === 'subscription_cycle';
         const period = termOf(inv);
         const offerId = src.metadata.offerId ?? currentOfferId(s.id, await store.events(s.id));
-        const charged = fromLookupKey(inv.lines?.data?.map((l) => l.price?.lookup_key).find(Boolean));
+        const charged = fromLookupKey(inv.lines?.data?.find((l) => fromLookupKey(l.price?.lookup_key))?.price?.lookup_key);
         const plan = { ...s, ...charged };
         const end = period ? zurichDayOf(period.end) : null;
         const start = period ? zurichDayOf(period.start) : null;
@@ -360,6 +466,17 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if ((sub.status === 'past_due' || sub.status === 'unpaid') && s.status === 'active' && !(await paidSince(store, s.id, event.created)))
           s = (await moveTo(store, s, 'past_due', event.id, { payload: { subscriptionStatus: sub.status } })).sponsor;
         const plan = planOfSubscription(sub);
+        const planRef = sub.metadata?.feePlanQuote;
+        if (planRef && plan) {
+          const fees = deps.fees ?? feeStore(env);
+          const q = await fees.quote(planRef);
+          if (q?.sponsorId === s.id && q.planChange?.subscription === sub.id && q.planChange.tier === plan.tier && q.planChange.cycle === plan.cycle) {
+            if (q.status === 'void' || q.status === 'superseded') break;
+            const item = await confirmedFeeItem(sub.id, q, stripeDeps);
+            if (!item || (q.status === 'open' && (!q.applyingBy || !(await fees.acceptQuote(q.id, q.applyingBy, item)))))
+              throw new Error('The confirmed plan and fee could not be verified.');
+          }
+        }
         if (!plan || (plan.tier === s.tier && plan.cycle === s.cycle) || s.status === 'pending') break;
         const previous = planLabel(s);
         const before = who(s);

@@ -4,6 +4,7 @@
  * Later phases add their templates here (docs/domains/membership/overview.md, "Emails").
  */
 import { render, type Block, type EmailContent, type RenderedEmail } from './layout.ts';
+import { RAFFLE_TEMPLATES } from './raffles.ts';
 import { SPONSOR_TEMPLATES } from './sponsors.ts';
 
 export interface LoginLinkProps {
@@ -459,6 +460,7 @@ const TEMPLATES = {
   'board-notice': boardNotice,
   'talk-scheduled': talkScheduled,
   ...SPONSOR_TEMPLATES,
+  ...RAFFLE_TEMPLATES,
 } satisfies Record<string, (p: never) => EmailContent>;
 
 export type TemplateName = keyof typeof TEMPLATES;

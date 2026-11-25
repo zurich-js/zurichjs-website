@@ -82,7 +82,7 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
     {schemas.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(schemas.length === 1 ? schemas[0] : schemas)} />}
     {c.source === 'sample' && <meta name="zurichjs-content" content="sample" />}
     {
-      posthogKey && (
+      cleanPath !== '/raffle/manage' && cleanPath !== '/raffle/manage/' && posthogKey && (
         <script is:inline define:vars={{ posthogKey, posthogHost }}>
           window.addEventListener('load', () => {
             const s = document.createElement('script');

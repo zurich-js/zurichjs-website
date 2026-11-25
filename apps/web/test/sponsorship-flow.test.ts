@@ -9,15 +9,20 @@
  */
 import { createHmac } from 'node:crypto';
 import { memoryStore as memoryMembers } from '@zurichjs/membership';
-import { AGREEMENT, memoryStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AGREEMENT, fee, fromLookupKey, memoryFeeStore, memoryStore, type FeeStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
+import { beforeEach, describe, expect, it, vi, onTestFinished } from 'vitest';
+import { startMockStripe } from '../../../tools/mock-stripe.mjs';
 import { handleAddSponsor, handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleAdminSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
 import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/end.ts';
 import { handleBundle } from '../src/pages/api/membership/admin/sponsors/[id]/bundle.ts';
 import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors/[id]/contracts/index.ts';
 import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
+import { handleSponsorPayments } from '../src/pages/api/membership/admin/sponsors/[id]/payments.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
+import { handleFees } from '../src/pages/api/membership/admin/fees.ts';
+import { handleSponsorFees } from '../src/pages/api/membership/admin/sponsors/[id]/fees.ts';
+import { handleConfirmFee } from '../src/pages/api/sponsorship/fees.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
 import { handleSuggest } from '../src/pages/api/membership/admin/sponsors/[id]/suggest.ts';
 import { handleUndoEnd } from '../src/pages/api/sponsorship/end/undo.ts';
@@ -60,7 +65,22 @@ const tick = { confirm: true, agreementVersion: AGREEMENT.version };
 function world() {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   const emails: { to: string[]; subject: string; text: string }[] = [];
-  const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[] };
+  const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[], feeItem: null as string | null };
+  const feePrices = new Map<string, string>();
+  const feeAmounts = new Map<string, number>();
+  let feePrice = '';
+  const invoice = { due: 12345 };
+  const schedule = {
+    metadata: { feeQuote: '' },
+    status: 'active',
+    subscription: 'sub_acme',
+    phases: [{ start_date: unix('2026-11-18T00:00:00Z'), end_date: unix('2027-02-18T00:00:00Z'), items: [] as { price: string; quantity: number }[] }],
+  };
+  function applyRenewal() {
+    sub.lookupKey = schedule.phases[1]!.items[0]!.price.replace('price_', '');
+    feePrice = schedule.phases[1]!.items[1]!.price;
+  }
+  const links = new Map<string, number>();
   let sessions = 0;
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
@@ -73,25 +93,83 @@ function world() {
     const params = new URLSearchParams(method === 'POST' ? String(init.body ?? '') : u.search);
     calls.push({ method, path, params });
     const ok = (b: unknown) => new Response(JSON.stringify(b));
+    const currentPlan = fromLookupKey(sub.lookupKey)!;
     const subscription = (id: string) => ({
       id,
       cancel_at: unix('2027-02-18T00:00:00Z'),
       metadata: { source: 'zurichjs.com/partners' },
-      items: { data: [{ id: 'si_1', price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey }, current_period_end: unix('2027-02-18T00:00:00Z') }] },
+      items: {
+        data: [
+          {
+            id: 'si_1',
+            quantity: 1,
+            price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey, currency: 'chf', unit_amount: fee(currentPlan.tier, currentPlan.cycle) * 100 },
+            current_period_end: unix('2027-02-18T00:00:00Z'),
+          },
+          ...(sub.feeItem
+            ? [
+                {
+                  id: sub.feeItem,
+                  quantity: 1,
+                  price: {
+                    product: 'prod_fee',
+                    currency: 'chf',
+                    unit_amount: feeAmounts.get(feePrice),
+                    id: feePrice,
+                    lookup_key: null,
+                    metadata: { source: 'zurichjs.com/partners', role: 'processing_fee', quoteId: feePrices.get(feePrice) },
+                  },
+                  current_period_end: unix('2027-02-18T00:00:00Z'),
+                },
+              ]
+            : []),
+        ],
+      },
       schedule: sub.schedule
         ? params.has('expand[0]')
           ? { id: sub.schedule, metadata: { plan: sub.plan }, phases: [{ end_date: unix('2027-02-18T00:00:00Z') }] }
           : sub.schedule
         : null,
     });
-    if (path === 'prices' && method === 'GET')
-      return ok({ data: [{ id: `price_${params.get('lookup_keys[0]')}`, product: `prod_${params.get('lookup_keys[0]')?.split('_')[1]}` }] });
+    if (path === 'invoices/create_preview') return ok({ currency: 'chf', amount_due: invoice.due });
+    if (path === 'prices' && method === 'GET') {
+      const key = params.get('lookup_keys[0]');
+      const plan = fromLookupKey(key);
+      return ok({
+        data: [
+          {
+            id: `price_${key}`,
+            product: `prod_${key?.split('_')[1]}`,
+            ...(plan && plan.cycle !== 'once' ? { currency: 'chf', unit_amount: fee(plan.tier, plan.cycle) * 100 } : {}),
+          },
+        ],
+      });
+    }
+    if (path === 'prices' && params.get('metadata[role]') === 'processing_fee') {
+      const quoteId = params.get('metadata[quoteId]')!;
+      const price = 'price_fee_' + quoteId;
+      feePrices.set(price, quoteId);
+      feeAmounts.set(price, Number(params.get('unit_amount')));
+      return ok({ id: price });
+    }
+    if (path.startsWith('prices/') && method === 'GET') {
+      const id = path.slice(7);
+      return ok({ currency: 'chf', unit_amount: feeAmounts.get(id), metadata: { quoteId: feePrices.get(id), role: 'processing_fee', source: 'zurichjs.com/partners' } });
+    }
     if (path === 'prices') return ok({ id: 'price_custom_1' });
     if (path === 'customers') return ok({ id: 'cus_acme' });
     if (path.startsWith('customers/')) return ok({ id: path.split('/')[1] });
-    if (path === 'checkout/sessions') return ok({ id: `cs_test_${++sessions}`, url: `https://checkout.stripe.com/c/pay/cs_test_${sessions}` });
+    if (path === 'checkout/sessions') {
+      feePrice = params.get('line_items[1][price]') ?? '';
+      return ok({ id: `cs_test_${++sessions}`, url: `https://checkout.stripe.com/c/pay/cs_test_${sessions}` });
+    }
     if (/^checkout\/sessions\/cs_test_\d+\/expire$/.test(path)) return ok({ status: 'expired' });
-    if (path === 'payment_links') return ok({ id: 'plink_1', url: 'https://buy.stripe.com/test_1' });
+    if (path === 'payment_links') {
+      const key = new Headers(init.headers).get('idempotency-key')!;
+      const n = links.get(key) ?? links.size + 1;
+      links.set(key, n);
+      return ok({ id: `plink_${n}`, url: `https://buy.stripe.com/test_${n}` });
+    }
     if (path.startsWith('payment_links/')) return ok({ id: path.split('/')[1], active: false });
     if (path === 'billing_portal/sessions') return ok({ url: 'https://billing.stripe.com/p/session/1' });
     if (path === 'subscriptions' && method === 'GET') return ok({ data: sub.live.map((id) => ({ id, status: 'active', metadata: { source: 'zurichjs.com/partners' } })) });
@@ -102,17 +180,37 @@ function world() {
     if (path === 'subscription_schedules/sub_sched_1/release') {
       sub.schedule = null;
       sub.plan = null;
-      return ok({ id: 'sub_sched_1' });
+      schedule.status = 'released';
+      return ok({ id: 'sub_sched_1', status: 'released' });
     }
     if (path === 'subscription_schedules/sub_sched_1') {
       if (method === 'POST') sub.plan = params.get('metadata[plan]');
+      if (params.get('metadata[feeQuote]')) {
+        schedule.metadata.feeQuote = params.get('metadata[feeQuote]')!;
+        schedule.status = 'active';
+        schedule.phases[1] = {
+          start_date: schedule.phases[0]!.end_date,
+          end_date: unix('2028-02-18T00:00:00Z'),
+          items: [0, 1].map((i) => ({ price: params.get(`phases[1][items][${i}][price]`)!, quantity: 1 })),
+        };
+      }
+      if (schedule.metadata.feeQuote) return ok({ ...schedule, id: 'sub_sched_1' });
       return ok({ id: 'sub_sched_1', phases: [{ start_date: unix('2026-11-18T00:00:00Z'), end_date: unix('2027-02-18T00:00:00Z') }] });
     }
+    if (path === 'subscription_items') {
+      sub.feeItem = 'si_fee_1';
+      return ok({ id: 'si_fee_1' });
+    }
     if (path.startsWith('subscriptions/')) {
+      if (method === 'POST' && params.get('items[0][deleted]') === 'true' && params.get('items[0][id]') === sub.feeItem) sub.feeItem = null;
       // Stripe refuses cancel_at_period_end while a schedule manages the subscription.
       if (method === 'POST' && params.has('cancel_at_period_end') && sub.schedule)
         return new Response(JSON.stringify({ error: { message: 'The subscription is managed by the subscription schedule `sub_sched_1`.' } }), { status: 400 });
-      if (method === 'POST' && params.get('items[0][price]')) sub.lookupKey = params.get('items[0][price]')!.replace('price_', '');
+      if (method === 'POST' && feePrices.has(params.get('items[0][price]') ?? '')) {
+        feePrice = params.get('items[0][price]')!;
+        sub.feeItem = 'si_fee_1';
+      } else if (method === 'POST' && params.get('items[0][price]')) sub.lookupKey = params.get('items[0][price]')!.replace('price_', '');
+      if (method === 'POST' && params.get('items[1][price]')) feePrice = params.get('items[1][price]')!;
       return ok(subscription(path.split('/')[1]!));
     }
     throw new Error(`unexpected ${method} ${url}`);
@@ -129,7 +227,7 @@ function world() {
   };
   const blobs = new Map<string, ArrayBuffer>();
   const logos: LogoStore = { set: async (k, d) => void blobs.set(k, d), get: async (k) => blobs.get(k) ?? null };
-  return { f, calls, emails, slack, slackPosts, sub, logos, blobs };
+  return { f, calls, emails, slack, slackPosts, sub, logos, blobs, invoice, applyRenewal };
 }
 
 const post = (path: string, body: unknown, headers: Record<string, string> = {}) =>
@@ -180,16 +278,18 @@ function base(over: Partial<NewSponsor> = {}): NewSponsor {
 
 describe('sponsorship flow', () => {
   let store: SponsorStore;
+  let fees: FeeStore;
   let w: ReturnType<typeof world>;
-  const user = (u = grace) => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => u, now: () => NOW });
-  const adminDeps = () => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
+  const user = (u = grace) => ({ env, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => u, now: () => NOW });
+  const adminDeps = (e: Record<string, string> = env) => ({ env: e, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
   // Sponsor events arrive on the site's one webhook, next to memberships and donations.
   const webhook = (req: Request) =>
-    handleStripeWebhook(req, { env, sponsorStore: store, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime() });
+    handleStripeWebhook(req, { env, sponsorStore: store, fees, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime() });
   const me = async (u = grace) => (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), user(u))).json() as Promise<Record<string, any>>;
 
   beforeEach(() => {
     store = memoryStore({ now: () => NOW });
+    fees = memoryFeeStore({ now: () => NOW });
     w = world();
     resetRateLimits();
   });
@@ -388,7 +488,9 @@ describe('sponsorship flow', () => {
     );
     expect(await attached.json()).toMatchObject({ contract: { filename: 'contract.pdf', signedOn: '2026-11-15' } });
 
-    const link = await (await handlePaymentLink(post('/x', {}, { authorization: `Bearer ${ADMIN}` }), sponsor.id, adminDeps())).json();
+    const link = await (
+      await handlePaymentLink(post('/x', { expectTotalMinor: 100000, requestId: crypto.randomUUID() }, { authorization: `Bearer ${ADMIN}` }), sponsor.id, adminDeps())
+    ).json();
     expect(link).toMatchObject({ url: 'https://buy.stripe.com/test_1' });
     const price = w.calls.find((c) => c.method === 'POST' && c.path === 'prices')!;
     expect(price.params.get('unit_amount')).toBe('50000');
@@ -401,7 +503,18 @@ describe('sponsorship flow', () => {
     const hank = { id: 'user-hank', email: 'hank@globex.com' };
     expect(await me(hank)).toMatchObject({ signedCurrent: true, sponsor: { hasContract: true } });
 
-    await webhook(stripeEvent('evt_l', 'checkout.session.completed', { mode: 'payment', payment_status: 'paid', payment_link: 'plink_1', customer: 'cus_globex', metadata: {} }));
+    await webhook(
+      stripeEvent('evt_l', 'checkout.session.completed', {
+        mode: 'payment',
+        payment_status: 'paid',
+        id: 'cs_globex',
+        currency: 'chf',
+        amount_total: 100000,
+        payment_link: 'plink_1',
+        customer: 'cus_globex',
+        metadata: {},
+      }),
+    );
     expect(await store.get(sponsor.id)).toMatchObject({ status: 'active', paidUntil: '2027-01-14', stripeCustomerId: 'cus_globex', paymentLinkId: null });
     expect(w.calls.some((c) => c.path === 'payment_links/plink_1' && c.params.get('active') === 'false')).toBe(true);
     const welcome = w.emails.find((e) => e.subject === 'Welcome, Globex: your ZurichJS sponsorship is active')!;
@@ -411,6 +524,294 @@ describe('sponsorship flow', () => {
     expect((await handleBundle(asAdmin('/x', { eventIds: ['event-jan'] }), sponsor.id, adminDeps())).status).toBe(409);
     const moved = await handleBundle(asAdmin('/x', { eventIds: ['event-jan', 'event-dec'] }), sponsor.id, adminDeps());
     expect(moved.status).toBe(200);
+  });
+
+  it('freezes a quote on every payment link; the sponsor covers the fees only once a tariff and an approved policy exist', async () => {
+    const { sponsor: s } = await store.create(
+      base({ companyName: 'Globex', tier: 'builder', cycle: 'once', pricePerMeetup: 500 }),
+      { email: 'hank@globex.com', name: 'Hank', role: 'primary' },
+      { kind: 'board', id: 'admin' },
+    );
+    await store.setMeetups(
+      s.id,
+      MEETUPS.map((m) => ({ eventId: m.id, title: m.title, date: m.date })),
+      { kind: 'board', id: 'admin' },
+    );
+    await store.addDocument(s.id, { blobKey: 'k', filename: 'c.pdf', bytes: 10, signedOn: null, uploadedBy: 'board' }, { kind: 'board', id: 'admin' });
+    const link = (body: Record<string, unknown>, e: Record<string, string> = env) =>
+      handlePaymentLink(
+        post('/x', { requestId: crypto.randomUUID(), expectTotalMinor: body.feeChoice === 'pass_through' ? 103018 : 100000, ...body }, { authorization: `Bearer ${ADMIN}` }),
+        s.id,
+        adminDeps(e),
+      );
+    const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'surcharge-2026-12' };
+
+    // Default: ZurichJS covers the fees. The quote is still the record of what they pay.
+    const requestId = crypto.randomUUID();
+    const [one, two] = await Promise.all([link({ requestId }), link({ requestId })]);
+    const absorbed = await one.json();
+    expect(await two.json()).toMatchObject({ url: absorbed.url, quote: { id: absorbed.quote.id } });
+    expect(await (await link({ requestId })).json()).toMatchObject({ url: absorbed.url, quote: { id: absorbed.quote.id } });
+    expect(absorbed.quote).toMatchObject({ feeChoice: 'absorb', base: 'CHF 1’000.00', surcharge: null, total: 'CHF 1’000.00', status: 'open' });
+
+    // Pass-through is refused without a tariff, and without the owner's policy version.
+    const closed = await link({ feeChoice: 'pass_through' }, policy);
+    expect(closed.status).toBe(409);
+    expect(((await closed.json()) as { error: string }).error).toMatch(/No card tariff/);
+    const gate = (await (await handleFees(asAdmin('/api/membership/admin/fees'), adminDeps())).json()) as Record<string, any>;
+    expect(gate.gate).toMatchObject({ open: false });
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '12', fixedChf: '0.30' }), adminDeps())).status).toBe(400);
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '2.9', fixedChf: '0.30', note: 'Stripe CH card' }), adminDeps())).status).toBe(
+      200,
+    );
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '3', fixedChf: '0.30' }), adminDeps())).status).toBe(409);
+    expect((await link({ feeChoice: 'pass_through' })).status).toBe(409);
+    expect(((await (await handleFees(asAdmin('/api/membership/admin/fees'), adminDeps(policy))).json()) as Record<string, any>).gate).toMatchObject({
+      open: true,
+      policyVersion: 'surcharge-2026-12',
+      tariff: { version: 't-1', rateLabel: '2.9%', fixedLabel: 'CHF 0.30' },
+    });
+
+    w.calls.length = 0;
+    const passed = (await (await link({ feeChoice: 'pass_through' }, policy)).json()) as Record<string, any>;
+    // (100'000 + 30) / 0.971 = 103'017.5… → 103'018
+    expect(passed.quote).toMatchObject({
+      feeChoice: 'pass_through',
+      base: 'CHF 1’000.00',
+      surcharge: 'CHF 30.18',
+      total: 'CHF 1’030.18',
+      tariffVersion: 't-1',
+      policyVersion: 'surcharge-2026-12',
+    });
+    const surcharge = w.calls.find((c) => c.path === 'prices' && c.params.get('product_data[name]'))!;
+    expect(surcharge.params.get('unit_amount')).toBe('3018');
+    expect(surcharge.params.get('product_data[name]')).toBe('Payment processing fee');
+    const created = w.calls.find((c) => c.path === 'payment_links')!;
+    expect(created.params.get('line_items[1][quantity]')).toBe('1');
+    expect(created.params.get('metadata[quoteId]')).toBe(passed.quote.id);
+    // The earlier link was switched off and its quote superseded.
+    expect(w.calls.some((c) => c.path === 'payment_links/plink_1' && c.params.get('active') === 'false')).toBe(true);
+    expect((await fees.quotes(s.id)).map((q) => q.status)).toEqual(['open', 'superseded']);
+
+    // The sponsor sees the offer before paying, and pays it only through its link.
+    const hank = { id: 'user-hank', email: 'hank@globex.com' };
+    expect((await me(hank)).offer).toMatchObject({
+      payUrl: 'https://buy.stripe.com/test_2',
+      quote: { surcharge: 'CHF 30.18', total: 'CHF 1’030.18', feeChoiceLabel: 'Sponsor covers the fees' },
+    });
+    const own = await handleStart(post('/api/sponsorship/start', { confirm: true }), user(hank));
+    expect(own.status).toBe(409);
+    expect(((await own.json()) as { error: string }).error).toMatch(/payment link/);
+
+    // A different total leaves the offer open and the sponsor pending until the board decides.
+    await webhook(
+      stripeEvent('evt_q1', 'checkout.session.completed', {
+        id: 'cs_q1',
+        mode: 'payment',
+        payment_status: 'paid',
+        payment_link: 'plink_2',
+        currency: 'chf',
+        amount_total: 100_000,
+        metadata: { quoteId: passed.quote.id },
+      }),
+    );
+    expect(await fees.quote(passed.quote.id)).toMatchObject({ status: 'open', stripeRef: null });
+    expect(w.slackPosts.join('\n')).toContain('needs a decision');
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
+    // A duplicate delivery changes nothing.
+    await webhook(
+      stripeEvent('evt_q1', 'checkout.session.completed', {
+        id: 'cs_q1',
+        mode: 'payment',
+        payment_status: 'paid',
+        payment_link: 'plink_2',
+        currency: 'chf',
+        amount_total: 100_000,
+        metadata: { quoteId: passed.quote.id },
+      }),
+    );
+    expect(w.slackPosts.filter((p) => p.includes('needs a decision')).length).toBe(1);
+    // The old, superseded quote paid through a stale page is recorded too, and flagged.
+    const stale = (await fees.quotes(s.id)).find((q) => q.status === 'superseded')!;
+    await webhook(
+      stripeEvent('evt_q2', 'checkout.session.completed', {
+        id: 'cs_q2',
+        mode: 'payment',
+        payment_status: 'paid',
+        amount_total: 100_000,
+        currency: 'chf',
+        payment_link: 'plink_1',
+        metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: stale.id },
+      }),
+    );
+    await webhook(
+      stripeEvent('evt_receipt', 'invoice.paid', { id: 'in_receipt', amount_paid: 100000, metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: stale.id } }),
+    );
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
+    expect(await fees.quote(stale.id)).toMatchObject({ status: 'superseded' });
+    expect(await fees.payment('cs_q2')).toMatchObject({ outcome: 'review' });
+    const board = await handleSponsorPayments(asAdmin('/x', { action: 'dismiss', sessionId: 'cs_q2', note: 'Settled separately in the fixture' }), s.id, adminDeps());
+    expect(await board.json()).toMatchObject({ payments: expect.arrayContaining([expect.objectContaining({ sessionId: 'cs_q2', resolution: 'dismissed' })]) });
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
+    expect((await handleSponsorPayments(asAdmin('/x', { action: 'accept', sessionId: 'cs_q1' }), s.id, adminDeps())).status).toBe(200);
+    expect(await store.get(s.id)).toMatchObject({ status: 'active' });
+  });
+
+  it('passes recurring fees on only with the gate open, the sponsor’s tick, and their confirmation; renewals carry the line', async () => {
+    const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'surcharge-2026-12' };
+    await fees.addTariff({ version: 't-1', method: 'card', currency: 'chf', ratePpm: 29_000, fixedMinor: 30, note: null, enteredBy: 'board' });
+    const { sponsor: s } = await store.create(base({ tier: 'friend', cycle: 'quarterly' }), { email: grace.email, name: 'Grace', role: 'primary' }, { kind: 'board', id: 'admin' });
+    const feesRoute = (body?: unknown, e: Record<string, string> = policy) =>
+      handleSponsorFees(body === undefined ? asAdmin(`/x`) : asAdmin('/x', body), s.id, adminDeps(e)).then(async (r) => ({
+        status: r.status,
+        body: (await r.json()) as Record<string, any>,
+      }));
+
+    // Gate closed without the owner's policy; with it, a pending offer for the current plan.
+    expect((await feesRoute({ feeChoice: 'pass_through' }, env)).status).toBe(409);
+    const offered = await feesRoute({ feeChoice: 'pass_through' });
+    // (84'000 + 30) / 0.971 = 86'539.6… → 86'540: CHF 25.40 a quarter on CHF 840.
+    expect(offered.body.open).toMatchObject({ interval: 'quarter', per: 'a quarter', base: 'CHF 840.00', surcharge: 'CHF 25.40', total: 'CHF 865.40' });
+    expect((await me()).offer).toMatchObject({ payUrl: null, quote: { per: 'a quarter', total: 'CHF 865.40' } });
+
+    // Starting needs the tick, and the offered plan.
+    const start = (body: Record<string, unknown>) => handleStart(post('/api/sponsorship/start', { ...full, companyName: 'Acme', ...body }), user());
+    const untick = await start({ tier: 'friend', cycle: 'quarterly' });
+    expect(untick.status).toBe(400);
+    expect(((await untick.json()) as { field: string }).field).toBe('acceptFee');
+    expect((await start({ tier: 'builder', cycle: 'quarterly', acceptFee: true })).status).toBe(409);
+    expect(await store.get(s.id)).toMatchObject({ tier: 'friend' });
+    w.calls.length = 0;
+    expect((await start({ tier: 'friend', cycle: 'quarterly', acceptFee: true, quoteId: 'superseded' })).status).toBe(409);
+    expect((await start({ tier: 'friend', cycle: 'quarterly', acceptFee: true, quoteId: offered.body.open.id })).status).toBe(200);
+    const checkout = w.calls.find((c) => c.path === 'checkout/sessions')!;
+    expect(checkout.params.get('line_items[1][price]')).toBe('price_fee_' + offered.body.open.id);
+    const feePriceRequest = w.calls.find((c) => c.path === 'prices' && c.params.get('metadata[role]') === 'processing_fee')!;
+    expect(feePriceRequest.params.get('unit_amount')).toBe('2540');
+    expect(feePriceRequest.params.get('recurring[interval_count]')).toBe('3');
+    expect(feePriceRequest.params.get('product_data[name]')).toBe('Payment processing fee');
+    const contact = (await store.contactByEmail(grace.email))!;
+    expect(checkout.params.get('metadata[quoteId]')).toBe(offered.body.open.id);
+    expect(checkout.params.get('metadata[acceptedBy]')).toBe(contact.id);
+
+    // Paid: the quote is in force, and a renewal with two lines still reads the plan and the term.
+    w.sub.feeItem = 'si_fee_checkout';
+    await webhook(
+      stripeEvent('evt_f1', 'checkout.session.completed', {
+        id: (await store.get(s.id))!.checkoutSessionId,
+        mode: 'subscription',
+        subscription: 'sub_acme',
+        customer: 'cus_acme',
+        metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: offered.body.open.id, acceptedBy: contact.id },
+      }),
+    );
+    expect(await fees.acceptedQuote(s.id)).toMatchObject({ id: offered.body.open.id, status: 'accepted', acceptedBy: contact.id, stripeRef: 'si_fee_checkout' });
+    const twoLines = { ...paidInvoice('in_f1', s.id, '2026-11-18T00:00:00Z', '2027-02-18T00:00:00Z'), amount_paid: 86_540 };
+    twoLines.lines.data.push({ period: { start: unix('2026-11-18T00:00:00Z'), end: unix('2027-02-18T00:00:00Z') }, price: { lookup_key: null } } as never);
+    await webhook(stripeEvent('evt_f2', 'invoice.paid', twoLines));
+    expect(await store.get(s.id)).toMatchObject({ status: 'active', tier: 'friend', paidUntil: '2027-02-18' });
+    expect((await me()).fees).toMatchObject({ inForce: { surcharge: 'CHF 25.40', per: 'a quarter' }, toConfirm: null });
+
+    // A plan change while a fee is in force waits for the board.
+    const plan = await handlePlan(post('/api/sponsorship/plan', { tier: 'builder', cycle: 'quarterly', ...tick }), user());
+    expect(plan.status).toBe(409);
+    expect(((await plan.json()) as { error: string }).error).toMatch(/processing fee/);
+
+    // ZurichJS covers the fees again: the line goes from the next renewal, at once.
+    const absorbed = await feesRoute({ feeChoice: 'absorb' });
+    expect(absorbed.body.inForce).toMatchObject({ feeChoice: 'pass_through' });
+    expect(w.sub.feeItem).toBe('si_fee_checkout');
+    expect((await handleConfirmFee(post('/api/sponsorship/fees', { quoteId: absorbed.body.open.id, confirm: true }), user())).status).toBe(200);
+    expect((await fees.acceptedQuote(s.id))?.feeChoice).toBe('absorb');
+    expect(w.sub.feeItem).toBeNull();
+    expect(w.calls.some((c) => c.path === 'subscriptions/sub_acme' && c.params.get('proration_behavior') === 'none')).toBe(true);
+
+    // Back to the sponsor covering them: it waits for the sponsor's confirmation.
+    const again = await feesRoute({ feeChoice: 'pass_through' });
+    expect(again.body).toMatchObject({ open: { surcharge: 'CHF 25.40' }, url: 'https://zurichjs.com/partners/account?change=fees' });
+    expect(w.sub.feeItem).toBeNull();
+    expect((await me()).fees.toConfirm).toMatchObject({ id: again.body.open.id });
+    const confirm = (body: unknown) => handleConfirmFee(post('/api/sponsorship/fees', body), user());
+    expect((await confirm({ quoteId: again.body.open.id })).status).toBe(400);
+    expect((await confirm({ quoteId: 'nope', confirm: true })).status).toBe(404);
+    const confirmed = (await (await confirm({ quoteId: again.body.open.id, confirm: true })).json()) as Record<string, any>;
+    expect(confirmed.inForce).toMatchObject({ feeChoice: 'pass_through', acceptedAt: expect.any(String) });
+    expect(w.sub.feeItem).toBe('si_fee_1');
+    const item = w.calls.find((c) => c.path === 'subscriptions/sub_acme' && c.params.get('items[0][price]'))!;
+    expect(item.params.get('proration_behavior')).toBe('none');
+    expect((await fees.quotes(s.id)).map((q) => q.status)).toEqual(['accepted', 'superseded', 'superseded']);
+    expect((await confirm({ quoteId: again.body.open.id, confirm: true })).status).toBe(200);
+  });
+
+  it.each(['upgrade', 'renewal', 'cancel'] as const)('requires a frozen plan quote and reconciles the %s', async (operation) => {
+    const fixture = w.f;
+    const stripe = await startMockStripe(0, fixture);
+    onTestFinished(() => stripe.close());
+    w.f = (input, init) => {
+      const url = new URL(String(input));
+      return url.hostname === 'api.stripe.com' ? fetch(stripe.url + url.pathname + url.search, init) : fixture(input, init);
+    };
+    const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'test-surcharge', SPONSOR_FEE_PRORATION_MODE: 'stripe_items', SPONSOR_FEE_PRORATION_POLICY_VERSION: 'test-proration' };
+    const actor = { kind: 'board', id: 'admin' } as const;
+    const { sponsor: s } = await store.create(base({ status: 'active' }), { name: 'Grace', email: grace.email, role: 'primary' }, actor);
+    await store.linkStripe(s.id, { subscriptionId: 'sub_acme' }, actor);
+    await fees.addTariff({ version: 't', method: 'card', currency: 'chf', ratePpm: 29000, fixedMinor: 30, note: null, enteredBy: 'board' });
+    const first = await handleSponsorFees(asAdmin('/x', { feeChoice: 'pass_through' }), s.id, adminDeps(policy));
+    const prior = (await first.json()).open.id;
+    expect((await handleConfirmFee(post('/x', { quoteId: prior, confirm: true }), user())).status).toBe(200);
+    const target = { tier: 'builder', cycle: operation === 'upgrade' ? 'quarterly' : 'yearly' };
+    const suggest = (e: Record<string, string>) => handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, adminDeps(e));
+    if (operation === 'upgrade') {
+      expect((await suggest({ ...env, SPONSOR_FEE_POLICY_VERSION: 'test-surcharge' })).status).toBe(503);
+      expect(await fees.openQuote(s.id, 'sponsorship', null)).toBeNull();
+    }
+    expect((await suggest(policy)).status).toBe(200);
+    const offer = (await me()).fees.toConfirm;
+    expect(offer.plan).toMatchObject({ ...target, timing: operation === 'upgrade' ? 'now' : 'renewal', dueNow: operation === 'upgrade' ? 'CHF 123.45' : 'CHF 0.00' });
+    const confirm = (id: string) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), env: policy });
+    expect((await confirm(prior)).status).toBe(409);
+    expect((await handleConfirmFee(post('/x', { quoteId: offer.id, confirm: true }), user())).status).toBe(409);
+    if (operation === 'upgrade') {
+      w.invoice.due++;
+      expect((await confirm(offer.id)).status).toBe(503);
+      expect((await fees.quote(offer.id))?.applyingBy).toBeFalsy();
+      w.invoice.due--;
+    }
+    expect((await confirm(offer.id)).status).toBe(200);
+    expect((await confirm(offer.id)).status).toBe(200);
+    expect(stripe.requests.some((r) => r.idempotencyKey?.includes(offer.id))).toBe(true);
+    if (operation === 'upgrade') {
+      expect(w.calls.filter((c) => c.params.get('proration_behavior') === 'always_invoice')).toHaveLength(1);
+      expect((await fees.acceptedQuote(s.id))?.id).toBe(offer.id);
+    } else {
+      expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+      expect(w.calls.filter((c) => c.params.has('metadata[feeQuote]'))).toHaveLength(1);
+      if (operation === 'cancel') {
+        expect((await handlePlan(post('/x', { tier: s.tier, cycle: s.cycle }), user())).status).toBe(409);
+        const pending = (await me()).pendingChange;
+        const retry = () => handlePlan(post('/x', { tier: s.tier, cycle: s.cycle, replaces: `${pending.tier}-${pending.cycle}@${pending.from}` }), user());
+        vi.spyOn(fees, 'retirePlanSchedule').mockRejectedValueOnce(new Error('fixture: local commit interrupted'));
+        expect((await retry()).status).toBe(502);
+        expect((await retry()).status).toBe(200);
+        expect((await fees.quote(offer.id))?.status).toBe('void');
+        expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+      } else {
+        w.applyRenewal();
+        expect(
+          (
+            await webhook(
+              stripeEvent('evt-renew', 'customer.subscription.updated', {
+                id: 'sub_acme',
+                metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, feePlanQuote: offer.id },
+                items: { data: [{ price: { lookup_key: 'sponsor_builder_yearly' } }] },
+              }),
+            )
+          ).status,
+        ).toBe(200);
+        expect((await fees.acceptedQuote(s.id))?.id).toBe(offer.id);
+        expect(await store.get(s.id)).toMatchObject(target);
+      }
+    }
   });
 
   it('starts a self-serve one-meetup sponsorship by card, and refuses past meetups and unknown ones', async () => {
@@ -424,7 +825,16 @@ describe('sponsorship flow', () => {
 
     // Checkout and the receipt arrive at once: one welcome.
     await Promise.all([
-      webhook(stripeEvent('evt_c', 'checkout.session.completed', { mode: 'payment', payment_status: 'paid', metadata: { source: 'zurichjs.com/partners', sponsorId: s.id } })),
+      webhook(
+        stripeEvent('evt_c', 'checkout.session.completed', {
+          id: 'cs_self',
+          currency: 'chf',
+          amount_total: 100000,
+          mode: 'payment',
+          payment_status: 'paid',
+          metadata: { source: 'zurichjs.com/partners', sponsorId: s.id },
+        }),
+      ),
       webhook(stripeEvent('evt_i', 'invoice.paid', { id: 'in_c', amount_paid: 100000, metadata: { source: 'zurichjs.com/partners', sponsorId: s.id } })),
     ]);
     expect(await store.get(s.id)).toMatchObject({ status: 'active', paidUntil: '2026-12-10' });

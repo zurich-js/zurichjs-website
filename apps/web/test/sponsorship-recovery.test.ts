@@ -3,7 +3,7 @@
  * whether the same request again finishes the job. Real handlers on the in-memory store, Stripe
  * and Resend faked with state and injected failures (sponsor-faults.ts).
  */
-import { AGREEMENT, memoryPartners, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { AGREEMENT, memoryFeeStore, memoryPartners, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAddSponsor } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleUpdateSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
@@ -28,7 +28,10 @@ describe('sponsorship board actions that fail half-way', () => {
   let w: ReturnType<typeof world>;
   let fs: ReturnType<typeof faulty>;
   let store: SponsorStore;
-  const deps = () => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
+  let fees: ReturnType<typeof memoryFeeStore>;
+  const deps = () => ({ env, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
+
+  const linkRequest = () => asAdmin('/x', { feeChoice: 'absorb', expectTotalMinor: 100000, requestId: crypto.randomUUID() });
 
   async function runningCard() {
     const { sponsor } = await store.create(newSponsor({ status: 'active', startedAt: '2026-11-18', paidUntil: '2027-02-18' }), contact, BOARD);
@@ -46,6 +49,7 @@ describe('sponsorship board actions that fail half-way', () => {
   }
 
   beforeEach(() => {
+    fees = memoryFeeStore();
     w = world();
     fs = faulty(memoryStore({ now: () => NOW }));
     store = fs.store;
@@ -156,7 +160,7 @@ describe('sponsorship board actions that fail half-way', () => {
 
   it('withdrawing: a payment link Stripe failed to switch off stays known and is switched off on retry', async () => {
     const id = await pendingBundle();
-    await handlePaymentLink(asAdmin('/x', {}), id, deps());
+    await handlePaymentLink(linkRequest(), id, deps());
     const link = (await store.get(id))!.paymentLinkId!;
     w.failNext('POST', /^payment_links\/plink_/);
     expect((await handleBoardEnd(asAdmin('/x', { reason: 'withdrawn' }), id, deps())).status).toBe(502);
@@ -168,19 +172,19 @@ describe('sponsorship board actions that fail half-way', () => {
 
   it('a new payment link is refused while the old one cannot be switched off: never two payable links', async () => {
     const id = await pendingBundle();
-    await handlePaymentLink(asAdmin('/x', {}), id, deps());
+    await handlePaymentLink(linkRequest(), id, deps());
     w.failNext('POST', /^payment_links\/plink_/);
-    expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+    expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
     expect(w.activeLinks.size).toBe(1);
-    expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(200);
+    expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(200);
     expect(w.activeLinks.size).toBe(1);
     expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
   });
 
-  it('two payment link requests at once keep one link; the other is switched off', async () => {
+  it('concurrent requests for identical figures return the same payable link', async () => {
     const id = await pendingBundle();
-    const results = await Promise.all([handlePaymentLink(asAdmin('/x', {}), id, deps()), handlePaymentLink(asAdmin('/x', {}), id, deps())]);
-    expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    const results = await Promise.all([handlePaymentLink(linkRequest(), id, deps()), handlePaymentLink(linkRequest(), id, deps())]);
+    expect(results.map((r) => r.status).sort()).toEqual([200, 200]);
     expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
   });
 
@@ -191,10 +195,10 @@ describe('sponsorship board actions that fail half-way', () => {
     it("Stripe's answer lost: the retry asks again with the same key, gets the same link and switches it off", async () => {
       const id = await pendingBundle();
       w.loseNext('POST', /^payment_links$/);
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       expect(w.activeLinks.size).toBe(1);
       expect(await attempts(id)).toMatchObject([{ state: 'open', linkId: null }]);
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(200);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(200);
       expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
       expect(await attempts(id)).toEqual([]);
     });
@@ -202,7 +206,7 @@ describe('sponsorship board actions that fail half-way', () => {
     it('saving the link failed: the daily check switches it off, also for a sponsorship nobody retried', async () => {
       const id = await pendingBundle();
       fs.failNext('linkStripeIf');
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       expect(w.activeLinks.size).toBe(1);
       expect(await daily()).toMatchObject({ linksClosed: 1 });
       expect(w.activeLinks.size).toBe(0);
@@ -212,7 +216,7 @@ describe('sponsorship board actions that fail half-way', () => {
     it('makes zero provider calls with an expired budget and recovers the outstanding link on the next run', async () => {
       const id = await pendingBundle();
       fs.failNext('linkStripeIf');
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       const before = w.calls.length;
       const lifecycle = lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW });
       const result = await dailyCheck({ ...lifecycle, deadline: { remaining: () => 0 } });
@@ -226,7 +230,7 @@ describe('sponsorship board actions that fail half-way', () => {
     it('delivers notices before recovering payment links and leaves the link open when delivery uses the remaining time', async () => {
       const id = await pendingBundle();
       fs.failNext('linkStripeIf');
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       await store.queueNotices(id, [{ key: 'board-reminder', body: { kind: 'slack', text: 'Board reminder' } }]);
       const deadline = { remaining: () => (w.slackPosts.includes('Board reminder') ? 0 : 25_000) };
       const lifecycle = lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW });
@@ -236,13 +240,13 @@ describe('sponsorship board actions that fail half-way', () => {
       expect(w.activeLinks.size).toBe(0);
     });
 
-    it('the losing request of two could not switch its link off: the daily check does, and keeps the saved one', async () => {
+    it('identical concurrent offers leave no extra payable link for the daily check even during a close outage', async () => {
       const id = await pendingBundle();
       w.failNext('POST', /^payment_links\/plink_/);
-      const replies = await Promise.all([1, 2].map(() => handlePaymentLink(asAdmin('/x', {}), id, deps())));
-      expect(replies.map((r) => r.status).sort()).toEqual([200, 502]);
-      expect(w.activeLinks.size).toBe(2);
-      expect(await daily()).toMatchObject({ linksClosed: 1 });
+      const replies = await Promise.all([1, 2].map(() => handlePaymentLink(linkRequest(), id, deps())));
+      expect(replies.map((r) => r.status).sort()).toEqual([200, 200]);
+      expect(w.activeLinks.size).toBe(1);
+      expect(await daily()).toMatchObject({ linksClosed: 0 });
       expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
     });
 
@@ -251,14 +255,14 @@ describe('sponsorship board actions that fail half-way', () => {
       store = memoryStore({ now: () => new Date(clock) });
       const id = await pendingBundle();
       w.loseNext('POST', /^payment_links$/);
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       const [original] = w.activeLinks;
       const [attempt] = await attempts(id);
       expect(w.calls.find((c) => c.path === 'payment_links')?.params.get('metadata[attemptId]')).toBe(attempt!.key);
       clock += 25 * 3_600_000;
       const late = { ...deps(), now: clock };
       const retry = (events: object[]) =>
-        handlePaymentLink(asAdmin('/x', {}), id, {
+        handlePaymentLink(linkRequest(), id, {
           ...late,
           fetch: async (url, init) => (new URL(String(url)).pathname === '/v1/events' ? Response.json({ data: events, has_more: false }) : w.f(url, init)),
         });
@@ -273,7 +277,7 @@ describe('sponsorship board actions that fail half-way', () => {
     it('an ambiguous recovery rejection keeps the attempt pending', async () => {
       const id = await pendingBundle();
       w.failNext('POST', /^payment_links$/, 2, 400);
-      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(502);
       expect(await daily()).toMatchObject({ linksClosed: 0 });
       expect(await attempts(id)).toHaveLength(1);
       expect(w.activeLinks.size).toBe(0);
@@ -282,7 +286,7 @@ describe('sponsorship board actions that fail half-way', () => {
 
   it('a payment link is refused for a bundle with a meetup that is over', async () => {
     const id = await pendingBundle([{ id: 'event-nov', title: 'ZurichJS Meetup November', date: '2026-11-11' }, MEETUPS[0]!]);
-    expect(await answer(await handlePaymentLink(asAdmin('/x', {}), id, deps()))).toMatchObject({ status: 409, body: { error: expect.stringContaining('already over') } });
+    expect(await answer(await handlePaymentLink(linkRequest(), id, deps()))).toMatchObject({ status: 409, body: { error: expect.stringContaining('already over') } });
     expect(w.activeLinks.size).toBe(0);
   });
 
@@ -298,7 +302,7 @@ describe('sponsorship board actions that fail half-way', () => {
     expect(w.openSessions.has('cs_old')).toBe(false);
 
     const bundle = await pendingBundle();
-    await handlePaymentLink(asAdmin('/x', {}), bundle, deps());
+    await handlePaymentLink(linkRequest(), bundle, deps());
     w.failNext('POST', /^payment_links\/plink_/);
     expect((await handleBundle(asAdmin('/x', { eventIds: ['event-dec'], pricePerMeetup: 400 }), bundle, deps())).status).toBe(502);
     expect(await store.get(bundle)).toMatchObject({ pricePerMeetup: 500 });
@@ -351,7 +355,7 @@ describe('sponsorship board actions that fail half-way', () => {
     store.update = async (...args) => {
       if (!interleaved && args[1].paymentMode === 'manual') {
         interleaved = true;
-        expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(200);
+        expect((await handlePaymentLink(linkRequest(), id, deps())).status).toBe(200);
         if (failClosure) w.failNext('POST', /^payment_links\/plink_/);
       }
       return original(...args);
@@ -366,6 +370,7 @@ describe('sponsorship board actions that fail half-way', () => {
       expect((await handleRecordPayment(asAdmin('/x', body), id, deps())).status).toBe(200);
     } else expect(response.status).toBe(200);
     expect(w.activeLinks.size).toBe(0);
+    expect(await fees.openQuote(id, 'sponsorship', null)).toBeNull();
     expect(await store.get(id)).toMatchObject({ status: 'active', paymentLinkId: null });
     expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
   });
@@ -386,7 +391,7 @@ describe('sponsorship board actions that fail half-way', () => {
       if (new URL(url).pathname === '/v1/payment_links') await store.transition(id, { from: 'pending', to: 'active', actor: BOARD });
       return f(url, init);
     }) as typeof fetch;
-    expect((await handlePaymentLink(asAdmin('/x', {}), id, { ...deps(), fetch: transferMeanwhile })).status).toBe(409);
+    expect((await handlePaymentLink(linkRequest(), id, { ...deps(), fetch: transferMeanwhile })).status).toBe(409);
     expect(w.activeLinks.size).toBe(0);
     expect(await store.get(id)).toMatchObject({ paymentLinkId: null });
   });
@@ -435,7 +440,7 @@ describe('sponsorship board actions that fail half-way', () => {
 
   it('the daily check closes what an ended sponsorship still has open in Stripe, and keeps going after a Stripe failure', async () => {
     const a = await pendingBundle();
-    await handlePaymentLink(asAdmin('/x', {}), a, deps());
+    await handlePaymentLink(linkRequest(), a, deps());
     w.failNext('POST', /^payment_links\/plink_/);
     await handleBoardEnd(asAdmin('/x', { reason: 'withdrawn' }), a, deps());
     const lifecycle = lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW });

@@ -41,6 +41,30 @@ const talk = {
   profileUrl: 'https://zurichjs.com/speakers/profile?token=t2',
 };
 
+/** Raffle emails (raffles.ts): what an entrant gets. */
+const raffle = {
+  name: 'Kim',
+  prize: 'Mechanical keyboard',
+  meetup: 'ZurichJS Meetup December, 9th December 2026',
+  sponsorName: 'Acme AG',
+  claimCode: 'K7Q3MX',
+  manageUrl: 'https://zurichjs.com/raffle/manage#t=abc',
+  rulesUrl: 'https://zurichjs.com/raffle-rules',
+};
+
+describe('raffle emails', () => {
+  it('give the claim code and the entry link, and never make entry depend on anything else', () => {
+    const entry = renderEmail('raffle-entry', raffle);
+    expect(entry.subject).toBe('You are in the raffle for Mechanical keyboard');
+    expect(entry.text).toContain('K7Q3MX');
+    expect(entry.text).toContain('https://zurichjs.com/raffle/manage#t=abc');
+    expect(entry.text).toContain('Your entry counts either way.');
+    expect(entry.text).not.toMatch(/newsletter|marketing|share/i);
+    const won = renderEmail('raffle-winner', raffle);
+    expect(won.subject).toBe('Your claim code K7Q3MX was drawn');
+  });
+});
+
 describe('login-link', () => {
   const e = renderEmail('login-link', { url: link, validMinutes: 60, firstTime: false });
 
@@ -116,6 +140,7 @@ describe('membership emails', () => {
         paidThrough: '30th September 2027',
         firstPayment: '1st October 2027',
         ...talk,
+        ...raffle,
       } as never);
       expect(e.text).not.toMatch(/declaration|approv/i);
     }
@@ -205,6 +230,7 @@ describe('layout', () => {
         paidThrough: '30th September 2027',
         firstPayment: '1st October 2027',
         ...talk,
+        ...raffle,
         ...sponsor,
         newPlan: null,
         message: null,

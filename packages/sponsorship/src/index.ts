@@ -5,3 +5,5 @@ export * from './store.ts';
 export * from './postgres.ts';
 export * from './agreement.ts';
 export * from './partners.ts';
+export * from './fees.ts';
+export * from './fee-store.ts';

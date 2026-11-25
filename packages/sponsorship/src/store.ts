@@ -3,6 +3,7 @@ import type {
   Actor,
   Agreement,
   Contact,
+  CoverageRow,
   EndedReason,
   LinkAttempt,
   Logo,
@@ -99,14 +100,23 @@ export interface SponsorStore {
   linkStripeIf(id: string, expect: StripeExpect, links: StripeLinks, actor: Actor): Promise<Sponsor | null>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
 
-  /** The meetups of a one-time sponsorship, by date. */
+  /** The meetups the sponsorship covers now, by date (rows taken off are left out). */
   meetups(sponsorId: string): Promise<SponsorMeetup[]>;
-  /** Meetups, contract on file and newest logo for each id (every id gets an entry). Postgres: at most three queries. */
-  summaries(sponsorIds: string[]): Promise<Map<string, SponsorSummary>>;
-  /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
   pendingMeetupRebuilds(): Promise<string[]>;
   acknowledgeMeetupRebuilds(versions: string[]): Promise<void>;
+  /** Meetups, contract on file and newest logo for each id (every id gets an entry). Postgres: at most three queries. */
+  summaries(sponsorIds: string[]): Promise<Map<string, SponsorSummary>>;
+  /**
+   * Makes the covered meetups exactly `meetups` (the board moves or bundles them; a sponsor picks
+   * one). Meetups not in the list are taken off, not deleted.
+   */
   setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
+  /** Every coverage row, taken-off ones included, by date. */
+  coverage(sponsorId: string): Promise<CoverageRow[]>;
+  /** Confirms one covered meetup (again, if it had been taken off). Returns the rows covered now. */
+  cover(sponsorId: string, meetup: SponsorMeetup, actor: Actor): Promise<SponsorMeetup[]>;
+  /** Takes one meetup off; its row stays, with when and by whom. Returns the rows covered now. */
+  uncover(sponsorId: string, eventId: string, actor: Actor): Promise<SponsorMeetup[]>;
 
   contacts(sponsorId: string): Promise<Contact[]>;
   contactByUser(userId: string): Promise<Contact | null>;
@@ -277,6 +287,8 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
   };
 }
 
+const plain = ({ eventId, title, date }: SponsorMeetup): SponsorMeetup => ({ eventId, title, date });
+
 const STRIPE_FIELD = {
   customerId: 'stripeCustomerId',
   subscriptionId: 'stripeSubscriptionId',
@@ -293,7 +305,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
   let n = 0;
   const id = (p: string) => `${p}_${++n}`;
   const sponsors = new Map<string, Sponsor>();
-  const meetups = new Map<string, SponsorMeetup[]>();
+  const coverage = new Map<string, Map<string, CoverageRow>>();
   const contacts = new Map<string, Contact>();
   const agreements: Agreement[] = [];
   const logos = new Map<string, Logo>();
@@ -330,6 +342,27 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     sponsors.set(s.id, saved);
     return { ...saved };
   };
+  const emailTaken = (email: string) => [...contacts.values()].some((c) => c.email === email);
+  const findBy = async (pred: (s: Sponsor) => boolean) => {
+    const s = [...sponsors.values()].find(pred);
+    return s ? { ...s } : null;
+  };
+  const rowsOf = (sid: string) => {
+    if (!coverage.has(sid)) coverage.set(sid, new Map());
+    return coverage.get(sid)!;
+  };
+  const covered = (sid: string) =>
+    [...rowsOf(sid).values()]
+      .filter((r) => !r.removedAt)
+      .map(plain)
+      .sort(byDate);
+  /** Adds or refreshes a row; a row taken off is confirmed again by this actor. */
+  const put = (rows: Map<string, CoverageRow>, m: SponsorMeetup, actor: Actor) => {
+    const r = rows.get(m.eventId);
+    const fresh = !r || r.removedAt;
+    rows.set(m.eventId, { ...m, confirmedAt: fresh ? now() : r.confirmedAt, confirmedBy: fresh ? actor.kind : r.confirmedBy, removedAt: null, removedBy: null });
+  };
+
   const linkStripe = (s: Sponsor, links: StripeLinks, actor: Actor) => {
     record(s.id, 'stripe_linked', actor, { payload: { ...links } });
     const set = Object.fromEntries(
@@ -339,12 +372,6 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     );
     return save({ ...s, ...set });
   };
-  const emailTaken = (email: string) => [...contacts.values()].some((c) => c.email === email);
-  const findBy = async (pred: (s: Sponsor) => boolean) => {
-    const s = [...sponsors.values()].find(pred);
-    return s ? { ...s } : null;
-  };
-
   return {
     all: () => [...sponsors.values()].map((s) => ({ ...s })),
     get: async (sid) => (sponsors.has(sid) ? { ...sponsors.get(sid)! } : null),
@@ -395,8 +422,8 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       if (movable) record(held!.sponsorId, 'contact_removed', actor, { payload: { contactId: held!.id, movedTo: s.id } });
       const list = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
       if (list.length) {
+        for (const meetup of list) put(rowsOf(s.id), meetup, actor);
         if (s.cycle === 'once' && isRunning(s.status)) s.meetupRebuildId = crypto.randomUUID();
-        meetups.set(s.id, list);
         record(s.id, 'meetups_set', actor, { payload: { events: list.map((m) => m.eventId) } });
       }
       return { sponsor: { ...s }, contact: { ...contact } };
@@ -429,12 +456,12 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       queue(sid, input.notices);
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
     },
-    meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
     pendingMeetupRebuilds: async () => [...sponsors.values()].flatMap((s) => (s.meetupRebuildId ? [s.meetupRebuildId] : [])),
     async acknowledgeMeetupRebuilds(versions) {
       const pending = new Set(versions);
       for (const s of sponsors.values()) if (s.meetupRebuildId && pending.has(s.meetupRebuildId)) s.meetupRebuildId = null;
     },
+    meetups: async (sid) => covered(sid),
     summaries: async (ids) =>
       new Map(
         ids.map((sid) => {
@@ -442,7 +469,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
           return [
             sid,
             {
-              meetups: [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+              meetups: covered(sid),
               hasContract: [...documents.values()].some((d) => d.sponsorId === sid),
               latestLogo: latestLogo ? { ...latestLogo } : null,
             },
@@ -451,12 +478,30 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       ),
     async setMeetups(sid, list, actor) {
       const s = must(sid);
-      const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
-      const old = new Set((meetups.get(sid) ?? []).map((m) => m.eventId));
+      const old = new Set(covered(sid).map((m) => m.eventId));
+      const unique = [...new Map(list.map((m) => [m.eventId, plain(m)])).values()];
       if (s.cycle === 'once' && isRunning(s.status) && (unique.length !== old.size || unique.some((m) => !old.has(m.eventId)))) s.meetupRebuildId = crypto.randomUUID();
-      meetups.set(sid, unique);
-      record(sid, 'meetups_set', actor, { payload: { events: unique.map((m) => m.eventId) } });
-      return unique.map((m) => ({ ...m }));
+      const rows = rowsOf(sid);
+      for (const r of rows.values()) if (!r.removedAt && !unique.some((m) => m.eventId === r.eventId)) rows.set(r.eventId, { ...r, removedAt: now(), removedBy: actor.kind });
+      for (const m of unique) put(rows, m, actor);
+      record(sid, 'meetups_set', actor, { payload: { events: unique.sort(byDate).map((m) => m.eventId) } });
+      return covered(sid);
+    },
+    coverage: async (sid) => [...rowsOf(sid).values()].sort(byDate).map((r) => ({ ...r })),
+    async cover(sid, m, actor) {
+      must(sid);
+      put(rowsOf(sid), plain(m), actor);
+      record(sid, 'meetup_covered', actor, { payload: { eventId: m.eventId } });
+      return covered(sid);
+    },
+    async uncover(sid, eventId, actor) {
+      must(sid);
+      const rows = rowsOf(sid);
+      const r = rows.get(eventId);
+      if (!r || r.removedAt) throw new NotFound('covered meetup');
+      rows.set(eventId, { ...r, removedAt: now(), removedBy: actor.kind });
+      record(sid, 'meetup_uncovered', actor, { payload: { eventId } });
+      return covered(sid);
     },
     contacts: async (sid) => [...contacts.values()].filter((c) => c.sponsorId === sid).map((c) => ({ ...c })),
     contactByUser: async (uid) => {
@@ -552,6 +597,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     },
     async beginLinkAttempt(sid, request, key = crypto.randomUUID()) {
       if (must(sid).status === 'ended') throw conflict();
+      const prior = linkAttempts.find((x) => x.key === key);
+      if (prior && prior.sponsorId === sid && prior.request === request) return { ...prior, ageMs: Date.parse(now()) - Date.parse(prior.createdAt) };
+      if (prior) throw new Error('Payment link request changed.');
       const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', ageMs: 0, createdAt: now() };
       linkAttempts.push(a);
       return { ...a };

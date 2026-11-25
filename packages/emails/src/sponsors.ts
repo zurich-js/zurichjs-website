@@ -211,7 +211,7 @@ function sponsorPaymentProblem(p: SponsorPaymentProblemProps): EmailContent {
 }
 
 export interface SponsorChangeRequestProps extends SponsorProps {
-  kind: 'plan' | 'end';
+  kind: 'plan' | 'end' | 'fees';
   /** For a plan change: the new tier, fee, when it applies and what it includes. */
   newPlan: { tierName: string; feeLabel: string; applies: string; benefits: string[] } | null;
   /** For an end: the last day. */
@@ -223,6 +223,13 @@ export interface SponsorChangeRequestProps extends SponsorProps {
 
 /** We agreed a change in conversation; the sponsor confirms it on their page (owner, 18th November 2026). */
 function sponsorChangeRequest(p: SponsorChangeRequestProps): EmailContent {
+  if (p.kind === 'fees')
+    return {
+      subject: `Review the card processing fees for ${p.companyName}`,
+      preheader: 'Your current terms continue until you confirm the offer.',
+      heading: `Hi ${firstName(p.contactName)}`,
+      blocks: [...say(p.message), { kind: 'button', label: 'Review the fee offer', url: p.url }],
+    };
   const plan = p.kind === 'plan' && p.newPlan;
   return {
     subject: plan ? `Please confirm: ${p.companyName} moves to ${p.newPlan!.tierName}` : `Please confirm: ending ${p.companyName}’s ZurichJS sponsorship`,

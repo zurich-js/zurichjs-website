@@ -132,6 +132,27 @@ d('sponsorship database', () => {
     expect((await store.events(s.id)).at(-1)).toMatchObject({ type: 'payment_recorded', payload: { amount: 840 } });
   });
 
+  it('covers meetups for any cycle and keeps the rows it takes off', async () => {
+    const s = (await store.search({ q: 'acme' }))[0]!;
+    // The bundle test above left e2 and e3 covered.
+    await store.cover(s.id, { eventId: 'e4', title: 'March', date: '2027-03-10' }, board);
+    expect((await store.uncover(s.id, 'e2', board)).map((m) => m.eventId)).toEqual(['e3', 'e4']);
+    await expect(store.uncover(s.id, 'e2', board)).rejects.toThrow(/No covered meetup/);
+    const history = await store.coverage(s.id);
+    expect(history.map((r) => [r.eventId, r.confirmedBy, r.removedBy])).toEqual([
+      ['e1', 'board', 'board'],
+      ['e2', 'board', 'board'],
+      ['e3', 'board', null],
+      ['e4', 'board', null],
+    ]);
+    expect(history[0]).toMatchObject({ date: '2026-12-09', removedAt: expect.any(String), confirmedAt: expect.any(String) });
+    // Covering a meetup that was taken off confirms it again, by the new actor.
+    await store.cover(s.id, { eventId: 'e1', title: 'December', date: '2026-12-09' }, sponsorActor);
+    expect((await store.coverage(s.id)).find((r) => r.eventId === 'e1')).toMatchObject({ confirmedBy: 'sponsor', removedAt: null, removedBy: null });
+    expect((await store.events(s.id)).slice(-3).map((e) => e.type)).toEqual(['meetup_covered', 'meetup_uncovered', 'meetup_covered']);
+    expect(pgdb.fails(`update sponsor_meetups set removed_at = now() where event_id = 'e3'`)).toMatch(/removed_pair/);
+  });
+
   it('creates a running import with its meetups, and moves a contact nobody accepted, in one statement', async () => {
     const { sponsor: globex } = await store.create({ ...acme, companyName: 'Globex' }, { email: 'hank@globex.com', name: 'Hank', role: 'primary' }, board);
     const pat = await store.addContact(globex.id, { email: 'pat@initech.com', name: 'Pat', role: 'other', addedBy: 'sponsor' }, sponsorActor);
@@ -334,7 +355,7 @@ d('sponsorship database', () => {
     for (const id of [acmeId, bare.id])
       expect(summaries.get(id)).toEqual({ meetups: await store.meetups(id), hasContract: (await store.documents(id)).length > 0, latestLogo: (await store.logos(id))[0] ?? null });
     expect(summaries.get(acmeId)).toMatchObject({ hasContract: true, latestLogo: { filename: 'acme.svg' } });
-    expect(summaries.get(acmeId)?.meetups.map((m) => m.eventId)).toEqual(['e2', 'e3']);
+    expect(summaries.get(acmeId)?.meetups.map((m) => m.eventId)).toEqual(['e1', 'e3', 'e4']);
     expect(summaries.get('not-a-uuid')).toEqual({ meetups: [], hasContract: false, latestLogo: null });
     const mixedCase = await counted.summaries([acmeId, acmeId.toUpperCase(), bare.id]);
     expect(mixedCase.get(acmeId.toUpperCase())).toEqual(summaries.get(acmeId));

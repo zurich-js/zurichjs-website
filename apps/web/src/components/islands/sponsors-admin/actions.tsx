@@ -12,11 +12,12 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, FileField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { cardClass } from '@zurichjs/design/recipes';
-import { RECURRING, TIERS, bundleLabel, changeTiming, chf, cycleInfo, fee, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
+import { RECURRING, TIERS, bundleLabel, type FeeChoice, changeTiming, chf, cycleInfo, fee, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, optional } from '../forms/shared.tsx';
+import { FeeChoiceField, OfferPreview, useFeeGate, usePreview, type QuoteView } from './fees.tsx';
 import { BASE, DATE, MeetupPicker, Notice, addMonths, francs, inputChecked, inputValue, listPrice, today, useMeetups, type FieldError } from './shared.tsx';
 
 export type ActionKey = 'suggest' | 'plan' | 'bundle' | 'contract' | 'link' | 'payment' | 'end';
@@ -144,7 +145,7 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
           if (same) return setError({ field: 'tier', message: 'That is the plan they have now. Choose another tier or billing.' });
           setBusy(true);
           setError(null);
-          const { status, body } = await post<{ url?: string; emailed?: number }>(
+          const { status, body } = await post<{ url?: string; emailed?: number; invitationQueued?: boolean }>(
             `${BASE}/${id}/suggest`,
             kind === 'plan' ? { kind, tier, cycle, message: message || undefined } : { kind, message: message || undefined },
           );
@@ -152,7 +153,7 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.url) return setError({ field: body.field, message: body.error ?? 'Could not send the change.' });
           onDone({
-            text: `${body.emailed ? `Emailed to ${body.emailed === 1 ? 'their contact' : `${body.emailed} contacts`}.` : 'The email was not sent.'} Nothing changes until they confirm it on their sponsorship page.`,
+            text: `${body.invitationQueued ? 'The plan offer is saved and its invitation is queued for delivery.' : body.emailed ? `Emailed to ${body.emailed === 1 ? 'their contact' : `${body.emailed} contacts`}.` : 'The email was not sent.'} Nothing changes until they confirm it on their sponsorship page.`,
             url: body.url,
             urlLabel: 'Or send them this link',
           });
@@ -373,6 +374,10 @@ function AttachContract({ id, onDone, onCancel, onSignedOut }: Props) {
 function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [feeChoice, setFeeChoice] = useState<FeeChoice>('absorb');
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const gate = useFeeGate(onSignedOut);
+  const { preview, error: previewError } = usePreview(id, feeChoice, onSignedOut);
   return (
     <Panel
       title={s.paymentLinkUrl ? 'New payment link' : 'Create payment link'}
@@ -383,16 +388,30 @@ function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
         noValidate
         onSubmit={async (e) => {
           e.preventDefault();
-          if (busy) return;
+          if (busy || !preview) return;
           setBusy(true);
           setError('');
-          const { status, body } = await post<{ url?: string }>(`${BASE}/${id}/payment-link`, {});
+          const { status, body } = await post<{ url?: string; quote?: QuoteView }>(`${BASE}/${id}/payment-link`, { feeChoice, expectTotalMinor: preview.totalMinor, requestId });
           setBusy(false);
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.url) return setError(body.error ?? 'Could not create the payment link.');
-          onDone({ text: 'Payment link created.', url: body.url, urlLabel: 'Payment link' });
+          const q = body.quote;
+          onDone({
+            text: q ? `Payment link created for ${q.surcharge ? `${q.base} plus a processing fee of ${q.surcharge}: ${q.total}` : q.total}.` : 'Payment link created.',
+            url: body.url,
+            urlLabel: 'Payment link',
+          });
         }}
       >
+        <FeeChoiceField
+          gate={gate}
+          value={feeChoice}
+          onChange={(choice) => {
+            setFeeChoice(choice);
+            setRequestId(crypto.randomUUID());
+          }}
+        />
+        <OfferPreview preview={preview} error={previewError} />
         {error && <Notice kind="error">{error}</Notice>}
         <Buttons busy={busy} label={s.paymentLinkUrl ? 'Create a new link' : 'Create the link'} busyLabel="Creating…" onCancel={onCancel} />
       </form>
@@ -425,7 +444,7 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
     if (busy) return;
     setBusy(true);
     setError(null);
-    const { status, body } = await post<{ outcome?: 'unknown'; alreadyRecorded?: boolean; confirmationTo?: string[] }>(`${BASE}/${id}/payment`, {
+    const { status, body } = await post<{ outcome?: 'unknown'; confirmationTo?: string[]; alreadyRecorded: boolean }>(`${BASE}/${id}/payment`, {
       paidUntil,
       amount: received ?? undefined,
       reference: reference.trim() || undefined,

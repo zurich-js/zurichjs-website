@@ -1,9 +1,9 @@
 ---
 type: Domain
 title: Sponsorship
-description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
+description: Self-serve paid sponsorships, including tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
 tags: [sponsorship, stripe, postgres]
-timestamp: "2026-11-25T00:00:00Z"
+timestamp: '2026-11-25T00:00:00Z'
 ---
 
 # Sponsorship
@@ -49,8 +49,17 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file for the current offer skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
 3. **Active** with the first payment (from the webhook, at the tier Stripe actually charged), or when the board records a transfer. The welcome email goes out once, with the benefits; the board gets a Slack note with what to deliver.
 4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
-5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). A link is refused while a meetup of the bundle is over. Once paid, the meetups can still move; their number and price cannot.
+5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Each link freezes a quote, and the board chooses who covers the card fees ([Processing fees](/domains/sponsorship/fees.md)). Once paid, the meetups can still move; their number and price cannot.
 6. **Ends:** at the end of the paid period (Stripe `cancel_at_period_end`, or the daily check for bank-transfer ones), after the last meetup (one-time), when Stripe gives up on payment (lapsed), or outright by the board (terminated, or withdrawn before it started). The daily check also closes unpaid one-time sponsorships whose meetup has passed.
+
+## Covered meetups
+
+A sponsorship covers the meetups recorded for it in `sponsor_meetups`, whatever its billing. Being a sponsor does not cover every meetup.
+
+- **One-time:** the meetups in the plan (the sponsor picks one, or the board bundles several). They set the price and the end.
+- **Recurring:** the board confirms each covered meetup in `/admin/sponsors` (Covered meetups), from the upcoming published meetups. A meetup inside a billing period is not covered until it is confirmed.
+- **History:** a row is never deleted. Taking a meetup off records when and by whom (`removed_at`, `removed_by`); confirming it again records the new confirmation. The board cannot take a past meetup off recurring coverage. Whether it has happened is decided on its current date in Sanity, the date the sponsor sees; when Sanity cannot be reached the row stays until the date can be checked. Each change is in `sponsor_events` (`meetup_covered`, `meetup_uncovered`, `meetups_set`).
+- **The sponsor's dashboard** lists the covered meetups with title, Zurich date, a link to the meetup's page and a state in words: upcoming, happened, cancelled, postponed, or no longer listed. Title, date, link and state come from Sanity when the page loads; when Sanity cannot be reached, the stored title and date are shown without a link, the state comes from the date, and the page says so. They load apart from the rest of the account and still show when the sponsorship itself fails to load, so a billing problem never hides them.
 
 ## Status machine
 
@@ -165,7 +174,7 @@ The schedule is set only in the function's source (`export const config`). `apps
 
 ## Related concepts
 
-- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
+- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Processing fees](/domains/sponsorship/fees.md), [Raffle add-ons](/domains/sponsorship/raffles.md)
 - [Partners and sponsorship](/domains/partners/overview.md) (the public list and `/partners`), [Membership](/domains/membership/overview.md) (sign-in, database and admin password are shared)
 - Systems: [Stripe](/systems/stripe.md), [Web app](/systems/web.md), [Environment variables](/systems/operations/environment.md), [Slack content agent](/systems/slack-agent.md)
 

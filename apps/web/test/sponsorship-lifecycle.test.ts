@@ -5,7 +5,7 @@
  * (sponsor-faults.ts).
  */
 import { memoryStore as memoryMembers } from '@zurichjs/membership';
-import { AGREEMENT, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { AGREEMENT, memoryFeeStore, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handlePlan } from '../src/pages/api/sponsorship/plan.ts';
 import { handleStart } from '../src/pages/api/sponsorship/start.ts';
@@ -36,7 +36,8 @@ describe('sponsorship lifecycle', () => {
   let w: ReturnType<typeof world>;
   let fs: ReturnType<typeof faulty>;
   let store: SponsorStore;
-  const user = () => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => grace, now: () => NOW });
+  let fees: ReturnType<typeof memoryFeeStore>;
+  const user = () => ({ env, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => grace, now: () => NOW });
   const hook = (req: Request) =>
     handleStripeWebhook(req, { env, sponsorStore: store, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime(), log: () => {} });
   const lifecycle = () => lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW, log: () => {} });
@@ -71,6 +72,7 @@ describe('sponsorship lifecycle', () => {
 
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    fees = memoryFeeStore();
     w = world();
     fs = faulty(memoryStore({ now: () => NOW }));
     store = fs.store;

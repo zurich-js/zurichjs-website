@@ -1,0 +1,19 @@
+{
+  "name": "@zurichjs/raffle",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Raffle add-ons for sponsors: stages, funding, eligibility, gift accounting and the raffle store (in-memory and Postgres).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1",
+    "@zurichjs/config": "workspace:*",
+    "pg": "8.23.1",
+    "typescript": "5.9.3"
+  }
+}

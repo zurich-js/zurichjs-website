@@ -8,6 +8,9 @@
  * both are done again by the next run.
  * Env: DATABASE_URL, RESEND_API_KEY, SLACK_AGENT_BOT_TOKEN, SLACK_SPONSORSHIP_CHANNEL_ID.
  */
+import { holdIneligibleRaffles, raffleStore } from '../../src/server/raffle.ts';
+import { sanityMeetups } from '../../src/server/sponsor-coverage.ts';
+import { deliverRaffleMail } from '../../src/server/raffle-mail.ts';
 import { siteOrigin } from '../../src/server/auth.ts';
 import { deadline, SCHEDULED_BUDGET_MS } from '../../src/server/deadline.ts';
 import { sponsorStore } from '../../src/server/sponsor.ts';
@@ -20,6 +23,13 @@ export default async () => {
     const budget = deadline(SCHEDULED_BUDGET_MS);
     const store = sponsorStore(env);
     const result = await dailyCheck({ ...lifecycleDeps(env, store, siteOrigin(env), { fetch: budget.fetch() }), deadline: budget });
+    const raffles = raffleStore(env);
+    for (const id of await raffles.dueForErasure(new Date())) {
+      if (budget.remaining() <= 0) break;
+      await raffles.eraseEntries(id, { kind: 'script', id: 'retention' });
+    }
+    if (budget.remaining() > 0) await deliverRaffleMail(env, raffles, store, siteOrigin(env), { fetch: budget.fetch() });
+    if (budget.remaining() > 0) await holdIneligibleRaffles(raffles, store, sanityMeetups(env, budget.fetch()), new Date());
     console.log(`[sponsorship-daily] ${JSON.stringify(result)}`);
     if (result.deferred.length)
       console.error(`[sponsorship-daily] time budget reached; ${result.deferred.length} sponsorships left for the next run: ${result.deferred.join(', ')}`);

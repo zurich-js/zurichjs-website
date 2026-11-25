@@ -1,4 +1,4 @@
-import { AGREEMENT, type SponsorStore } from '@zurichjs/sponsorship';
+import { memoryFeeStore, AGREEMENT, type SponsorStore } from '@zurichjs/sponsorship';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
 
@@ -23,6 +23,7 @@ const current = { items: { data: [{ id: 'si_1', price: { id: 'price_f', lookup_k
 
 const answer = async (reply: () => Response) => {
   const res = await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), {
+    fees: memoryFeeStore(),
     store,
     session: async () => user as never,
     env: { STRIPE_SECRET_KEY: 'sk_test_x' },

@@ -2,6 +2,7 @@
 import type { ComponentChildren, Ref } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Heading } from '@zurichjs/design/islands/Heading';
 import { TextField } from '@zurichjs/design/islands/Field';
 import { Notice as Result } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -216,5 +217,20 @@ export function MeetupPicker({
         </label>
       ))}
     </ChoiceGroup>
+  );
+}
+
+/** A titled part of the sponsor's page in the admin area. */
+export function Block({ id, title, intro, children }: { id: string; title: string; intro?: string; children: ComponentChildren }) {
+  return (
+    <section aria-labelledby={id} class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <Heading as="h3" size="card" id={id} focus class="scroll-mt-6">
+          {title}
+        </Heading>
+        {intro && <p class="m-0 text-compact text-ink-2">{intro}</p>}
+      </div>
+      {children}
+    </section>
   );
 }

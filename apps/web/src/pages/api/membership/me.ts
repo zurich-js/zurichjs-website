@@ -20,21 +20,26 @@ export const handleMe = (request: Request, deps: RouteDeps = {}) =>
   signedIn(
     request,
     deps,
-    async ({ user, member, store, env }) =>
-      json(200, {
+    async ({ user, member, store, env }) => {
+      const [certificates, acceptedTerms, pendingPlan] = await Promise.all([
+        member ? store.certificates(member.id) : [],
+        member ? store.acceptedTerms(member.id) : null,
+        // A Stripe failure leaves the rest of the account available.
+        member?.stripeSubscriptionId && member.status !== 'resigning' && member.status !== 'ended'
+          ? pendingPlanChange(member.stripeSubscriptionId, { env, fetch: deps.fetch }).catch(() => null)
+          : null,
+      ]);
+      return json(200, {
         ok: true,
         email: user.email,
         member: member ? memberView(member) : null,
-        certificates: member ? (await store.certificates(member.id)).map(certificateView) : [],
+        certificates: certificates.map(certificateView),
         canJoin: canJoin(member?.status ?? null),
         termsVersion: TERMS.version,
-        acceptedCurrentTerms: member ? acceptedCurrent(await store.acceptedTerms(member.id)) : false,
-        // A level or cycle switch waiting for the next renewal. Stripe being slow never breaks the page.
-        pendingPlan:
-          member?.stripeSubscriptionId && member.status !== 'resigning' && member.status !== 'ended'
-            ? await pendingPlanChange(member.stripeSubscriptionId, { env, fetch: deps.fetch }).catch(() => null)
-            : null,
-      }),
+        acceptedCurrentTerms: member ? acceptedCurrent(acceptedTerms) : false,
+        pendingPlan,
+      });
+    },
     'load your membership',
   );
 

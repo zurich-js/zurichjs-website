@@ -770,3 +770,31 @@ describe('admin import', () => {
     expect(await again.json()).toMatchObject({ problems: [{ line: 2, message: 'ada@example.com is already a member.' }] });
   });
 });
+
+describe('account read failures', () => {
+  async function account() {
+    const store = memoryStore();
+    const w = world();
+    await handleCheckout(req('/api/membership/checkout', join), { env, store, session: async () => ada, fetch: w.f });
+    const member = (await store.byEmail(ada.email))!;
+    await store.linkStripe(member.id, { subscriptionId: 'sub_ada' }, { kind: 'stripe', id: 'evt_account' });
+    return { store, w, member };
+  }
+
+  it('returns the member and certificates when Stripe rejects the pending-plan read', async () => {
+    const { store, member } = await account();
+    const fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(new Error('Stripe unavailable'));
+    const response = await handleMe(req('/api/membership/me'), { env, store, session: async () => ada, fetch, log: () => {} });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, member: { name: member.name }, certificates: [], acceptedCurrentTerms: true, pendingPlan: null });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it.each(['certificates', 'acceptedTerms'] as const)('returns 502 when %s fails during parallel account reads', async (read) => {
+    const { store, w } = await account();
+    vi.spyOn(store, read).mockRejectedValue(new Error('Database unavailable'));
+    const response = await handleMe(req('/api/membership/me'), { env, store, session: async () => ada, fetch: w.f, log: () => {} });
+    expect(response.status).toBe(502);
+    expect(await response.json()).toMatchObject({ ok: false });
+  });
+});

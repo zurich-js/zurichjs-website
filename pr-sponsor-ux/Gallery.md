@@ -1,5 +1,7 @@
 # Sponsor screenshots and recordings
 
+Every PNG now includes an external “MOCK · local test data” strip. The original page pixels, including the real header, are unchanged. [Annotation proof](mock-label-proof.json).
+
 All images show the deterministic sample build with local mock APIs. Each width links to a full-page PNG. The two detail views keep the real site header in view.
 
 [Mobile confirmation](provider-upgrade-375-detail.png) · [Desktop fee settings](admin-fees-running-1280-detail.png) · [File hashes, dimensions and frame counts](manifest.json)

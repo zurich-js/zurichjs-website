@@ -43,3 +43,7 @@ The present card flow chooses an immediate prorated upgrade for a higher tier on
 - T3 Preview opened the account but twice reported “The browser is not producing screenshot frames.” Playwright supplied the captures. The interactions, provider calls and email acknowledgements shown are local mocks. No remote push, CI watch, deploy, real charge or external message occurred.
 
 [All states and recordings](Gallery.md) · [Dimensions, rendered fonts and hashes](manifest.json)
+
+## Correction from independent review
+
+The later successful retry described above used a Stripe fixture without idempotency-error replay. With a cached decline, the same retry fails and the quote remains claimed. That recovery conclusion is superseded; see [Review status](Review-status.md). Full-page screenshots now have an explicit external mock label, with original page pixels preserved; see [Publication](Publication.md).

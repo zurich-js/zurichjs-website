@@ -31,6 +31,7 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 - **The admin API** sits under `/api/membership/admin` so it shares the admin cookie's path and `ADMIN_PASSWORD` ([Membership frontend](/domains/membership/frontend.md)).
 - **A sponsor's partner id** (`partnerId` on the admin's details route) links it to its partner record on the public site ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 - **Writes** must come from the site (an `Origin` check, as in the admin area); uploads and contact changes are rate limited.
+- **A write that fails unexpectedly** (for example a database answer lost after its 10 s limit, when the write may still have committed) answers 502 with `outcome: "unknown"`: part of it may be saved. Reload and check the result before retrying. A recorded bank transfer resumes from its saved paid-through date and is recorded once.
 - **Logos:** SVG, PNG or WebP up to 2 MB; SVGs with scripts, external references or other tricks are refused. **Contracts:** PDF up to 10 MB. Both are stored in the Netlify Blobs store `sponsors` (`apps/web/src/server/sponsor-logo.ts`).
 
 ## Stripe

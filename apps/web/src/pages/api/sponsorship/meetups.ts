@@ -7,7 +7,7 @@ import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-
 export const prerender = false;
 
 export const handleMeetups = (request: Request, deps: SponsorRouteDeps = {}) =>
-  signedInSponsor(request, deps, async ({ env }) => json(200, { ok: true, meetups: await (deps.meetups ?? (() => upcomingMeetups(env, deps.fetch)))() }), 'load the meetups');
+  signedInSponsor(request, deps, async ({ env, deps }) => json(200, { ok: true, meetups: await (deps.meetups ?? (() => upcomingMeetups(env, deps.fetch)))() }), 'load the meetups');
 
 export const GET: APIRoute = ({ request }) => handleMeetups(request);
 export const ALL: APIRoute = () => methodNotAllowed('GET');

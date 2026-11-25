@@ -20,7 +20,7 @@ export const handleLogoUpload = (request: Request, deps: SponsorRouteDeps = {}) 
   signedInSponsor(
     request,
     deps,
-    async ({ user, sponsor, contact, store, env, origin }) => {
+    async ({ user, sponsor, contact, store, env, origin, deps }) => {
       if (!sponsor || !contact) return fail(404, 'There is no sponsorship on this account yet.');
       if (sponsor.status === 'ended') return fail(409, 'This sponsorship has ended.', { field: 'file' });
       if (rateLimited('sponsorship-logo', `${user.id}:${clientKey(request)}`, 10, 60 * 60_000)) return fail(429, 'Too many uploads. Try again in an hour.', { field: 'file' });

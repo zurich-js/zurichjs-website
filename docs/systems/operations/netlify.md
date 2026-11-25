@@ -3,7 +3,7 @@ type: System
 title: Netlify deploys
 description: How zurichjs.com builds and deploys on Netlify, the owner's go-live steps, rollback, and the optional draft preview site.
 tags: [operations, netlify, deploy]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Netlify deploys
@@ -19,6 +19,13 @@ Production deploys are owner actions. Agents never deploy.
 - **`NETLIFY_NEXT_PLUGIN_SKIP=true`** makes the old app's Next.js plugin, still installed from the Netlify UI, skip itself on an Astro build (checked in `@netlify/plugin-nextjs` 5.16.3).
 - **A failed build never replaces a deploy,** so the site stays up when a build fails.
 - **Code merged to `main`** builds automatically; content builds come from the rebuild triggers ([Rebuilds](/systems/operations/rebuilds.md)).
+
+## Function time limits
+
+Netlify stops a synchronous function (every `/api/*` route) after 60 seconds, a scheduled function after 30 seconds and a background function after 15 minutes, with no answer or log line from the code (Netlify's function configuration docs, checked 24th November 2026). The site keeps inside them:
+
+- **Database:** a connection gives up after 5 s and a query after 10 s (`DB_TIMEOUTS` in `apps/web/src/server/db-url.ts`), so a database that hangs gets the route's own 502. The limits are per connection and per query, not for a route's sequence of queries.
+- **Outbound calls:** the sponsorship routes give all their Stripe, Resend, Slack and Sanity calls one 50 s budget, and the daily sponsorship check 25 s (`apps/web/src/server/deadline.ts`). No call starts once the budget is spent, and a call still waiting when it runs out is aborted with `DeadlineExceeded`. A Checkout or payment link close stopped that way keeps its saved id. Membership and donation routes keep only each call's own timeout.
 
 ## Go live (owner steps)
 

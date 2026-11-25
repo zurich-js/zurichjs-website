@@ -1,0 +1,38 @@
+[
+  {
+    "file": "lapse-1280.gif",
+    "sha256": "3bbd90bdbd4169feb9d59408c77f2af333cb632619c81701b7dab6ac437ede61"
+  },
+  {
+    "file": "lapse-1280.mp4",
+    "sha256": "acb2d6a2feb510789b5ad1f47829535af5be087a15017143bc8a0eee1bb42c93"
+  },
+  {
+    "file": "lapse-1280.png",
+    "sha256": "59bd1c4472ebbb10dea3e0d77166546d59772d94bddb85cae5aaae0ebd20fc16"
+  },
+  {
+    "file": "lapse-1440.png",
+    "sha256": "609e5d2628c76acdbb3c2162755c204b7fb37a77730ac68fc0a0b30b5712b66d"
+  },
+  {
+    "file": "lapse-320.png",
+    "sha256": "28acb8977bfefa5350001664beb10d1cbeb7bd52fbd2a476949f1346c0fef11e"
+  },
+  {
+    "file": "lapse-375.png",
+    "sha256": "390c7a9acd7cfdd7bbe138cd5076c8624833a390e4bf99b41bb917965f3a0eae"
+  },
+  {
+    "file": "lapse-390.gif",
+    "sha256": "7f559b723625e2fc039faf3f21e7422425d1d6818b7095d0de30046bf421f5c0"
+  },
+  {
+    "file": "lapse-390.mp4",
+    "sha256": "181c847dfffa8c37b189a5604aca775e04c1670e22ebc39cc10b8f1ee40998f0"
+  },
+  {
+    "file": "lapse-390.png",
+    "sha256": "8bbe7a1265fc4e98533acefa4f8d08c109605859a9cfcc2c3850ada2a83b44dc"
+  }
+]

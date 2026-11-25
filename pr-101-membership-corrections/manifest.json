@@ -1,0 +1,58 @@
+[
+  {
+    "file": "manual-form-1280.png",
+    "sha256": "a3e3ecd4130a0e6fc9e56cc1e9cd1d65232f312270f670116831a71d46030613"
+  },
+  {
+    "file": "manual-form-1440.png",
+    "sha256": "c77c12b67e32b4181a1ee63b1bc9092508e762a00adbe4e6ce53953dfb95d93b"
+  },
+  {
+    "file": "manual-form-320.png",
+    "sha256": "21584d755847b03bf1a1217fea9912a8179544ff5ec8504f7ef7b925fab95ed6"
+  },
+  {
+    "file": "manual-form-375.png",
+    "sha256": "1b23a1684c580e11bedbe09655a8b39e1ae7f2cc54323ea5e887e19e4bafef33"
+  },
+  {
+    "file": "manual-form-390.png",
+    "sha256": "e9d34b827e421dfe4ae83f4a7161e5ed92c2301b659ff950070174a76ac90187"
+  },
+  {
+    "file": "manual-payment-1280.gif",
+    "sha256": "7261781990ffb5d9d9272e2df411e40bd6e0a10b5e3b193a9e2b7fa4f4987cd6"
+  },
+  {
+    "file": "manual-payment-1280.mp4",
+    "sha256": "96ea3abf97580ba0552293a16f78af65db65c05aaad2126d43ffa2f6541b1e6c"
+  },
+  {
+    "file": "manual-payment-390.gif",
+    "sha256": "f8a3eb087a9ae0436876b33cbdac4a3dfa2657de5ba0feea98ac7d1143f2ef66"
+  },
+  {
+    "file": "manual-payment-390.mp4",
+    "sha256": "0cba2ede257ea1339e5d6c48837ed4497346284fd7e0286cecf536b22f416a63"
+  },
+  {
+    "file": "manual-result-1280.png",
+    "sha256": "4710be74860d1a337fa4e5fb88bc99f2ee604738133ae2165d6b78a3ec9c78f7"
+  },
+  {
+    "file": "manual-result-1440.png",
+    "sha256": "feb29f414cbbe9ec485368cae4757771d04e126b9536b4782db8af46727aa143"
+  },
+  {
+    "file": "manual-result-320.png",
+    "sha256": "903266b64c05a1afa12aaa1cd5b679e2101ae2382222be69e42afc69e159d108"
+  },
+  {
+    "file": "manual-result-375.png",
+    "sha256": "cb4d7cb627ea2be44649d5dec7ab389e5065c49ecfbed3f9ca9ae46e2634339e"
+  },
+  {
+    "file": "manual-result-390.png",
+    "sha256": "cd6bf284b19db5abc70c963912b97555e0a29f255bf70423c3a0ee913444e385"
+  }
+]

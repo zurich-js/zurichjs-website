@@ -271,6 +271,21 @@ function paymentFailed(p: PaymentFailedProps): EmailContent {
   };
 }
 
+function membershipLapsed(p: MembershipProps): EmailContent {
+  return {
+    subject: 'Your ZurichJS membership has ended',
+    preheader: 'We could not collect your membership payment.',
+    heading: `Hi ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'p', text: 'We could not collect your membership payment, so your membership has ended. Nothing more is charged.' },
+      summary(p),
+      { kind: 'p', text: 'You are welcome to join again at any time on your account page.' },
+      { kind: 'button', label: 'Join again', url: p.accountUrl },
+      { kind: 'small', text: 'Think this is a mistake? Reply to this email and the board will look into it.' },
+    ],
+  };
+}
+
 export interface ResignationProps extends MembershipProps {
   /** Dues still open (bylaws Art. 5: the resignation waits until they are paid). */
   openDues: boolean;
@@ -454,6 +469,7 @@ const TEMPLATES = {
   'membership-invite': membershipInvite,
   'automatic-payment-set-up': automaticPaymentSetUp,
   'payment-failed': paymentFailed,
+  'membership-lapsed': membershipLapsed,
   'resignation-received': resignationReceived,
   'resignation-confirmed': resignationConfirmed,
   'resignation-withdrawn': resignationWithdrawn,

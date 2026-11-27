@@ -2,8 +2,8 @@
 
 ## 2026-11-25
 
+- Membership Checkout reuses a reserved session. Webhook retries resume queued member and board notices. [Membership payments](/domains/membership/api.md)
 - Sponsors can review the current plan, recurring total and amount due today, and check a replacement offer after an unconfirmed change. [Sponsorship frontend](/domains/sponsorship/frontend.md)
-
 - Sponsors can confirm a [plan change with a processing fee](/domains/sponsorship/fees.md). Immediate upgrades require an approved proration policy and a matching CHF invoice preview.
 - The recurring coverage panel refreshes the sponsor history after a change and reloads its controls when the sponsorship ends. The past-meetup removal rule applies to [recurring coverage](/domains/sponsorship/overview.md).
 - **Update**: CI runs the site checks in parallel: the Playwright suite once per project (`mobile`, `desktop`) and the SEO gate with Lighthouse as their own job, each with its own build. Lighthouse runs only on pushes to `main` (owner, 25th November 2026). A pull request's run takes about 4 minutes instead of 8 ([CI](/systems/operations/ci.md)).
@@ -11,6 +11,8 @@
 
 ## 2026-11-24
 
+- **Update**: the membership webhook claims each Stripe event before it runs, so two deliveries at once run it once; a retry after a failure decides from what is stored (the welcome still goes with the first payment, paid until never moves back); late or out-of-order events (a failure for a paid invoice, a stale "past due") no longer mark a paying member behind; a payment for an ended membership or a second subscription is reported to the board instead of renewing; starting Checkout closes the member's open Checkout pages ([Membership payments](/domains/membership/api.md), [Stripe](/systems/stripe.md)).
+- **Update**: a membership that lapses emails the member, and an unconfirmed resignation that runs out of payment retries ends as lapsed, not resigned. Refunds and disputes of member payments are recorded in the member's history and posted to Slack; the membership is unchanged until the owner decides a policy ([Membership payments](/domains/membership/api.md)).
 - Raffle releases record each delivery and track recipient deletion requests. The daily job erases entrant details on the schedule approved when entries opened. [Raffle add-ons](/domains/sponsorship/raffles.md)
 - **Update**: [Raffle add-ons](/domains/sponsorship/raffles.md) can share entrant contacts with the sponsor, off unless the owner configured the raffle notice, recipient policy, retention and sharing terms: an unticked box per entrant, counted once the email is confirmed, withdrawable from the entrant's link; releases narrowed by the board and again on every read, to one sponsor contact for a limited time; erasure after the retention period.
 - Raffle admissions serialize with closing. Private mail survives a delivery failure, and the board records claims, expiries and fulfilment separately. [Raffle add-ons](/domains/sponsorship/raffles.md)
@@ -69,7 +71,6 @@
 - **Update**: memberships, sponsorships and donations share one Stripe webhook, `/api/stripe/webhook` ([Membership payments](/domains/membership/api.md), [Donations](/domains/donations/overview.md), [Environment variables](/systems/operations/environment.md)); Netlify Functions are bundled with esbuild ([Web app](/systems/web.md), [Netlify deploys](/systems/operations/netlify.md)); the Slack bots call the model provider with an explicit base URL ([Slack content agent](/systems/slack-agent.md)).
 - **Correction**: the old sponsorship doc said the sponsorship webhook is its own Stripe endpoint with its own secret; the code has one shared endpoint and secret ([Stripe](/systems/stripe.md)). The old runbook said the webhook updates Netlify Database; it is Neon.
 - **Update**: the binding rules moved out of `AGENTS.md` into [Working rules](/conventions/working-rules.md) and [UI and design system rules](/systems/design-system/ui-rules.md); `AGENTS.md` now only points into this bundle.
-
 - **Bootstrap**: the documentation became this OKF bundle. The old docs (docs/design-system.md and docs/v2) were rehomed into concepts under [Systems](/systems/index.md), [Domains](/domains/index.md) and [Reference](/reference/index.md); the dated phase records (`STATUS.md`, `PLAN.md`, `BLOCKERS.md`, `UI-AUDIT.md`, `CONTENT-MODEL-DIFF.md`) were folded in and removed. Git keeps their history.
 - **Correction**: contact and partner enquiries go to email and Slack only, never to Sanity ([Forms](/domains/forms/overview.md)). The old runbook said they reach Sanity.
 - **Correction**: the membership status machine also allows a board or Stripe ending straight from active or past due, and Stripe activating an imported member ([Membership](/domains/membership/overview.md)).

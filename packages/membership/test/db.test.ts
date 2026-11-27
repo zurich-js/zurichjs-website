@@ -127,6 +127,33 @@ d('membership database', () => {
       expect(counts.active).toBe(1);
     });
 
+    it('claims a Stripe event once: a second delivery is busy until the first is marked or gives it back', async () => {
+      const claim = async () => {
+        const result = await store.claimStripeEvent('evt_claim', 'invoice.paid');
+        if (typeof result === 'string') throw new Error(`Unexpected claim result: ${result}`);
+        return result.lease;
+      };
+      const original = await claim();
+      expect(await store.claimStripeEvent('evt_claim', 'invoice.paid')).toBe('busy');
+      await store.releaseStripeEvent('evt_claim', original);
+      const expired = await claim();
+      pgdb.sql("update stripe_events set claimed_at = now() - interval '3 minutes' where id = 'evt_claim'");
+      const successor = await claim();
+      await store.releaseStripeEvent('evt_claim', expired);
+      await expect(store.markStripeEvent('evt_claim', expired)).rejects.toThrow(/expired/);
+      expect(await store.claimStripeEvent('evt_claim', 'invoice.paid')).toBe('busy');
+      await store.markStripeEvent('evt_claim', successor);
+      expect(await store.claimStripeEvent('evt_claim', 'invoice.paid')).toBe('done');
+    });
+
+    it('finds a member by Stripe customer and appends audit rows that change nothing else', async () => {
+      const m = (await store.byStripeCustomer('cus_ada'))!;
+      expect(m.email).toBe('ada@example.com');
+      await store.logEvent(m.id, 'payment_refunded', stripe, { charge: 'ch_1', amount: 'CHF 250.00' });
+      expect((await store.events(m.id)).at(-1)).toMatchObject({ type: 'payment_refunded', actor: stripe, payload: { charge: 'ch_1' } });
+      expect((await store.get(m.id))!.status).toBe(m.status);
+    });
+
     it('keeps manual members dated', async () => {
       await expect(
         store.create({ ...person, email: 'd@example.com', status: 'imported_manual', source: 'imported', paymentMode: 'manual' }, { kind: 'script', id: 't' }),

@@ -19,11 +19,36 @@ export interface TransitionInput {
  * postgres.ts); unit tests use the in-memory one. Every status change goes through
  * `transition`, which writes the new status and the audit row together.
  */
+export type MemberDelivery =
+  | { kind: 'board'; text: string }
+  | { kind: 'email'; to: string; subject: string; html: string; text: string }
+  | { kind: 'certificate'; certificateId: string; template: 'membership-welcome' | 'membership-renewed' | 'membership-ported' };
+
+export interface CheckoutAttempt {
+  id: string;
+  customer: string;
+  price: string;
+  trialEnd: number | null;
+  expiresAt: number;
+  account: string;
+  url: string | null;
+}
+
 export interface MemberStore {
+  transaction<T>(work: (store: MemberStore) => Promise<T>): Promise<T>;
+  recordInvoice(memberId: string, invoice: string, subscriptionId: string, outcome: 'paid' | 'failed'): Promise<'apply' | 'settled' | 'conflict'>;
+  checkoutAttempt(id: string): Promise<CheckoutAttempt | null>;
+  saveCheckoutAttempt(id: string, attempt: CheckoutAttempt): Promise<void>;
+  enqueue(memberId: string, operation: string, key: string, payload: MemberDelivery): Promise<void>;
+  pendingDeliveries(operation: string): Promise<{ memberId: string; key: string; payload: MemberDelivery }[]>;
+  delivered(key: string): Promise<void>;
+  stripePrepared(eventId: string, lease: string): Promise<boolean>;
+  prepareStripeEvent(eventId: string, lease: string): Promise<void>;
   get(id: string): Promise<Member | null>;
   byEmail(email: string): Promise<Member | null>;
   byUser(userId: string): Promise<Member | null>;
   byStripeSubscription(subscriptionId: string): Promise<Member | null>;
+  byStripeCustomer(customerId: string): Promise<Member | null>;
   /** Oldest first, at most 500 (e.g. manual members for the renewal reminders). */
   byStatus(status: Status): Promise<Member[]>;
   /** For the admin area: newest first; `q` matches name, email or organisation (case-insensitive). */
@@ -52,11 +77,19 @@ export interface MemberStore {
   issueCertificate(id: string, term: { periodStart: string; periodEnd: string; stripeInvoiceId: string | null }, actor: Actor): Promise<Certificate>;
   /** Newest first. */
   certificates(id: string): Promise<Certificate[]>;
-  /** Whether a Stripe webhook event was already handled. */
-  stripeEventSeen(eventId: string): Promise<boolean>;
-  /** Marks a Stripe event as handled (after it succeeded). */
-  markStripeEvent(eventId: string, type: string): Promise<void>;
+  /**
+   * Claims a Stripe webhook event before handling it, so two deliveries at once (a retry, or the
+   * old and the shared endpoint) never both run it. `done`: handled before. `busy`: another
+   * delivery holds the claim (younger than `CLAIM_TTL_MS`). A claim older than that is taken over.
+   */
+  claimStripeEvent(eventId: string, type: string): Promise<{ lease: string } | 'done' | 'busy'>;
+  /** Marks a claimed event as handled (after it succeeded). */
+  markStripeEvent(eventId: string, lease: string): Promise<void>;
+  /** Gives a claim back after a failure, so Stripe's retry can run the event again at once. */
+  releaseStripeEvent(eventId: string, lease: string): Promise<void>;
   events(id: string): Promise<MemberEvent[]>;
+  /** Appends a row to the audit log that changes nothing else (e.g. a refund the board must look at). */
+  logEvent(id: string, type: string, actor: Actor, payload: Record<string, unknown>): Promise<void>;
 }
 
 export class DuplicateEmail extends Error {
@@ -75,6 +108,9 @@ export class MemberNotFound extends Error {
 
 export const normaliseEmail = (email: string) => email.trim().toLowerCase();
 
+/** How long a claimed Stripe event stays claimed without being marked handled (a function timed out). */
+export const CLAIM_TTL_MS = 2 * 60_000;
+
 /** In-memory store with the same rules as the database (unique email, append-only events). */
 export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}): MemberStore & { all(): Member[] } {
   const now = opts.now ?? (() => new Date());
@@ -84,7 +120,17 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
   const log: MemberEvent[] = [];
   const acceptances: { memberId: string; version: string; at: string }[] = [];
   const certs: Certificate[] = [];
-  const stripeEvents = new Set<string>();
+  const stripeEvents = new Map<string, { claimedAt: number | null; done: boolean; lease: string; prepared: boolean }>();
+
+  const outcomes = new Map<string, { memberId: string; subscriptionId: string; outcome: 'paid' | 'failed' }>();
+  const attempts = new Map<string, CheckoutAttempt>();
+  const deliveries = new Map<string, { memberId: string; operation: string; payload: MemberDelivery | null }>();
+  let tail = Promise.resolve();
+  function owned(id: string, lease: string) {
+    const event = stripeEvents.get(id);
+    if (!event || event.lease !== lease || event.done) throw new Error('Membership event lease expired.');
+    return event;
+  }
 
   const record = (memberId: string, type: string, actor: Actor, extra: Partial<MemberEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, memberId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now().toISOString(), ...extra });
@@ -107,11 +153,68 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
   };
 
   return {
+    transaction(work) {
+      const result = tail.then(async () => {
+        const backup = structuredClone({ members, certs, log, deliveries, attempts, outcomes });
+        try {
+          return await work(this);
+        } catch (error) {
+          members.clear();
+          for (const [id, member] of backup.members) members.set(id, member);
+          certs.splice(0, certs.length, ...backup.certs);
+          log.splice(0, log.length, ...backup.log);
+          deliveries.clear();
+          for (const [key, delivery] of backup.deliveries) deliveries.set(key, delivery);
+          outcomes.clear();
+          for (const [invoice, outcome] of backup.outcomes) outcomes.set(invoice, outcome);
+          attempts.clear();
+          for (const [id, attempt] of backup.attempts) attempts.set(id, attempt);
+          throw error;
+        }
+      });
+      tail = result.then(
+        () => {},
+        () => {},
+      );
+      return result;
+    },
+    async recordInvoice(memberId, invoice, subscriptionId, outcome) {
+      const prior = outcomes.get(invoice);
+      if (prior && (prior.memberId !== memberId || prior.subscriptionId !== subscriptionId)) return 'conflict';
+      const certificate = certs.find((c) => c.stripeInvoiceId === invoice);
+      if (certificate && certificate.memberId !== memberId) return 'conflict';
+      if (prior?.outcome === 'paid') return 'settled';
+      outcomes.set(invoice, { memberId, subscriptionId, outcome });
+      return 'apply';
+    },
+    async checkoutAttempt(id) {
+      return attempts.get(id) ?? null;
+    },
+    async saveCheckoutAttempt(id, attempt) {
+      attempts.set(id, attempt);
+    },
+    async enqueue(memberId, operation, key, payload) {
+      if (!deliveries.has(key)) deliveries.set(key, { memberId, operation, payload });
+    },
+    async pendingDeliveries(operation) {
+      return [...deliveries].flatMap(([key, row]) => (row.operation === operation && row.payload ? [{ memberId: row.memberId, key, payload: row.payload }] : []));
+    },
+    async delivered(key) {
+      const row = deliveries.get(key);
+      if (row) row.payload = null;
+    },
+    async stripePrepared(id, lease) {
+      return owned(id, lease).prepared;
+    },
+    async prepareStripeEvent(id, lease) {
+      owned(id, lease).prepared = true;
+    },
     all: () => [...members.values()].map((m) => ({ ...m })),
     get: (id) => Promise.resolve(members.has(id) ? { ...members.get(id)! } : null),
     byEmail: (email) => find((m) => m.email === normaliseEmail(email)),
     byUser: (uid) => find((m) => m.userId === uid),
     byStripeSubscription: (sid) => find((m) => m.stripeSubscriptionId === sid),
+    byStripeCustomer: (cid) => find((m) => m.stripeCustomerId === cid),
     byStatus: (status) => Promise.resolve([...members.values()].filter((m) => m.status === status).map((m) => ({ ...m }))),
     search: ({ q, status, limit = 200 }) => {
       const needle = q?.trim().toLowerCase();
@@ -207,8 +310,29 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
           .sort((a, b) => b.periodStart.localeCompare(a.periodStart))
           .map((c) => ({ ...c })),
       ),
-    stripeEventSeen: (eventId) => Promise.resolve(stripeEvents.has(eventId)),
-    markStripeEvent: async (eventId) => void stripeEvents.add(eventId),
+    async claimStripeEvent(eventId) {
+      const e = stripeEvents.get(eventId);
+      if (e?.done) return 'done';
+      const at = now().getTime();
+      if (e?.claimedAt && at - e.claimedAt < CLAIM_TTL_MS) return 'busy';
+      const lease = crypto.randomUUID();
+      stripeEvents.set(eventId, { claimedAt: at, done: false, lease, prepared: e?.prepared ?? false });
+      return { lease };
+    },
+    async markStripeEvent(id, lease) {
+      owned(id, lease).done = true;
+    },
+    async releaseStripeEvent(id, lease) {
+      const e = stripeEvents.get(id);
+      if (e?.lease === lease && !e.done) {
+        e.claimedAt = null;
+        e.lease = '';
+      }
+    },
     events: (id) => Promise.resolve(log.filter((e) => e.memberId === id).map((e) => ({ ...e }))),
+    async logEvent(id, type, actor, payload) {
+      must(id);
+      record(id, type, actor, { payload });
+    },
   };
 }

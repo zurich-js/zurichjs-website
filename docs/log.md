@@ -4,6 +4,7 @@
 
 - **Update**: CI has a `CI ok` job that fails unless every other job succeeded. With `dependency-review`, it is the required status check on `main`, so a pull request cannot merge while a check fails or is still running. Runs on `main` no longer cancel each other ([CI](/systems/operations/ci.md)).
 - **Update**: CI can be started by hand on any branch (`gh workflow run ci.yml --ref <branch>`), Lighthouse included, and the Lighthouse reports are now saved in `reports-site` ([CI](/systems/operations/ci.md)).
+- **Update**: CI installs only Chromium's headless shell, and the font packages it needs come from the Actions cache instead of the Ubuntu mirror, which had stalled the install for up to 15 minutes. The browser install takes about 8 s instead of 18 ([CI](/systems/operations/ci.md)).
 
 ## 2026-11-25
 

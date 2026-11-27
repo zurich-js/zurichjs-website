@@ -86,7 +86,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
+      - uses: ./.github/actions/playwright-chromium
       - name: End-to-end, accessibility and visual regression
         run: pnpm e2e --project=${{ matrix.project }}
       - name: Visual diff summary
@@ -121,8 +121,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      # The SEO gate crawls the build with Playwright's Chromium (tools/seo/snapshot.mjs).
-      - run: pnpm exec playwright install --with-deps chromium
+      # The SEO gate crawls the build with Playwright's Chromium (tools/seo/snapshot.mjs). Lighthouse uses
+      # the runner's own Chrome.
+      - uses: ./.github/actions/playwright-chromium
       - name: SEO and LLM parity
         run: |
           node tools/serve-dist.mjs 4321 &

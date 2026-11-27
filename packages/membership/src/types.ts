@@ -87,7 +87,7 @@ export type NewMember = Omit<
 
 /** Fields that may change without a status transition. Status, Stripe ids and the end reason are not here on purpose. */
 export type MemberPatch = Partial<
-  Pick<Member, 'userId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>
+  Pick<Member, 'userId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt' | 'source'>
 >;
 
 /** One row of the append-only audit log (`member_events`). */

@@ -4,6 +4,7 @@
  * they had before, and a confirmed resignation's scheduled end is taken back in Stripe.
  * POST → 200 { ok, member } · 409 not resigning · 404.
  */
+import { label } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { adminRoute, type AdminDeps } from '../../../../../../server/admin-route.ts';
 import { adminMember } from '../../../../../../server/admin-views.ts';
@@ -19,7 +20,7 @@ export const handleAdminUndoResignation = (request: Request, id: string, deps: A
     async ({ env, store, origin }) => {
       const r = await withdrawResignation(id, { kind: 'board', id: 'admin' }, { env, store, origin, fetch: deps.fetch, log: deps.log });
       if (r.result === 'not_found') return fail(404, 'No such member.');
-      if (r.result === 'not_resigning') return fail(409, `This member is not resigning (status: ${r.member.status.replace('_', ' ')}).`);
+      if (r.result === 'not_resigning') return fail(409, `This member is not resigning. Their membership is ${label(r.member.status)}.`);
       return json(200, { ok: true, member: adminMember(r.member), emailFailed: r.emailFailed });
     },
     'undo the resignation',

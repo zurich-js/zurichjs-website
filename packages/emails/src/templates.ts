@@ -238,6 +238,27 @@ function membershipRenewed(p: TermProps): EmailContent {
   };
 }
 
+function membershipManualPayment(p: TermProps): EmailContent {
+  return {
+    subject: 'Your ZurichJS membership payment is recorded',
+    preheader: `Thank you. Your certificate ${p.certificateNumber} for the new term is attached.`,
+    heading: `Thank you, ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'p', text: 'The board recorded your payment by cash or bank transfer, and your membership continues.' },
+      {
+        kind: 'plan',
+        title: p.levelName,
+        price: p.price,
+        per: p.per,
+        rows: [...(p.organisationName ? ([['Organisation', p.organisationName]] as [string, string][]) : []), ['This term', `${p.term}, paid by cash or bank transfer`]],
+      },
+      { kind: 'p', text: `Your certificate of membership for this term (${p.certificateNumber}) is attached, and it is on your account page.` },
+      { kind: 'button', label: 'Open your account page', url: p.accountUrl },
+      { kind: 'small', text: `To pay automatically from the next term, set up automatic payment on your account page. Nothing is charged before ${p.nextPayment}.` },
+    ],
+  };
+}
+
 export interface PaymentFailedProps extends MembershipProps {
   /** Stripe's page for this invoice, where the member can pay it or confirm the payment with their bank. */
   payUrl?: string | null;
@@ -289,6 +310,8 @@ function membershipLapsed(p: MembershipProps): EmailContent {
 export interface ResignationProps extends MembershipProps {
   /** Dues still open (bylaws Art. 5: the resignation waits until they are paid). */
   openDues: boolean;
+  /** The board recorded it for the member (they resigned to the board directly). */
+  byBoard?: boolean;
 }
 
 function resignationReceived(p: ResignationProps): EmailContent {
@@ -297,7 +320,12 @@ function resignationReceived(p: ResignationProps): EmailContent {
     preheader: 'A copy for your records. Your request is with the board.',
     heading: `Hi ${firstName(p.name)}`,
     blocks: [
-      { kind: 'p', text: 'You resigned from the Swiss JavaScript Group on your account page. This email is your written copy (bylaws Art. 5).' },
+      {
+        kind: 'p',
+        text: p.byBoard
+          ? 'The board recorded your resignation from the Swiss JavaScript Group. This email is your written copy (bylaws Art. 5).'
+          : 'You resigned from the Swiss JavaScript Group on your account page. This email is your written copy (bylaws Art. 5).',
+      },
       summary(p),
       { kind: 'p', text: 'Your request is with the board, and they typically get back to you within 72 hours.' },
       p.openDues
@@ -466,6 +494,7 @@ const TEMPLATES = {
   'membership-welcome': membershipWelcome,
   'membership-renewed': membershipRenewed,
   'membership-ported': membershipPorted,
+  'membership-manual-payment': membershipManualPayment,
   'membership-invite': membershipInvite,
   'automatic-payment-set-up': automaticPaymentSetUp,
   'payment-failed': paymentFailed,

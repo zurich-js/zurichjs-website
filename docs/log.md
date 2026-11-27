@@ -2,6 +2,8 @@
 
 ## 2026-11-25
 
+- Cash and bank payments and resignation changes retain their notice work across retries. [Membership](/domains/membership/overview.md)
+
 - Membership Checkout reuses a reserved session. Webhook retries resume queued member and board notices. [Membership payments](/domains/membership/api.md)
 - Sponsors can review the current plan, recurring total and amount due today, and check a replacement offer after an unconfirmed change. [Sponsorship frontend](/domains/sponsorship/frontend.md)
 - Sponsors can confirm a [plan change with a processing fee](/domains/sponsorship/fees.md). Immediate upgrades require an approved proration policy and a matching CHF invoice preview.
@@ -11,6 +13,8 @@
 
 ## 2026-11-24
 
+- **Update**: members paying by cash or bank transfer: the board records each later term in the admin area (certificate issued, optionally emailed); adding someone whose online joining was never paid, or whose membership ended, records them again on the same record; an add that failed half-way is finished by adding again; inviting a former member opens their record as an invitation. A confirmed resignation of a manual member now runs to its paid-until day, when a new daily check ends it; before, confirming ended it at once although the email named the paid-until day. A manual term that runs out unpaid is never ended by the site (owner question) ([Membership](/domains/membership/overview.md), [Membership frontend](/domains/membership/frontend.md)).
+- **Update**: a resignation the board records is worded as such in the member's copy; when Stripe cannot be asked about open invoices, the board is told so instead of "none"; the admin totals count every member ([Membership frontend](/domains/membership/frontend.md)).
 - **Update**: the membership webhook claims each Stripe event before it runs, so two deliveries at once run it once; a retry after a failure decides from what is stored (the welcome still goes with the first payment, paid until never moves back); late or out-of-order events (a failure for a paid invoice, a stale "past due") no longer mark a paying member behind; a payment for an ended membership or a second subscription is reported to the board instead of renewing; starting Checkout closes the member's open Checkout pages ([Membership payments](/domains/membership/api.md), [Stripe](/systems/stripe.md)).
 - **Update**: a membership that lapses emails the member, and an unconfirmed resignation that runs out of payment retries ends as lapsed, not resigned. Refunds and disputes of member payments are recorded in the member's history and posted to Slack; the membership is unchanged until the owner decides a policy ([Membership payments](/domains/membership/api.md)).
 - Raffle releases record each delivery and track recipient deletion requests. The daily job erases entrant details on the schedule approved when entries opened. [Raffle add-ons](/domains/sponsorship/raffles.md)

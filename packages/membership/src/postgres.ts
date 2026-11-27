@@ -120,6 +120,7 @@ const PATCH_COLUMNS: Record<keyof MemberPatch, string> = {
   paymentMode: 'payment_mode',
   notes: 'notes',
   joinedAt: 'joined_at',
+  source: 'source',
 };
 
 export const toPatchRow = (patch: MemberPatch): Record<string, unknown> =>
@@ -182,6 +183,23 @@ export function postgresStore(db: Queryable, locked = false): MemberStore {
       } finally {
         client.release(destroy);
       }
+    },
+    async retireSubscription(id) {
+      await q('select member_retire_subscription($1)', [id]);
+    },
+    async retiredSubscription(id, sub) {
+      return (await q('select 1 from member_retired_subscriptions where member_id=$1 and subscription_id=$2', [id, sub])).length > 0;
+    },
+    async dueResignations(today) {
+      return (
+        await q<MemberRow>(
+          "select * from members where status='resigning' and payment_mode='manual' and resignation_confirmed_at is not null and paid_until <= $1 order by paid_until,id limit 100",
+          [today],
+        )
+      ).map(fromRow);
+    },
+    async pendingOperations() {
+      return (await q<{ operation: string }>('select distinct operation from member_deliveries where payload is not null')).map((r) => r.operation);
     },
     async recordInvoice(id, invoice, sub, outcome) {
       const historical = await q('select 1 from certificates where stripe_invoice_id=$1 and member_id<>$2', [invoice, id]);

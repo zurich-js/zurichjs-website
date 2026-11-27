@@ -96,7 +96,12 @@ export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
         if (member) {
           // An earlier checkout that was not finished, or a membership that ended: same record.
           m = await store.update(member.id, { kind: c.kind, name: c.name, organisationName: c.organisationName, level: c.level, cycle: c.cycle, paymentMode: 'automatic' }, actor);
-          if (m.status === 'ended') m = await store.transition(m.id, { from: 'ended', to: 'pending', actor });
+          if (m.status === 'ended')
+            m = await store.transaction(async (tx) => {
+              const updated = await tx.transition(m.id, { from: 'ended', to: 'pending', actor });
+              await tx.retireSubscription(m.id);
+              return { ...updated, stripeSubscriptionId: null };
+            });
         } else {
           m = await store.create(
             {

@@ -53,6 +53,7 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
   'membership-welcome': [term, { ...term, name: 'Grace Hopper', organisationName: 'Acme AG' }],
   'membership-renewed': [{ ...term, term: '10th November 2027 to 9th November 2028', certificateNumber: 'ZJS-2027-0042', nextPayment: '10th November 2028' }],
   'membership-ported': [{ ...term, term: '1st September 2026 to 31st August 2027', certificateNumber: 'ZJS-2026-0007', nextPayment: '1st September 2027' }],
+  'membership-manual-payment': [{ ...term, term: '1st May 2027 to 30th April 2028', certificateNumber: 'ZJS-2027-0051', nextPayment: '1st May 2028' }],
   'membership-invite': [
     { ...base, accountUrl: 'https://zurichjs.com/membership/account?level=supporter&cycle=yearly' },
     {
@@ -72,6 +73,7 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
   'resignation-received': [
     { ...base, openDues: false },
     { ...base, openDues: true },
+    { ...base, openDues: false, byBoard: true },
   ],
   'resignation-withdrawn': [base],
   'resignation-confirmed': [{ ...base, lastDay: '9th November 2027' }],

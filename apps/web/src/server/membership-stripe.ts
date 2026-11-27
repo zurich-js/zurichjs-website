@@ -142,7 +142,7 @@ async function assertNoSubscription(customer: string, deps: StripeDeps) {
 }
 
 /** Expires the customer's membership Checkout sessions that are still open. */
-async function expireOpenCheckouts(customer: string, deps: StripeDeps): Promise<void> {
+export async function expireOpenCheckouts(customer: string, deps: StripeDeps): Promise<void> {
   const f = deps.fetch ?? fetch;
   let after: string | undefined;
   const sessionIds: string[] = [];

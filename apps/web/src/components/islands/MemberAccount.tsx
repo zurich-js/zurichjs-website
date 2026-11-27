@@ -263,6 +263,12 @@ export default function MemberAccount({ contactEmail }: Props) {
   );
 }
 
+/**
+ * Whether setting up automatic payment charges at once: Stripe waits (a trial) only for a paid
+ * term that ends more than 49 hours from now (createCheckout in membership-stripe.ts).
+ */
+const chargedNow = (paidUntil: string | null) => !paidUntil || Date.parse(`${paidUntil}T00:00:00Z`) <= Date.now() + 49 * 3_600_000;
+
 const NOTES: Partial<Record<MemberView['status'], string>> = {
   past_due: 'Your last payment did not go through. Stripe will try again. To keep your membership, update your card under Manage payment details.',
 };
@@ -354,9 +360,9 @@ function MemberPortal({
             Switch to automatic payment
           </h2>
           <p class="m-0 text-body text-ink-2 text-pretty">
-            You pay manually today (cash or bank transfer). Set up automatic payment with Stripe: nothing is charged before your paid period ends
-            {m.paidUntil ? ` (${lastPaidDay(m.paidUntil)})` : ''}, then {m.feeLabel}. You can set up automatic payment now and change your subscription type afterwards, before you
-            are charged.
+            {chargedNow(m.paidUntil)
+              ? `You pay by cash or bank transfer, and your paid term ${m.paidUntil ? `ended on ${lastPaidDay(m.paidUntil)}` : 'has ended'}. To stay a member, set up automatic payment with Stripe: the first payment of ${m.feeLabel} is charged now. Or pay the board by cash or bank transfer.`
+              : `You pay by cash or bank transfer. Set up automatic payment with Stripe now. Stripe charges nothing before ${m.paidUntil ? longDate(m.paidUntil) : 'your paid period ends'}, then ${m.feeLabel}. You can change your level or billing before the first charge.`}
           </p>
           <div class="flex flex-wrap items-center justify-between gap-4">
             <TermsCheckbox checked={accepted} onChange={setAccepted} error={triedSwitch && !accepted ? 'Accept the membership terms to continue.' : undefined} />

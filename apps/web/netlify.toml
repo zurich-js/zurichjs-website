@@ -46,6 +46,9 @@ functions = ".netlify/functions-bundled"
 # The scheduled rebuild (every 2 minutes); the webhook is an Astro endpoint, /api/rebuild.
 [functions."scheduled-rebuild"]
 schedule = "*/2 * * * *"
+# Ends confirmed resignations of members paying by cash or bank transfer on their paid-until day.
+[functions."membership-daily"]
+schedule = "30 7 * * *"
 # Deletes CFP drafts untouched for 14 days.
 [functions."slack-cfp-cleanup"]
 schedule = "@daily"

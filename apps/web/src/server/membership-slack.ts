@@ -99,7 +99,8 @@ export async function notify(text: string, deps: { env: Env; slack?: MembershipS
 
 export function resignationCard(
   m: Member,
-  openDues: number,
+  /** null: Stripe could not be asked. */
+  openDues: number | null,
   why: { reasons: readonly ResignReason[]; note: string } = { reasons: [], note: '' },
 ): { text: string; blocks: SlackBlock[] } {
   const level = levelInfo(m.level).name;
@@ -124,7 +125,9 @@ export function resignationCard(
               { type: 'mrkdwn', text: `:warning: ${openDues} open invoice${openDues === 1 ? '' : 's'}. The resignation takes effect once paid; press Confirm after that.` },
             ],
           }
-        : { type: 'context', elements: [{ type: 'mrkdwn', text: 'No open dues. Confirming ends the membership with the paid period; nothing more is charged.' }] },
+        : openDues === null
+          ? { type: 'context', elements: [{ type: 'mrkdwn', text: ':grey_question: Open invoices could not be checked in Stripe. Confirming checks again.' }] }
+          : { type: 'context', elements: [{ type: 'mrkdwn', text: 'No open dues. Confirming ends the membership with the paid period; nothing more is charged.' }] },
       {
         type: 'actions',
         block_id: 'membership_resignation',

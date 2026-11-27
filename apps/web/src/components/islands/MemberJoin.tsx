@@ -143,8 +143,8 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
         </h2>
         {previous?.status === 'pending' && (
           <p class="m-0 text-body text-ink-2 text-pretty">
-            {/* Invited by the board and not at Stripe yet: nothing was started, so nothing "was not finished". */}
-            {previous.invited && !previous.canManagePayment
+            {/* Invited by the board (also a former member invited again): the invitation, not "not finished". */}
+            {previous.invited
               ? 'The board invited you to join, with the membership you asked for. Check your details, accept the membership terms and continue to payment.'
               : 'Your payment was not finished, so nothing was charged. Check your details and continue.'}
           </p>

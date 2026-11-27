@@ -20,9 +20,10 @@ export interface TransitionInput {
  * `transition`, which writes the new status and the audit row together.
  */
 export type MemberDelivery =
+  | { kind: 'renewal'; subscription: string; reference: string }
   | { kind: 'board'; text: string }
   | { kind: 'email'; to: string; subject: string; html: string; text: string }
-  | { kind: 'certificate'; certificateId: string; template: 'membership-welcome' | 'membership-renewed' | 'membership-ported' };
+  | { kind: 'certificate'; certificateId: string; template: 'membership-welcome' | 'membership-renewed' | 'membership-ported' | 'membership-manual-payment' };
 
 export interface CheckoutAttempt {
   id: string;
@@ -35,6 +36,10 @@ export interface CheckoutAttempt {
 }
 
 export interface MemberStore {
+  retireSubscription(id: string): Promise<void>;
+  retiredSubscription(id: string, sub: string): Promise<boolean>;
+  dueResignations(today: string): Promise<Member[]>;
+  pendingOperations(): Promise<string[]>;
   transaction<T>(work: (store: MemberStore) => Promise<T>): Promise<T>;
   recordInvoice(memberId: string, invoice: string, subscriptionId: string, outcome: 'paid' | 'failed'): Promise<'apply' | 'settled' | 'conflict'>;
   checkoutAttempt(id: string): Promise<CheckoutAttempt | null>;
@@ -49,7 +54,7 @@ export interface MemberStore {
   byUser(userId: string): Promise<Member | null>;
   byStripeSubscription(subscriptionId: string): Promise<Member | null>;
   byStripeCustomer(customerId: string): Promise<Member | null>;
-  /** Oldest first, at most 500 (e.g. manual members for the renewal reminders). */
+  /** Oldest first, at most 500 (e.g. resignations for the daily check). */
   byStatus(status: Status): Promise<Member[]>;
   /** For the admin area: newest first; `q` matches name, email or organisation (case-insensitive). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Member[]>;
@@ -123,6 +128,7 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
   const stripeEvents = new Map<string, { claimedAt: number | null; done: boolean; lease: string; prepared: boolean }>();
 
   const outcomes = new Map<string, { memberId: string; subscriptionId: string; outcome: 'paid' | 'failed' }>();
+  const retired = new Set<string>();
   const attempts = new Map<string, CheckoutAttempt>();
   const deliveries = new Map<string, { memberId: string; operation: string; payload: MemberDelivery | null }>();
   let tail = Promise.resolve();
@@ -177,6 +183,23 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
         () => {},
       );
       return result;
+    },
+    async retireSubscription(id) {
+      const m = must(id);
+      if (m.stripeSubscriptionId) retired.add(m.stripeSubscriptionId);
+      save({ ...m, stripeSubscriptionId: null });
+      attempts.delete(id);
+    },
+    async retiredSubscription(_id, sub) {
+      return retired.has(sub);
+    },
+    async dueResignations(today) {
+      return [...members.values()]
+        .filter((m) => m.status === 'resigning' && m.paymentMode === 'manual' && m.resignationConfirmedAt && m.paidUntil && m.paidUntil <= today)
+        .slice(0, 100);
+    },
+    async pendingOperations() {
+      return [...new Set([...deliveries.values()].filter((d) => d.payload).map((d) => d.operation))];
     },
     async recordInvoice(memberId, invoice, subscriptionId, outcome) {
       const prior = outcomes.get(invoice);

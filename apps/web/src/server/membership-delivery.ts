@@ -1,6 +1,7 @@
 import { sendMemberEmail } from '@zurichjs/integrations';
 import type { MemberStore } from '@zurichjs/membership';
 import { sendCertificate, type IssueDeps } from './membership-certificate.ts';
+import { cancelAtPeriodEnd, resumeSubscription } from './membership-stripe.ts';
 import { membershipSlack, type MembershipSlack } from './membership-slack.ts';
 
 type DeliveryDeps = Omit<IssueDeps, 'actor' | 'template'> & { slack?: MembershipSlack };
@@ -18,6 +19,13 @@ export async function deliverMembershipNotices(operation: string, deps: Delivery
         if (!row) return;
         const { payload } = row;
         switch (payload.kind) {
+          case 'renewal':
+            if (member.stripeSubscriptionId === payload.subscription) {
+              if (member.status === 'ended' || member.status === 'resigning')
+                await cancelAtPeriodEnd(payload.subscription, `reconcile-${member.resignedAt ?? member.updatedAt}`, deps);
+              else await resumeSubscription(payload.subscription, payload.reference, deps);
+            }
+            break;
           case 'board':
             await (deps.slack ?? membershipSlack(deps.env, deps.fetch)).post(payload.text);
             break;
@@ -38,4 +46,14 @@ export async function deliverMembershipNotices(operation: string, deps: Delivery
     }
   }
   if (failures.length) throw new AggregateError(failures, 'Membership notice delivery incomplete.');
+}
+
+export async function tryMembershipNotices(operation: string, deps: DeliveryDeps) {
+  try {
+    await deliverMembershipNotices(operation, deps);
+  } catch (error) {
+    if (!(error instanceof AggregateError)) throw error;
+    (deps.log ?? console.log)(`[membership] Outstanding deliveries for ${operation}`);
+  }
+  return deps.store.pendingDeliveries(operation);
 }

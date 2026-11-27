@@ -48,6 +48,7 @@ A recurring quote names its interval (month, quarter or year) and is worked out 
 - **Renewals and receipts** carry the fee as its own line. The sponsorship price identifies the base plan and its billing period.
 - **Changing plans with a fee in force.** The board sends a quote for the new base price, surcharge and billing interval. The sponsor sees the renewal total and the amount due on confirmation. Confirming a renewal schedules both price lines together. The previous quote stays in force until Stripe applies the new plan. Keeping the current plan cancels the scheduled offer.
 - **Prorated upgrades.** An immediate upgrade requires an explicitly approved treatment. Set both `SPONSOR_FEE_PRORATION_MODE=stripe_items` and `SPONSOR_FEE_PRORATION_POLICY_VERSION` only if the owner approves prorating the base and surcharge together using Stripe. The offer freezes Stripe’s CHF invoice preview and its timestamp. Confirmation checks the preview again before charging. A different treatment requires implementation before enabling it.
+- **Retrying a quoted upgrade.** A definite card refusal releases that confirmation. The sponsor can review and confirm the offer again, or the board can replace it. An unknown response keeps the same signer and Stripe key. The board sees that confirmation is in progress. If Stripe applied both price lines, the sponsor’s retry records the accepted quote even after the billing period ends.
 
 ## Draft surcharge policy (for the owner to review, not approved)
 

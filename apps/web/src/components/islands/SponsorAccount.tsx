@@ -725,7 +725,7 @@ function Sponsorship({ ctx, s, link, onCloseLink, cancelled }: { ctx: Ctx; s: Sp
             setDismissedOffer(offer?.id);
             onCloseLink();
             if (message) {
-              result.set({ tone: 'success', text: message });
+              result.set(message);
               void ctx.reload();
             } else {
               document.getElementById('h-sponsorship')?.focus();
@@ -889,9 +889,9 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
             ctx={ctx}
             s={s}
             title="Change tier or how often you pay"
-            onDone={(text) => {
+            onDone={(message) => {
               setPanel('');
-              result.set({ tone: 'success', text });
+              result.set(message);
               void ctx.reload();
             }}
             onCancel={() => setPanel('')}
@@ -908,7 +908,7 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
 }
 
 /** A change we agreed, opened from our email's link: filled in, at the top, to check and confirm. */
-function LinkedChange({ ctx, s, link, onClose }: { ctx: Ctx; s: SponsorView; link: Link; onClose: (message?: string) => void }) {
+function LinkedChange({ ctx, s, link, onClose }: { ctx: Ctx; s: SponsorView; link: Link; onClose: (message?: Message) => void }) {
   return (
     <section aria-labelledby="h-linked" class={cardClass('outline', 'lg')}>
       <Heading id="h-linked" size="subsection" focus class="scroll-mt-header">
@@ -918,7 +918,7 @@ function LinkedChange({ ctx, s, link, onClose }: { ctx: Ctx; s: SponsorView; lin
         Your current plan is {s.tierName}, {ctx.me.fees?.inForce ? `${ctx.me.fees.inForce.total} ${ctx.me.fees.inForce.per}` : s.feeLabel}.
       </p>
       {link.kind === 'end' ? (
-        <EndForm ctx={ctx} s={s} onDone={onClose} onCancel={() => onClose()} />
+        <EndForm ctx={ctx} s={s} onDone={(text) => onClose({ tone: 'success', text })} onCancel={() => onClose()} />
       ) : (
         <ChangePlan ctx={ctx} s={s} initial={link} onDone={onClose} onCancel={() => onClose()} />
       )}
@@ -939,7 +939,7 @@ function ChangePlan({
   s: SponsorView;
   initial?: { tier: Tier; cycle: Cycle };
   title?: string;
-  onDone: (message: string) => void;
+  onDone: (message: Message) => void;
   onCancel: () => void;
 }) {
   const pending = ctx.me.pendingChange ?? null;
@@ -959,10 +959,11 @@ function ChangePlan({
   const unchecked = !manual && timing !== 'none' && !!ctx.me.pendingChangeUnknown;
   const unchanged = timing === 'none' || scheduled || unchecked;
   const errorOf = (k: string) => errs.errorOf(sig.local, k);
-  const plan = planName(tier, cycle);
 
   const offer = ctx.me.fees?.toConfirm;
   const quote = offer?.plan?.tier === tier && offer.plan.cycle === cycle ? offer : null;
+  const plan = quote ? `${tierInfo(tier).name}, ${quote.total} ${quote.per}` : planName(tier, cycle);
+  const consentId = quote?.plan?.attempt ?? quote?.id;
   const [acceptedQuote, setAcceptedQuote] = useState<string | null>(null);
   const needsOffer = ctx.me.fees?.inForce?.feeChoice === 'pass_through' && !unchanged;
   const effect = needsOffer
@@ -981,7 +982,7 @@ function ChangePlan({
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (busy || unchanged || (needsOffer && !quote) || (quote && acceptedQuote !== quote.id)) return;
+    if (busy || unchanged || (needsOffer && !quote) || (quote && acceptedQuote !== consentId)) return;
     if (!sig.valid) {
       errs.setTried(true);
       focusError();
@@ -992,27 +993,39 @@ function ChangePlan({
     result.set(null);
     const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }>(
       '/api/sponsorship/plan',
-      { json: { tier, cycle, replaces: renewalReference(pending), ...sig.payload, ...(quote && { quoteId: quote.id, acceptFee: acceptedQuote === quote.id }) } },
+      {
+        json: {
+          tier,
+          cycle,
+          replaces: renewalReference(pending),
+          ...sig.payload,
+          ...(quote && { quoteId: quote.id, confirmationAttempt: quote.plan?.attempt, acceptFee: acceptedQuote === consentId }),
+        },
+      },
       ctx,
     );
     setBusy(false);
     if (!r) return;
     if (!r.ok) {
+      if (r.field === 'quoteId') return onDone({ tone: 'danger', text: r.error });
       setAcceptedQuote(null);
+      if (r.field === 'confirmationAttempt') await ctx.reload();
       errs.setServer(r);
       if (r.field && SIGN_FIELDS.includes(r.field)) focusError();
       else result.set({ tone: 'danger', text: r.error });
       return;
     }
-    onDone(
-      r.timing === 'now'
-        ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}${
-            r.droppedChange ? ` The change to ${r.droppedChange} that was waiting for your renewal no longer applies.` : ''
-          }`
-        : r.timing === 'renewal'
-          ? `Change scheduled for ${r.from ? longDate(r.from) : 'your next renewal'}. From then, your sponsorship is ${plan}.`
-          : 'Your current plan stays.',
-    );
+    onDone({
+      tone: 'success',
+      text:
+        r.timing === 'now'
+          ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}${
+              r.droppedChange ? ` The change to ${r.droppedChange} that was waiting for your renewal no longer applies.` : ''
+            }`
+          : r.timing === 'renewal'
+            ? `Change scheduled for ${r.from ? longDate(r.from) : 'your next renewal'}. From then, your sponsorship is ${plan}.`
+            : 'Your current plan stays.',
+    });
   };
 
   return (
@@ -1055,15 +1068,15 @@ function ChangePlan({
       {!unchanged && quote?.plan && (
         <Checkbox
           label={`I agree to ${quote.total} ${quote.per} and ${quote.plan.dueNow} due now.`}
-          checked={acceptedQuote === quote.id}
-          onChange={(e) => setAcceptedQuote(e.currentTarget.checked ? quote.id : null)}
+          checked={acceptedQuote === consentId}
+          onChange={(e) => setAcceptedQuote(e.currentTarget.checked ? (consentId ?? null) : null)}
         />
       )}
       {!unchanged && (!needsOffer || quote) && <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />}
       <ResultNotice result={result} />
       <Actions>
         {!unchanged && (!needsOffer || quote) && (
-          <Button type="submit" variant="primary" disabled={busy || (!!quote && acceptedQuote !== quote.id)}>
+          <Button type="submit" variant="primary" disabled={busy || (!!quote && acceptedQuote !== consentId)}>
             {busy ? 'Changing…' : signedLabel(sig, 'Sign and change', 'Confirm the change')}
           </Button>
         )}

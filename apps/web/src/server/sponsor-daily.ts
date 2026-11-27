@@ -17,9 +17,9 @@
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  *
  * Netlify stops a scheduled function after 30 s. With a `deadline` (deadline.ts) the work is done
- * in this order: everything decided from the sponsor row alone (endings, reminders, Stripe left
- * open by an ended sponsorship), then the unpaid one-time sponsorships, which need their meetups
- * read, starting at a different one each day, then the queued notices. Nothing is started with
+ * in this order: row-based endings and reminders, then unpaid one-time sponsorships starting at
+ * a different one each day. Retries for ended sponsors alternate days taking priority over
+ * queued notices, coverage rebuilds and orphaned payment links. Nothing is started with
  * less than PER_SPONSOR_MS left; what was not started is returned as `deferred` and done by a later
  * run, because each step is decided again from the saved rows (a reminder by its catch-up rule).
  */
@@ -154,20 +154,27 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
     },
   }));
 
-  const work = [...fromRow, ...reminders, ...leftOpen, ...unpaidWork];
-  for (const [i, w] of work.entries()) {
-    if (!room()) {
-      out.deferred.push(...work.slice(i).map((x) => x.id));
-      break;
+  const run = async (work: typeof fromRow) => {
+    for (const [i, w] of work.entries()) {
+      if (!room()) {
+        out.deferred.push(...work.slice(i).map((x) => x.id));
+        break;
+      }
+      await w.run();
     }
-    await w.run();
-  }
+  };
+  const day = dayNumber(today);
+  const start = leftOpen.length ? Math.floor(day / 2) % leftOpen.length : 0;
+  const closes = [...leftOpen.slice(start), ...leftOpen.slice(0, start)];
+  const closesFirst = !deps.deadline || day % 2 === 0;
+  await run([...fromRow, ...reminders, ...(closesFirst ? closes : []), ...unpaidWork]);
   // No notice is claimed without time to send one; the rest wait for the next run.
   if (!deps.deadline || deps.deadline.remaining() >= PER_NOTICE_MS) out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
-  if (room()) out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: room })).closed;
   if (room()) {
     const versions = await deps.store.pendingMeetupRebuilds();
     if (room()) await queueCoverage(deps.store, deps.queueRebuild ?? queueRebuild, versions);
   }
+  if (room()) out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: room })).closed;
+  if (!closesFirst) await run(closes);
   return out;
 }

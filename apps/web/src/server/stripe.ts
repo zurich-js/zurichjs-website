@@ -59,11 +59,13 @@ export const DONATION_SOURCE = 'zurichjs.com/donate';
 export class StripeRequestError extends Error {
   readonly status: number;
   readonly code: string | undefined;
+  readonly type?: string;
 
-  constructor(path: string, status: number, code: string | undefined, message: string) {
+  constructor(path: string, status: number, code: string | undefined, message: string, type?: string) {
     super(`Stripe ${path} failed: HTTP ${status} ${message}`.trim());
     this.status = status;
     this.code = code;
+    this.type = type;
   }
 }
 
@@ -95,9 +97,11 @@ export async function stripeApi<T>(env: Env, fetchImpl: Fetch, method: 'GET' | '
     body: method === 'POST' ? params?.toString() : undefined,
     signal: AbortSignal.timeout(15_000),
   });
-  const json = (await res.json()) as T & { error?: { message?: string; code?: string } };
-  if (!res.ok) throw new StripeRequestError(path, res.status, json.error?.code, json.error?.message ?? '');
-  return json;
+  if (!res.ok) {
+    const body: { error?: { code?: string; message?: string; type?: string } } | null = await res.json().catch(() => null);
+    throw new StripeRequestError(path, res.status, body?.error?.code, body?.error?.message ?? '', body?.error?.type);
+  }
+  return res.json() as Promise<T>;
 }
 
 /** Creates a Checkout Session and returns the URL to send the visitor to. */

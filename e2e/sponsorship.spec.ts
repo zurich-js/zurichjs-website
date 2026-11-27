@@ -66,6 +66,25 @@ const me = (s: ReturnType<typeof sponsor> | null) => ({
   invitation: null,
 });
 
+function accountWithPlanOffer(offer: 'original' | 'revised' | null) {
+  const current = sponsor({ cycle: 'quarterly', cycleLabel: 'Quarterly', feeLabel: 'CHF 840 a quarter' });
+  return {
+    ...me(current),
+    fees: {
+      inForce: { feeChoice: 'pass_through', surcharge: 'CHF 25.40', total: 'CHF 865.40', per: 'a quarter' },
+      toConfirm: offer && {
+        id: offer,
+        feeChoice: 'pass_through',
+        base: 'CHF 1’400.00',
+        surcharge: 'CHF 42.13',
+        total: 'CHF 1’442.13',
+        per: 'a quarter',
+        plan: { tier: 'builder', cycle: 'quarterly', timing: 'now', dueNow: offer === 'revised' ? 'CHF 123.46' : 'CHF 123.45', from: '2026-11-18T10:00:00Z', scheduled: false },
+      },
+    },
+  };
+}
+
 /** The board's row and detail: the sponsor plus what only the board sees (adminSponsorView). */
 const adminSponsor = (over: Record<string, unknown> = {}) => ({
   ...sponsor(),
@@ -441,22 +460,10 @@ test.describe('the sponsorship page (/partners/account)', () => {
   test('a revised invoice requires fresh consent to its price before submitting the upgrade', async ({ page }) => {
     let revised = false;
     const attempts: unknown[] = [];
-    const current = sponsor({ cycle: 'quarterly', cycleLabel: 'Quarterly', feeLabel: 'CHF 840 a quarter' });
-    const quote = () => ({
-      id: revised ? 'revised' : 'original',
-      feeChoice: 'pass_through',
-      base: 'CHF 1’400.00',
-      surcharge: 'CHF 42.13',
-      total: 'CHF 1’442.13',
-      per: 'a quarter',
-      plan: { tier: 'builder', cycle: 'quarterly', timing: 'now', dueNow: revised ? 'CHF 123.46' : 'CHF 123.45', from: '2026-11-18T10:00:00Z', scheduled: false },
-    });
-    await mockMe(page, () => ({
-      ...me(current),
-      fees: { inForce: { feeChoice: 'pass_through', surcharge: 'CHF 25.40', total: 'CHF 865.40', per: 'a quarter' }, toConfirm: quote() },
-    }));
+    await mockMe(page, () => accountWithPlanOffer(revised ? 'revised' : 'original'));
     await page.route('**/api/sponsorship/plan', (route) => {
       attempts.push(route.request().postDataJSON());
+      if (attempts.length === 3) return route.fulfill({ json: { ok: true, timing: 'now', from: null } });
       const first = !revised;
       revised = true;
       return route.fulfill({
@@ -494,7 +501,50 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await expect(panel.getByRole('alert')).toHaveText('The payment was not confirmed.');
     await expect(panel.getByRole('status')).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Acme AG' })).toContainText('Community Friend');
-    expect(attempts).toEqual(['original', 'revised'].map((quoteId) => expect.objectContaining({ quoteId, acceptFee: true, confirm: true })));
+    for (const tick of await panel.getByRole('checkbox').all()) await tick.check();
+    await submit.press('Enter');
+    await expect(page.getByText(/Your sponsorship is now Community Builder, CHF 1’442.13 a quarter/)).toBeVisible();
+    expect(attempts).toEqual(['original', 'revised', 'revised'].map((quoteId) => expect.objectContaining({ quoteId, acceptFee: true, confirm: true })));
+  });
+
+  test('an expired offer closes its confirmation and leaves the sponsor with the next step', async ({ page }) => {
+    let expired = false;
+    await mockMe(page, () => accountWithPlanOffer(expired ? null : 'original'));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      expired = true;
+      return route.fulfill({ status: 409, json: { ok: false, field: 'quoteId', error: 'This offer expired. Ask the board for a new one.' } });
+    });
+    await page.goto(ACCOUNT + '?change=builder-quarterly');
+    const panel = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    await expect(panel.getByRole('checkbox')).toHaveCount(2);
+    for (const tick of await panel.getByRole('checkbox').all()) await tick.check();
+    await panel.getByRole('button', { name: 'Confirm the change' }).click();
+    const notice = page.getByRole('alert').filter({ hasText: 'This offer expired. Ask the board for a new one.' });
+    await expect(notice).toBeFocused();
+    await expect(panel).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Acme AG' })).toContainText('Community Friend');
+    await expect(page).toHaveURL(new RegExp(ACCOUNT + '$'));
+  });
+
+  test('retrying the raffle meetup list preserves the proposal', async ({ page }) => {
+    let reads = 0;
+    await mockMe(page, () => me(sponsor()));
+    await page.route('**/api/sponsorship/raffles', (route) => route.fulfill({ json: { ok: true, eligible: true, raffles: [], terms: { open: true } } }));
+    await page.route('**/api/sponsorship/meetups', (route) =>
+      ++reads === 1
+        ? route.fulfill({ status: 503, json: { ok: false, error: 'The meetup list is unavailable.' } })
+        : route.fulfill({ json: { ok: true, meetups: [{ id: 'upcoming', title: 'Mock meetup', date: '2026-12-12' }] } }),
+    );
+    await page.goto(ACCOUNT);
+    const panel = page.getByRole('region', { name: 'Raffle add-ons' });
+    await panel.getByRole('button', { name: 'Propose a raffle' }).click();
+    await panel.getByLabel('Prize', { exact: true }).fill('Keyboard');
+    await expect(panel.getByRole('button', { name: 'Send the proposal' })).toBeDisabled();
+    await panel.getByRole('button', { name: 'Try again' }).press('Enter');
+    await panel.getByLabel('Meetup', { exact: true }).selectOption('upcoming');
+    await expect(panel.getByLabel('Prize', { exact: true })).toHaveValue('Keyboard');
+    await expect(panel.getByRole('button', { name: 'Send the proposal' })).toBeEnabled();
+    await expect(panel.getByText('The meetup list is unavailable.')).toHaveCount(0);
   });
 
   test('a change link opened while the scheduled change is unknown cannot be confirmed yet', async ({ page }) => {

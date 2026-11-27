@@ -18,6 +18,7 @@
  */
 import {
   AGREEMENT,
+  QuoteBusy,
   fee,
   isRecurring,
   quoteFigures,
@@ -28,6 +29,8 @@ import {
   chf,
   cycleInfo,
   feeLabel,
+  priceLookupKey,
+  fromLookupKey,
   renewalReference,
   tierInfo,
   type Actor,
@@ -38,10 +41,12 @@ import {
   type NewNotice,
   type Sponsor,
   type SponsorDocument,
+  type SponsorEvent,
   type SponsorMeetup,
   type SponsorStore,
   type Tier,
   type FeeStore,
+  type Quote,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
 import { MembershipUnavailable } from './membership-db.ts';
@@ -66,6 +71,7 @@ import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
 import {
   cancelAtPeriodEnd,
   cancelNow,
+  claimedPlanExpired,
   prepareCardPlan,
   readPlanSubscription,
   releaseSchedule,
@@ -77,6 +83,7 @@ import {
   scheduleChange,
   startCardCheckout,
   upgradeNow,
+  UpgradeDeclined,
   previewFeePlan,
   releaseFeePlan,
   type StripeDeps,
@@ -100,6 +107,15 @@ const feesOf = (deps: LifecycleDeps): FeeStore | null => {
     throw cause;
   }
 };
+
+/**
+ * A sponsor's confirmation holds the open offer. Stripe shows it never applied and the term renewed
+ * on the old plan: void it under the same fence the sponsor's retry uses. Anything else stays busy.
+ */
+async function releaseExpiredClaim(q: Quote, fees: FeeStore, stripe: StripeDeps) {
+  const expired = q.planChange && (await claimedPlanExpired(q, q.planChange, stripe));
+  if (!expired || !(await fees.voidExpiredPlan(q.id, q.applyingBy!, q.confirmationAttempt ?? null))) throw new QuoteBusy();
+}
 
 /** The board's open offer no longer stands: void its quote and switch its link off. */
 async function endOffer(s: Sponsor, deps: LifecycleDeps) {
@@ -257,6 +273,74 @@ async function cancelQuotedRenewal(s: Sponsor, deps: LifecycleDeps, expected?: s
   return true;
 }
 
+function releasedRenewal(
+  history: SponsorEvent[],
+  sub: Awaited<ReturnType<typeof readPlanSubscription>>,
+  to: { tier: Tier; cycle: Cycle },
+  actor: Actor,
+  replaces: string,
+  now: Date,
+) {
+  const target = priceLookupKey(to.tier, to.cycle);
+  const release = history.findLast((e) => e.type === 'upgrade_replacing_renewal' && e.payload.subscription === sub.id && e.payload.item === sub.item.id);
+  if (!release || release.actor.kind !== actor.kind || release.actor.id !== actor.id || release.payload.target !== target || release.payload.replaces !== replaces) return null;
+  const p = release.payload;
+  if (
+    sub.item.price?.lookup_key !== target &&
+    (!sub.item.current_period_end ||
+      now.getTime() >= sub.item.current_period_end * 1000 ||
+      p.periodEnd !== sub.item.current_period_end ||
+      p.current !== sub.item.price?.id ||
+      history.some((e) => e.type === 'upgrade_settled' && e.payload.base === p.base && e.payload.outcome === 'applied' && e.payload.generation === p.generation))
+  )
+    return null;
+  return typeof p.dropped === 'string' ? fromLookupKey(p.dropped) : null;
+}
+
+async function applyCardUpgrade(
+  s: Sponsor,
+  card: Awaited<ReturnType<typeof prepareCardPlan>>,
+  history: SponsorEvent[],
+  released: { tier: Tier; cycle: Cycle } | null,
+  actor: Actor,
+  deps: LifecycleDeps,
+) {
+  const base = `sponsor-upgrade:${card.id}:${card.price}`;
+  const settled = history.filter((e) => e.type === 'upgrade_settled' && e.payload.base === base);
+  const attempts = new Set(settled.map((e) => e.payload.key)).size;
+  const generation = new Set(settled.filter((e) => e.payload.outcome === 'applied').map((e) => e.payload.key)).size;
+  const key = attempts ? `${base}:${attempts}` : base;
+  const dropped = card.pending ?? released;
+  if (card.current !== card.price) {
+    if (card.schedule) {
+      if (card.pending)
+        await deps.store.log(s.id, 'upgrade_replacing_renewal', actor, {
+          base,
+          generation,
+          subscription: card.id,
+          item: card.itemId,
+          periodEnd: card.item.current_period_end,
+          current: card.current,
+          target: priceLookupKey(card.plan.tier, card.plan.cycle),
+          schedule: card.schedule,
+          replaces: renewalReference(card.pending),
+          dropped: priceLookupKey(card.pending.tier, card.pending.cycle),
+        });
+      await releaseSchedule(card.schedule, deps.stripe);
+    }
+    try {
+      await upgradeNow(card, key, deps.stripe);
+    } catch (cause) {
+      if (!(cause instanceof UpgradeDeclined)) throw cause;
+      await deps.store.log(s.id, 'upgrade_settled', actor, { base, key, generation, outcome: 'declined' });
+      const renewal = dropped ? ' The change scheduled for renewal was cancelled.' : '';
+      throw new SponsorshipError(`Stripe could not complete the payment.${renewal} Update your payment method, then confirm the upgrade again.`, 402);
+    }
+  }
+  await deps.store.log(s.id, 'upgrade_settled', actor, { base, key, generation, outcome: 'applied' });
+  return dropped;
+}
+
 /**
  * Changes tier and/or how often they pay. Not started yet or paid outside Stripe: at once (an open
  * Checkout is closed so the next one has the new price). Card: by changeTiming. Choosing the
@@ -278,8 +362,11 @@ export async function changePlan(
   const { timing, from } = await appliesLabel(s, to, deps);
   let sponsor = s;
 
+  const history = timing === 'now' && s.stripeSubscriptionId && s.status !== 'pending' ? await deps.store.events(s.id) : [];
   const subscription = s.stripeSubscriptionId && s.status !== 'pending' ? await readPlanSubscription(s.stripeSubscriptionId, deps.stripe) : null;
-  if (subscription && renewalReference(subscription.pending) !== replaces) {
+  const released =
+    subscription && timing === 'now' && !subscription.schedule && replaces ? releasedRenewal(history, subscription, to, actor, replaces, deps.now?.() ?? new Date()) : null;
+  if (subscription && renewalReference(subscription.pending) !== replaces && !released) {
     // Stripe may have released the signed schedule before the local transaction was saved.
     if (timing === 'none' && !subscription.schedule && (await cancelQuotedRenewal(s, deps, replaces))) return { sponsor, timing, from };
     throw new SponsorshipError('The renewal plan changed. Reload the page and check it before confirming.');
@@ -310,7 +397,7 @@ export async function changePlan(
   let dropped: { tier: Tier; cycle: Cycle } | null = null;
   if (timing === 'now') {
     if (s.status === 'pending') await closeCheckout(s, deps.store, deps.stripe);
-    else if (card) dropped = await upgradeNow(card, deps.stripe);
+    else if (card) dropped = await applyCardUpgrade(s, card, history, released, actor, deps);
     sponsor = await deps.store.update(s.id, { tier: to.tier, cycle: to.cycle }, actor);
   } else if (card) {
     await scheduleChange(card, deps.stripe);
@@ -483,6 +570,8 @@ export async function suggestChange(
   const prior = c.kind === 'plan' ? await fees?.acceptedQuote(s.id) : null;
   if (fees && prior?.feeChoice === 'pass_through' && c.kind === 'plan') {
     if (!s.stripeSubscriptionId || !isRecurring(c.cycle) || !applies || applies.timing === 'none') throw new SponsorshipError('Choose a different recurring plan.');
+    const claimed = await fees.openQuote(s.id, 'sponsorship', null);
+    if (claimed?.applyingBy) await releaseExpiredClaim(claimed, fees, deps.stripe);
     const figures = quoteFigures(fee(c.tier, c.cycle) * 100, prior.feeChoice, await currentGate(fees, deps.env));
     const plan = await previewFeePlan(s.stripeSubscriptionId, prior.id, { tier: c.tier, cycle: c.cycle }, figures.baseMinor, figures.surchargeMinor, applies.timing, deps.stripe);
     const purpose = planLabel(c) + ', ' + chfMinor(figures.totalMinor) + ' per payment';

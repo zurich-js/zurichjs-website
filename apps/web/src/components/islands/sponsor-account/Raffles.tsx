@@ -285,6 +285,8 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; te
 
 function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; onCancel: () => void; onDone: () => void }) {
   const [meetups, setMeetups] = useState<Meetup[] | null>(null);
+  const [meetupError, setMeetupError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [f, setF] = useState({ eventId: '', prize: '', quantity: '1', budgetChf: '', fulfilment: 'zurichjs' as 'zurichjs' | 'in_kind' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
@@ -294,13 +296,13 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
     let active = true;
     void call<{ meetups: Meetup[] }>('/api/sponsorship/meetups', undefined, onSignedOut).then((r) => {
       if (!active || !r) return;
-      if (!r.ok) setError({ field: 'eventId', message: r.error });
-      setMeetups(r.ok ? r.data.meetups : []);
+      if (!r.ok) return setMeetupError(r.error);
+      setMeetups(r.data.meetups);
     });
     return () => {
       active = false;
     };
-  }, [onSignedOut]);
+  }, [onSignedOut, loadAttempt]);
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -322,17 +324,37 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
       <SelectField
         label="Meetup"
         value={f.eventId}
-        error={err('eventId')}
-        invalid={!!err('eventId')}
+        error={meetupError || err('eventId')}
+        invalid={!!(meetupError || err('eventId'))}
         onChange={(e) => setF({ ...f, eventId: (e.target as HTMLSelectElement).value })}
       >
-        <option value="">{!meetups ? 'Loading the meetups…' : meetups.length || err('eventId') ? 'Choose an upcoming meetup' : 'No upcoming meetup is published yet'}</option>
+        <option value="">
+          {!meetups && !meetupError
+            ? 'Loading the meetups…'
+            : meetups?.length || meetupError || err('eventId')
+              ? 'Choose an upcoming meetup'
+              : 'No upcoming meetup is published yet'}
+        </option>
         {(meetups ?? []).map((m) => (
           <option key={m.id} value={m.id}>
             {m.title}, {longDate(m.date)}
           </option>
         ))}
       </SelectField>
+      {meetupError && (
+        <div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setMeetupError('');
+              setLoadAttempt((n) => n + 1);
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      )}
       <TextField
         label="Prize"
         hint="What the winner gets, for example a mechanical keyboard"

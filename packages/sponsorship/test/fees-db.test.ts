@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startPg, type Pg } from '../../membership/test/pg.ts';
-import { DuplicateTariff, feeGate, memoryFeeStore, postgresFeeStore, postgresStore, quoteFigures, type FeeStore } from '../src/index.ts';
+import { DuplicateTariff, QuoteBusy, feeGate, memoryFeeStore, postgresFeeStore, postgresStore, quoteFigures, type FeeStore } from '../src/index.ts';
 
 const migrations = join(import.meta.dirname, '../../../apps/web/database/migrations');
 const db = startPg();
@@ -206,7 +206,38 @@ d('fee store on Postgres', () => {
         charge: { timing: 'renewal' as const },
       },
     };
-    const { quote } = await fees.createQuote(next);
+    const immediate = { ...next, planChange: { ...next.planChange, charge: { timing: 'now' as const, at: 1800000000, dueMinor: 100, policy: 'test' } } };
+    const { quote: upgrade } = await fees.createQuote(immediate);
+    const signer = { version: '2026-11-01', name: 'First', title: 'Director', email: 'first@example.test' };
+    expect((await Promise.all(['a', 'b'].map((c) => fees.claimRecurring(upgrade.id, c, signer)))).filter(Boolean)).toHaveLength(1);
+    const contact = (await fees.quote(upgrade.id))!.applyingBy!;
+    expect(await fees.releaseDeclinedPlan(upgrade.id, contact, null)).toBe(true);
+    expect(await fees.claimRecurring(upgrade.id, contact, signer)).toBe(false);
+    const attempt = (await fees.quote(upgrade.id))!.confirmationAttempt!;
+    expect(await fees.claimRecurring(upgrade.id, contact, { ...signer, attempt })).toBe(true);
+    expect(await fees.releaseDeclinedPlan(upgrade.id, contact, null)).toBe(false);
+    expect(await fees.voidQuote(upgrade.id)).toBeNull();
+    await expect(fees.createQuote(immediate)).rejects.toThrow(/confirming/);
+    expect(await fees.voidExpiredPlan(upgrade.id, contact, null)).toBe(false);
+    expect(await fees.voidExpiredPlan(upgrade.id, 'other', attempt)).toBe(false);
+    const expire = () => fees.voidExpiredPlan(upgrade.id, contact, attempt);
+    const [replacement, ...expired] = await Promise.all([
+      fees.createQuote(next).catch((cause: unknown) => {
+        if (!(cause instanceof QuoteBusy)) throw cause;
+        return null;
+      }),
+      expire(),
+      expire(),
+    ] as const);
+    expect(expired.sort()).toEqual([false, true]);
+    const { quote } = replacement ?? (await fees.createQuote(next));
+    expect(await fees.quote(upgrade.id)).toMatchObject({ status: 'void', applyingBy: null });
+    expect(await fees.claimRecurring(upgrade.id, contact, { ...signer, attempt })).toBe(false);
+    expect(await fees.releaseDeclinedPlan(upgrade.id, contact, attempt)).toBe(false);
+    expect(await fees.acceptQuote(upgrade.id, contact, 'si_late')).toBeNull();
+    expect(await expire()).toBe(false);
+    expect((await fees.openQuote(running.id, 'sponsorship', null))?.id).toBe(quote.id);
+    expect((await fees.acceptedQuote(running.id))?.id).toBe(current.id);
     expect(quote.planChange).toEqual(next.planChange);
     const signature = { version: '2026-11-01', name: 'Grace', title: 'Director', email: 'g@example.test' };
     const claims = await Promise.all(['a', 'b'].map((c) => fees.claimRecurring(quote.id, c, signature)));
@@ -216,6 +247,7 @@ d('fee store on Postgres', () => {
     expect((await pool.query('select count(*)::int as n from sponsor_agreements where id=$1', [quote.id])).rows[0].n).toBe(1);
     await expect(fees.createQuote(next)).rejects.toThrow(/confirming/);
     expect(pgdb.fails(`update payment_quotes set plan_change='{}' where id='${quote.id}'`)).toMatch(/frozen/);
+    expect(await fees.voidExpiredPlan(quote.id, winner, null)).toBe(false);
     expect(await fees.savePlanSchedule(quote.id, 'sched_one')).toBe(true);
     expect(await fees.retirePlanSchedule(quote.id, 'other')).toBe(false);
     expect(await fees.acceptQuote(quote.id, winner, 'si_next')).toMatchObject({ status: 'accepted' });

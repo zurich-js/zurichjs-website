@@ -10,12 +10,12 @@
  */
 import { AGREEMENT } from '@zurichjs/sponsorship';
 import { feeStore } from '../../../server/sponsor-fees.ts';
-import { applyFeePlan } from '../../../server/sponsor-stripe.ts';
+import { applyFeePlan, UnappliedPlanExpired, UpgradeDeclined } from '../../../server/sponsor-stripe.ts';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
 import { parsePlan, parseSignature } from '../../../server/sponsor-input.ts';
-import { changePlan, resolveSigner } from '../../../server/sponsor-lifecycle.ts';
+import { changePlan, resolveSigner, SponsorshipError } from '../../../server/sponsor-lifecycle.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 
 export const prerender = false;
@@ -63,11 +63,24 @@ export const handlePlan = (request: Request, deps: SponsorRouteDeps = {}) =>
             from: terms.charge.timing === 'renewal' ? new Date(terms.periodEnd * 1000).toISOString().slice(0, 10) : null,
           });
         if (q.status === 'accepted') return response(sponsor);
+        if ((body.confirmationAttempt ?? null) !== (q.confirmationAttempt ?? null))
+          return fail(409, 'This confirmation has ended. Review the offer again.', { field: 'confirmationAttempt' });
         if (q.applyingBy && q.applyingBy !== contact.id) return fail(409, 'Another contact is confirming this quote.');
+        if (q.status === 'void') return fail(409, 'This offer is no longer available. Review the current quote.', { field: 'quoteId' });
         if (q.status !== 'open' || (await fees.acceptedQuote(sponsor.id))?.id !== terms.previousQuote) return fail(409, 'This offer was replaced. Review the current quote.');
-        const signature = { ...signer, version: AGREEMENT.version };
+        const signature = { ...signer, version: AGREEMENT.version, attempt: q.confirmationAttempt ?? null };
         const applied = await applyFeePlan(q, terms, lifecycle.stripe, async () => {
-          if (!(await fees.claimRecurring(q.id, contact.id, signature))) throw new Error('The sponsor must review the current quote.');
+          if (!(await fees.claimRecurring(q.id, contact.id, signature)))
+            throw new SponsorshipError('The confirmation changed. Review the current quote.', 409, 'confirmationAttempt');
+        }).catch(async (cause: unknown) => {
+          if (cause instanceof UnappliedPlanExpired) {
+            if (await fees.voidExpiredPlan(q.id, contact.id, signature.attempt)) throw new SponsorshipError('This offer expired. Ask the board for a new one.', 409, 'quoteId');
+            throw new SponsorshipError('This confirmation has ended. Review the current offer.', 409, 'quoteId');
+          }
+          if (!(cause instanceof UpgradeDeclined)) throw cause;
+          if (!(await fees.releaseDeclinedPlan(q.id, contact.id, signature.attempt)))
+            throw new SponsorshipError('The confirmation changed. Review the current quote.', 409, 'confirmationAttempt');
+          throw new SponsorshipError('Stripe could not complete the payment. Update your payment method, then review and confirm the offer again.', 402, 'confirmationAttempt');
         });
         if ('schedule' in applied) {
           if (!(await fees.savePlanSchedule(q.id, applied.schedule))) throw new Error('The confirmed schedule needs reconciliation.');

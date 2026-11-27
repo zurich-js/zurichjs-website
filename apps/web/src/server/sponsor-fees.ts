@@ -53,6 +53,7 @@ export const quoteView = (q: Quote) => ({
   purpose: q.purpose,
   plan: q.planChange
     ? {
+        attempt: q.confirmationAttempt ?? null,
         tier: q.planChange.tier,
         cycle: q.planChange.cycle,
         timing: q.planChange.charge.timing,

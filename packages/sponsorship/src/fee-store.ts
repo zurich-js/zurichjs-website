@@ -42,6 +42,7 @@ export interface FeePlanChange {
 export interface Quote extends QuoteFigures {
   planChange?: FeePlanChange | null;
   applyingBy?: string | null;
+  confirmationAttempt?: string | null;
   id: string;
   sponsorId: string;
   subject: QuoteSubject;
@@ -105,10 +106,18 @@ export class DuplicateTariff extends Error {
   }
 }
 
+export class QuoteBusy extends Error {
+  constructor() {
+    super('The sponsor is confirming this offer and Stripe has not answered yet. Try again later.');
+  }
+}
+
 export interface FeeStore {
+  voidExpiredPlan(id: string, contact: string, attempt: string | null): Promise<boolean>;
+  releaseDeclinedPlan(id: string, contact: string, attempt: string | null): Promise<boolean>;
   savePlanSchedule(id: string, schedule: string): Promise<boolean>;
   retirePlanSchedule(id: string, schedule: string): Promise<boolean>;
-  claimRecurring(id: string, contact: string, signature?: { name: string; title: string; email: string; version: string }): Promise<boolean>;
+  claimRecurring(id: string, contact: string, signature?: { name: string; title: string; email: string; version: string; attempt?: string | null }): Promise<boolean>;
   /**
    * The sponsor agreed to an open recurring quote: it becomes the one in force (any earlier accepted
    * quote for the same thing is superseded). `ref` is the surcharge's subscription item, if any.
@@ -196,7 +205,6 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
   const tariffs: Tariff[] = [];
   const quotes: Quote[] = [];
   const payments: QuotePayment[] = [];
-  const applying = new Map<string, string>();
   const requests = new Map<string, Quote>();
   let n = 0;
   const copy = <T extends object>(x: T | undefined) => (x ? { ...x } : null);
@@ -231,7 +239,7 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
       if (o.reuse && open && (open.linkState === 'none' || open.linkState === 'creating') && sameFigures(open, input))
         return { quote: { ...open }, superseded: null, reused: true };
       if (open?.linkState === 'creating') throw new Error('Payment link creation is in progress. Retry the same offer first.');
-      if (open && applying.has(open.id)) throw new Error('The sponsor is confirming this offer.');
+      if (open?.applyingBy) throw new QuoteBusy();
       if (open) retire(open, 'superseded');
       const quote: Quote = {
         ...input,
@@ -284,7 +292,7 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
     async voidQuote(id) {
       const q = quotes.find((x) => x.id === id && x.status === 'open');
       if (!q) return null;
-      if (applying.has(id)) return null;
+      if (q.applyingBy) return null;
       retire(q, 'void');
       return { ...q };
     },
@@ -298,23 +306,35 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
       const q = quotes.find((q) => q.id === id && q.status === 'open' && q.planChange && q.stripeRef === schedule);
       if (!q) return false;
       retire(q, 'void');
-      applying.delete(id);
+      q.applyingBy = null;
       return true;
     },
-    async claimRecurring(id, contact) {
+    async voidExpiredPlan(id, contact, attempt) {
+      const q = quotes.find((q) => q.id === id);
+      if (q?.status !== 'open' || q.planChange?.charge.timing !== 'now' || q.applyingBy !== contact || (q.confirmationAttempt ?? null) !== attempt) return false;
+      retire(q, 'void');
+      q.applyingBy = null;
+      return true;
+    },
+    async releaseDeclinedPlan(id, contact, attempt) {
+      const q = quotes.find((q) => q.id === id);
+      if (q?.status !== 'open' || q.planChange?.charge.timing !== 'now' || q.applyingBy !== contact || (q.confirmationAttempt ?? null) !== attempt) return false;
+      q.applyingBy = null;
+      q.confirmationAttempt = crypto.randomUUID();
+      return true;
+    },
+    async claimRecurring(id, contact, signature) {
       const q = quotes.find((x) => x.id === id);
-      if (!q?.interval || q.status !== 'open' || (applying.has(id) && applying.get(id) !== contact)) return false;
-      applying.set(id, contact);
+      if (!q?.interval || q.status !== 'open' || (q.applyingBy && q.applyingBy !== contact) || (q.confirmationAttempt ?? null) !== (signature?.attempt ?? null)) return false;
       q.applyingBy = contact;
       return true;
     },
     async acceptQuote(id, by, ref) {
       const q = quotes.find((x) => x.id === id);
-      if (applying.has(id) && applying.get(id) !== by) return null;
+      if (q?.applyingBy && q.applyingBy !== by) return null;
       if (!q || !q.interval || (q.status !== 'open' && q.status !== 'accepted')) return null;
       if (q.status === 'accepted') return { ...q };
       for (const o of quotes) if (o.status === 'accepted' && same(o, q.sponsorId, q.subject, q.subjectId)) o.status = 'superseded';
-      applying.delete(id);
       Object.assign(q, { status: 'accepted', acceptedAt: now(), acceptedBy: by, stripeRef: ref, applyingBy: null });
       return { ...q };
     },
@@ -385,6 +405,7 @@ const quoteOf = (r: Record<string, unknown>): Quote => ({
   subjectId: (r.subject_id as string | null) ?? null,
   purpose: r.purpose as string,
   applyingBy: r.applying_by as string | null,
+  confirmationAttempt: r.confirmation_attempt as string | null,
   planChange: r.plan_change as FeePlanChange | null,
   interval: (r.interval as QuoteInterval | null) ?? null,
   currency: 'chf',
@@ -456,7 +477,10 @@ export function postgresFeeStore(db: Pick<Queryable, 'query'>): FeeStore {
     },
     async createQuote(n, o = {}) {
       const statement = n.planChange ? 'select * from freeze_plan_quote($1::jsonb, $2)' : 'select * from freeze_payment_quote($1::jsonb, $2)';
-      const result = (await one(statement, [JSON.stringify({ ...n, requestId: o.requestId, invitation: o.invitation }), o.reuse === true]))!;
+      const result = (await one(statement, [JSON.stringify({ ...n, requestId: o.requestId, invitation: o.invitation }), o.reuse === true]).catch((cause: unknown) => {
+        if (cause instanceof Error && 'code' in cause && cause.code === 'P0001' && cause.message === new QuoteBusy().message) throw new QuoteBusy();
+        throw cause;
+      }))!;
       return {
         quote: quoteOf(result.current_quote as Record<string, unknown>),
         superseded: result.previous_quote ? quoteOf(result.previous_quote as Record<string, unknown>) : null,
@@ -532,17 +556,35 @@ export function postgresFeeStore(db: Pick<Queryable, 'query'>): FeeStore {
         schedule,
       ]));
     },
+    async voidExpiredPlan(id, contact, attempt) {
+      return !!(await one(
+        `update payment_quotes set status='void', applying_by=null,
+           link_state=case when link_state in ('live','creating') then 'closing' else link_state end
+         where id=$1 and status='open' and plan_change->'charge'->>'timing'='now'
+           and applying_by=$2 and confirmation_attempt is not distinct from $3::uuid returning id`,
+        [id, contact, attempt],
+      ));
+    },
+    async releaseDeclinedPlan(id, contact, attempt) {
+      return !!(await one(
+        `update payment_quotes set applying_by=null, confirmation_attempt=gen_random_uuid()
+         where id=$1 and status='open' and plan_change->'charge'->>'timing'='now'
+           and applying_by=$2 and confirmation_attempt is not distinct from $3::uuid returning id`,
+        [id, contact, attempt],
+      ));
+    },
     async claimRecurring(id, contact, signature) {
       if (!UUID.test(id)) return false;
       return !!(await one(
         `with owner as (select s.id,s.status,s.stripe_subscription_id from sponsors s join payment_quotes q on q.sponsor_id=s.id where q.id=$1 for update of s),
           claimed as (update payment_quotes q set applying_by=$2 from owner where q.id=$1 and q.subject='sponsorship' and q.interval is not null
           and q.status='open' and (q.applying_by is null or q.applying_by=$2)
+          and q.confirmation_attempt is not distinct from ($3::jsonb->>'attempt')::uuid
           and (q.plan_change is null or ($3::jsonb is not null and owner.status in ('active','past_due') and owner.stripe_subscription_id=q.plan_change->>'subscription'
             and exists(select 1 from payment_quotes prior where prior.id=(q.plan_change->>'previousQuote')::uuid and prior.sponsor_id=owner.id and prior.status='accepted')))
-          returning q.id,q.sponsor_id,q.purpose),
+          returning q.id,q.confirmation_attempt,q.sponsor_id,q.purpose),
           signed as (insert into sponsor_agreements(id,sponsor_id,version,signer_name,signer_title,signer_email,context,summary)
-            select id,sponsor_id,$3::jsonb->>'version',$3::jsonb->>'name',$3::jsonb->>'title',$3::jsonb->>'email','change',purpose from claimed
+            select coalesce(confirmation_attempt,id),sponsor_id,$3::jsonb->>'version',$3::jsonb->>'name',$3::jsonb->>'title',$3::jsonb->>'email','change',purpose from claimed
             where $3::jsonb is not null on conflict(id) do nothing)
           select id from claimed`,
         [id, contact, signature ? JSON.stringify(signature) : null],

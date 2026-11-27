@@ -212,6 +212,46 @@ describe('the daily sponsorship check under a time budget', () => {
     expect(posts.filter((p) => p.includes(':calendar:'))).toEqual([expect.stringContaining('29 days left')]);
   });
 
+  it('reaches notices, coverage and orphaned links even when ended subscriptions time out every day', async () => {
+    const clock = { ms: 0 };
+    const { store, add } = await slowStore(0, clock);
+    const subs = new Set<string>();
+    for (const name of ['A', 'B', 'C', 'D']) {
+      const s = await add(name);
+      await store.linkStripe(s.id, { subscriptionId: 'sub_' + name }, board);
+      await store.transition(s.id, { to: 'ended', reason: 'withdrawn', actor: board });
+    }
+    const covered = await add('Active', { status: 'active', paidUntil: '2027-01-14' });
+    const attempt = await store.beginLinkAttempt(covered.id, 'fixture');
+    await store.claimLinkCleanup(attempt.key, 'plink_orphan');
+    await store.queueNotices(covered.id, [{ key: 'ready', body: { kind: 'slack', text: 'Ready' } }]);
+    const queueRebuild = vi.fn(async () => {});
+    const post = vi.fn(async () => '1.1');
+    const slack = { post, update: async () => {}, reply: async () => {}, ephemeral: async () => {} };
+    const fetch: typeof globalThis.fetch = async (url, init) => {
+      if (init?.method === 'DELETE') {
+        subs.add(new URL(String(url)).pathname);
+        clock.ms += 15_000;
+        throw new Error('fixture timeout');
+      }
+      expect(new URL(String(url)).pathname).toBe('/v1/payment_links/plink_orphan');
+      return Response.json({ active: false });
+    };
+    for (const date of [20, 21, 22, 23, 24, 25]) {
+      clock.ms = 0;
+      const budget = deadline(25_000, () => clock.ms);
+      const deps = lifecycleDeps({ STRIPE_SECRET_KEY: 'sk_test_x' }, store, SITE, { fetch: budget.fetch(fetch), slack, now: () => new Date(`2026-11-${date}T08:00:00Z`) });
+      await dailyCheck({ ...deps, deadline: budget, queueRebuild });
+      if (date === 21) {
+        expect(post).toHaveBeenCalledWith('Ready');
+        expect(queueRebuild).toHaveBeenCalledTimes(1);
+        expect(await store.pendingMeetupRebuilds()).toEqual([]);
+        expect(await store.unsettledLinkAttempts({ limit: 1 })).toEqual([]);
+      }
+    }
+    expect(subs.size).toBe(4);
+  });
+
   it('keeps the ids of a close Stripe refused, and closes them on a later run', async () => {
     const clock = { ms: 0 };
     const { store, slow, add } = await slowStore(0, clock);

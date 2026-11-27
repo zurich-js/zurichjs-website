@@ -65,11 +65,18 @@ const tick = { confirm: true, agreementVersion: AGREEMENT.version };
 function world() {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   const emails: { to: string[]; subject: string; text: string }[] = [];
-  const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[], feeItem: null as string | null };
+  const sub = {
+    feePlanQuote: null as string | null,
+    lookupKey: 'sponsor_friend_quarterly',
+    schedule: null as string | null,
+    plan: null as string | null,
+    live: [] as string[],
+    feeItem: null as string | null,
+  };
   const feePrices = new Map<string, string>();
   const feeAmounts = new Map<string, number>();
   let feePrice = '';
-  const invoice = { due: 12345, decline: false };
+  const invoice = { due: 12345, decline: false, failUpdate: false, periodStart: unix('2026-11-18T00:00:00Z'), periodEnd: unix('2027-02-18T00:00:00Z') };
   const schedule = {
     metadata: { feeQuote: '' },
     status: 'active',
@@ -82,7 +89,7 @@ function world() {
   }
   const links = new Map<string, number>();
   let sessions = 0;
-  const f = (async (url: string, init: RequestInit = {}) => {
+  const respond = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
       emails.push(JSON.parse(String(init.body)));
       return new Response('{"id":"e"}');
@@ -97,14 +104,15 @@ function world() {
     const subscription = (id: string) => ({
       id,
       cancel_at: unix('2027-02-18T00:00:00Z'),
-      metadata: { source: 'zurichjs.com/partners' },
+      metadata: { source: 'zurichjs.com/partners', feePlanQuote: sub.feePlanQuote },
       items: {
         data: [
           {
             id: 'si_1',
             quantity: 1,
             price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey, currency: 'chf', unit_amount: fee(currentPlan.tier, currentPlan.cycle) * 100 },
-            current_period_end: unix('2027-02-18T00:00:00Z'),
+            current_period_start: invoice.periodStart,
+            current_period_end: invoice.periodEnd,
           },
           ...(sub.feeItem
             ? [
@@ -119,7 +127,8 @@ function world() {
                     lookup_key: null,
                     metadata: { source: 'zurichjs.com/partners', role: 'processing_fee', quoteId: feePrices.get(feePrice) },
                   },
-                  current_period_end: unix('2027-02-18T00:00:00Z'),
+                  current_period_start: invoice.periodStart,
+                  current_period_end: invoice.periodEnd,
                 },
               ]
             : []),
@@ -202,8 +211,10 @@ function world() {
       return ok({ id: 'si_fee_1' });
     }
     if (path.startsWith('subscriptions/')) {
+      if (invoice.failUpdate && method === 'POST' && params.get('payment_behavior') === 'error_if_incomplete')
+        return new Response(JSON.stringify({ error: { type: 'api_error' } }), { status: 500 });
       if (invoice.decline && method === 'POST' && params.get('payment_behavior') === 'error_if_incomplete')
-        return new Response(JSON.stringify({ error: { code: 'card_declined', message: 'Your card was declined.' } }), { status: 402 });
+        return new Response(JSON.stringify({ error: { type: 'invalid_request_error', code: 'subscription_payment_intent_requires_action' } }), { status: 402 });
       if (method === 'POST' && params.get('items[0][deleted]') === 'true' && params.get('items[0][id]') === sub.feeItem) sub.feeItem = null;
       // Stripe refuses cancel_at_period_end while a schedule manages the subscription.
       if (method === 'POST' && params.has('cancel_at_period_end') && sub.schedule)
@@ -217,6 +228,17 @@ function world() {
     }
     throw new Error(`unexpected ${method} ${url}`);
   }) as unknown as typeof fetch;
+  const results = new Map<string, { request: string; response: Promise<Response> }>();
+  const f: typeof fetch = async (input, init = {}) => {
+    const key = init.method === 'POST' && new URL(String(input)).hostname !== 'api.resend.com' ? new Headers(init.headers).get('idempotency-key') : null;
+    if (!key) return respond(input, init);
+    const request = JSON.stringify([String(input), init.body]);
+    const saved = results.get(key);
+    if (saved && saved.request !== request) return new Response('{"error":{"code":"idempotency_error"}}', { status: 400 });
+    const response = saved?.response ?? respond(input, init);
+    results.set(key, { request, response });
+    return (await response).clone();
+  };
   const slackPosts: string[] = [];
   const slack: MembershipSlack = {
     post: async (text) => {
@@ -294,6 +316,70 @@ describe('sponsorship flow', () => {
     fees = memoryFeeStore({ now: () => NOW });
     w = world();
     resetRateLimits();
+  });
+
+  it('reuses the ordinary upgrade key after a lost response and rotates it once for concurrent cached declines', async () => {
+    const actor = { kind: 'board', id: 'board' } as const;
+    const { sponsor } = await store.create(base({ status: 'active' }), { name: 'Grace', email: grace.email, role: 'primary' }, actor);
+    await store.linkStripe(sponsor.id, { subscriptionId: 'sub_acme' }, actor);
+    const confirm = () => handlePlan(post('/x', { ...full, tier: 'builder', cycle: 'quarterly' }), user());
+    const send = w.f;
+    const keys: (string | null)[] = [];
+    let release!: () => void;
+    const both = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    w.f = async (url, init) => {
+      if (init?.method !== 'POST' || new URL(String(url)).pathname !== '/v1/subscriptions/sub_acme') return send(url, init);
+      keys.push(new Headers(init.headers).get('idempotency-key'));
+      if (keys.length === 1) throw new TypeError('fixture connection lost before delivery');
+      if (keys.length === 2) await both;
+      release();
+      const response = await send(url, init);
+      if (response.ok) throw new TypeError('fixture connection lost after payment');
+      return response;
+    };
+    w.invoice.decline = true;
+    expect((await confirm()).status).toBe(502);
+    expect((await Promise.all([confirm(), confirm()])).map((r) => r.status)).toEqual([402, 402]);
+    expect(await store.get(sponsor.id)).toMatchObject({ tier: 'friend' });
+    w.invoice.decline = false;
+    expect((await confirm()).status).toBe(502);
+    expect((await confirm()).status).toBe(200);
+    const original = 'sponsor-upgrade:sub_acme:price_sponsor_builder_quarterly';
+    expect(keys.slice(0, 3)).toEqual([original, original, original]);
+    expect(keys).toHaveLength(4);
+    expect(keys[3]).toBeTruthy();
+    expect(keys[3]).not.toBe(original);
+    expect(w.calls.filter((c) => c.params.get('proration_behavior') === 'always_invoice')).toHaveLength(2);
+    expect(await store.get(sponsor.id)).toMatchObject({ tier: 'builder' });
+  });
+
+  it('resumes only the signed replacement after Stripe released a waiting renewal', async () => {
+    const actor = { kind: 'board', id: 'board' } as const;
+    const { sponsor } = await store.create(base({ status: 'active' }), { name: 'Grace', email: grace.email, role: 'primary' }, actor);
+    await store.linkStripe(sponsor.id, { subscriptionId: 'sub_acme' }, actor);
+    const colleague = { id: 'user-ada', email: 'ada@example.test' };
+    await store.addContact(sponsor.id, { name: 'Ada', email: colleague.email, role: 'primary' }, actor);
+    w.sub.schedule = 'sub_sched_1';
+    w.sub.plan = 'sponsor_friend_monthly';
+    const confirm = (who = grace, tier = 'builder', now = NOW) =>
+      handlePlan(post('/x', { ...full, tier, cycle: 'quarterly', replaces: 'friend-monthly@2027-02-18' }), { ...user(who), now: () => now });
+    w.invoice.decline = true;
+    const declined = await confirm();
+    expect(declined.status).toBe(402);
+    expect(await declined.json()).toMatchObject({ error: expect.stringContaining('scheduled for renewal was cancelled') });
+    expect(w.sub.schedule).toBeNull();
+    w.invoice.decline = false;
+    expect((await confirm(colleague)).status).toBe(409);
+    expect((await confirm(grace, 'champion')).status).toBe(409);
+    expect((await confirm(grace, 'builder', new Date(w.invoice.periodEnd * 1000))).status).toBe(409);
+    const periodEnd = w.invoice.periodEnd;
+    w.invoice.periodEnd = unix('2027-05-18T00:00:00Z');
+    expect((await confirm()).status).toBe(409);
+    w.invoice.periodEnd = periodEnd;
+    expect(await (await confirm()).json()).toMatchObject({ ok: true, droppedChange: expect.stringContaining('Community Friend') });
+    expect(w.calls.filter((c) => c.path.endsWith('/release'))).toHaveLength(1);
   });
 
   it('invite → sign once → pay → upgrade with one tick → downgrade at renewal → end we sent to confirm → undo → ended', async () => {
@@ -745,14 +831,7 @@ describe('sponsorship flow', () => {
     expect((await confirm({ quoteId: again.body.open.id, confirm: true })).status).toBe(200);
   });
 
-  it.each(['upgrade', 'renewal', 'cancel'] as const)('requires a frozen plan quote and reconciles the %s', async (operation) => {
-    const fixture = w.f;
-    const stripe = await startMockStripe(0, fixture);
-    onTestFinished(() => stripe.close());
-    w.f = (input, init) => {
-      const url = new URL(String(input));
-      return url.hostname === 'api.stripe.com' ? fetch(stripe.url + url.pathname + url.search, init) : fixture(input, init);
-    };
+  async function sponsorWithFee() {
     const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'test-surcharge', SPONSOR_FEE_PRORATION_MODE: 'stripe_items', SPONSOR_FEE_PRORATION_POLICY_VERSION: 'test-proration' };
     const actor = { kind: 'board', id: 'admin' } as const;
     const { sponsor: s } = await store.create(base({ status: 'active' }), { name: 'Grace', email: grace.email, role: 'primary' }, actor);
@@ -761,6 +840,138 @@ describe('sponsorship flow', () => {
     const first = await handleSponsorFees(asAdmin('/x', { feeChoice: 'pass_through' }), s.id, adminDeps(policy));
     const prior = (await first.json()).open.id;
     expect((await handleConfirmFee(post('/x', { quoteId: prior, confirm: true }), user())).status).toBe(200);
+    return { policy, s, prior };
+  }
+
+  it.each(['cached 500', 'lost before delivery'])('retires a claimed offer after an unchanged renewal following a %s', async (fault) => {
+    const { policy, s, prior } = await sponsorWithFee();
+    const target = { tier: 'builder', cycle: 'quarterly' };
+    const suggest = (now = NOW) => handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, { ...adminDeps(policy), now: now.getTime() });
+    expect((await suggest()).status).toBe(200);
+    const offer = (await me()).fees.toConfirm;
+    const confirm = (id: string, now = NOW) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), now: () => now, env: policy });
+    const send = w.f;
+    const keys: (string | null)[] = [];
+    w.invoice.failUpdate = fault === 'cached 500';
+    w.f = async (url, init) => {
+      if (new URL(String(url)).pathname === '/v1/subscriptions/sub_acme' && init?.method === 'POST') {
+        keys.push(new Headers(init.headers).get('idempotency-key'));
+        if (fault === 'lost before delivery') throw new TypeError('fixture: connection lost before delivery');
+      }
+      return send(url, init);
+    };
+    expect((await confirm(offer.id)).status).toBe(502);
+    w.invoice.failUpdate = false;
+    expect((await confirm(offer.id)).status).toBe(502);
+    expect(keys).toEqual(Array(2).fill('sponsor-plan:' + offer.id));
+    const boundary = w.invoice.periodEnd;
+    const nextTerm = new Date(boundary * 1000);
+    expect((await confirm(offer.id, nextTerm)).status).toBe(503);
+    w.invoice.periodEnd = unix('2027-05-18T00:00:00Z');
+    expect((await confirm(offer.id, nextTerm)).status).toBe(503);
+    w.invoice.periodStart = boundary;
+    w.sub.lookupKey = 'sponsor_builder_quarterly';
+    expect((await confirm(offer.id, nextTerm)).status).toBe(503);
+    expect((await suggest(nextTerm)).status).toBe(409);
+    w.sub.lookupKey = 'sponsor_friend_quarterly';
+    w.sub.feePlanQuote = offer.id;
+    expect((await confirm(offer.id, nextTerm)).status).toBe(503);
+    w.sub.feePlanQuote = null;
+    let readSnapshot!: () => void;
+    const reading = new Promise<void>((resolve) => {
+      readSnapshot = resolve;
+    });
+    let deliverSnapshot!: () => void;
+    const resume = new Promise<void>((resolve) => {
+      deliverSnapshot = resolve;
+    });
+    const beforeExpiry = w.f;
+    w.f = async (url, init) => {
+      const snapshot = await beforeExpiry(url, init);
+      if (new URL(String(url)).pathname === '/v1/subscriptions/sub_acme' && init?.method === 'GET') {
+        readSnapshot();
+        await resume;
+      }
+      return snapshot;
+    };
+    const late = confirm(offer.id, nextTerm);
+    await reading;
+    w.f = beforeExpiry;
+    const expired = await confirm(offer.id, nextTerm);
+    expect(expired.status).toBe(409);
+    expect(await expired.json()).toMatchObject({ field: 'quoteId', error: 'This offer expired. Ask the board for a new one.' });
+    expect(await fees.quote(offer.id)).toMatchObject({ status: 'void', applyingBy: null });
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+    expect(await store.get(s.id)).toMatchObject({ tier: 'friend', cycle: 'quarterly' });
+    expect((await me()).fees.toConfirm).toBeNull();
+    expect((await suggest(nextTerm)).status).toBe(200);
+    const replacement = (await me()).fees.toConfirm;
+    expect(replacement.id).not.toBe(offer.id);
+    expect((await confirm(offer.id, nextTerm)).status).toBe(409);
+    expect((await me()).fees.toConfirm).toEqual(replacement);
+    expect(keys).toHaveLength(2);
+    w.f = send;
+    expect((await confirm(replacement.id, nextTerm)).status).toBe(200);
+    deliverSnapshot();
+    const stale = await late;
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toMatchObject({ field: 'quoteId' });
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(replacement.id);
+  });
+
+  it.each(['cached 500', 'lost before delivery'])('lets the board replace a claimed offer the sponsor abandoned after a %s and an unchanged renewal', async (fault) => {
+    const { policy, s, prior } = await sponsorWithFee();
+    const target = { tier: 'builder', cycle: 'quarterly' };
+    const suggest = (now = NOW) => handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, { ...adminDeps(policy), now: now.getTime() });
+    expect((await suggest()).status).toBe(200);
+    const offer = (await me()).fees.toConfirm;
+    const confirm = (id: string, now = NOW) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), now: () => now, env: policy });
+    const send = w.f;
+    let posts = 0;
+    w.invoice.failUpdate = fault === 'cached 500';
+    w.f = async (url, init) => {
+      if (new URL(String(url)).pathname === '/v1/subscriptions/sub_acme' && init?.method === 'POST') {
+        posts++;
+        if (fault === 'lost before delivery') throw new TypeError('fixture: connection lost before delivery');
+      }
+      return send(url, init);
+    };
+    expect((await confirm(offer.id)).status).toBe(502);
+    w.invoice.failUpdate = false;
+    // Before the renewal Stripe's answer is still unknown: the board waits.
+    const waiting = await suggest();
+    expect(waiting.status).toBe(409);
+    expect(await waiting.json()).toMatchObject({ error: expect.stringContaining('Stripe has not answered yet') });
+    const boundary = w.invoice.periodEnd;
+    const nextTerm = new Date(boundary * 1000);
+    w.invoice.periodStart = boundary;
+    w.invoice.periodEnd = unix('2027-05-18T00:00:00Z');
+    // Renewed, but Stripe marks the attempted offer: it may have applied, so it stays held.
+    w.sub.feePlanQuote = offer.id;
+    expect((await suggest(nextTerm)).status).toBe(409);
+    w.sub.feePlanQuote = null;
+    expect((await suggest(nextTerm)).status).toBe(200);
+    expect(await fees.quote(offer.id)).toMatchObject({ status: 'void', applyingBy: null });
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+    expect(await store.get(s.id)).toMatchObject({ tier: 'friend', cycle: 'quarterly' });
+    const replacement = (await me()).fees.toConfirm;
+    expect(replacement.id).not.toBe(offer.id);
+    expect((await confirm(offer.id, nextTerm)).status).toBe(409);
+    expect(posts).toBe(1);
+    w.f = send;
+    expect((await confirm(replacement.id, nextTerm)).status).toBe(200);
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(replacement.id);
+  });
+
+  it.each(['upgrade', 'renewal', 'cancel'] as const)('requires a frozen plan quote and reconciles the %s', async (operation) => {
+    const fixture = w.f;
+    const stripe = await startMockStripe(0, fixture);
+    onTestFinished(() => stripe.close());
+    w.f = (input, init) => {
+      const url = new URL(String(input));
+      return url.hostname === 'api.stripe.com' ? fetch(stripe.url + url.pathname + url.search, init) : fixture(input, init);
+    };
+    const { policy, s, prior } = await sponsorWithFee();
     const target = { tier: 'builder', cycle: operation === 'upgrade' ? 'quarterly' : 'yearly' };
     const suggest = (e: Record<string, string>) => handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, adminDeps(e));
     if (operation === 'upgrade') {
@@ -770,7 +981,8 @@ describe('sponsorship flow', () => {
     expect((await suggest(policy)).status).toBe(200);
     let offer = (await me()).fees.toConfirm;
     expect(offer.plan).toMatchObject({ ...target, timing: operation === 'upgrade' ? 'now' : 'renewal', dueNow: operation === 'upgrade' ? 'CHF 123.45' : 'CHF 0.00' });
-    const confirm = (id: string) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), env: policy });
+    const confirm = (id: string, now = NOW) =>
+      handlePlan(post('/x', { ...full, ...target, quoteId: id, confirmationAttempt: offer.plan.attempt, acceptFee: true }), { ...user(), now: () => now, env: policy });
     expect((await confirm(prior)).status).toBe(409);
     expect((await handleConfirmFee(post('/x', { quoteId: offer.id, confirm: true }), user())).status).toBe(409);
     if (operation === 'upgrade') {
@@ -785,19 +997,62 @@ describe('sponsorship flow', () => {
       expect((await confirm(stale)).status).toBe(409);
       w.invoice.decline = true;
       const declined = await confirm(offer.id);
-      expect(declined.ok).toBe(false);
-      expect((await declined.json()).ok).toBe(false);
+      expect(declined.status).toBe(402);
+      expect(await declined.json()).toMatchObject({ ok: false, error: expect.stringContaining('Update your payment method') });
       expect(await store.get(s.id)).toMatchObject({ tier: s.tier, cycle: s.cycle });
       expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
       expect(w.sub.lookupKey).toBe('sponsor_friend_quarterly');
+      const expired = offer.id;
+      offer = (await me()).fees.toConfirm;
+      const nextTerm = new Date(w.invoice.periodEnd * 1000);
+      w.invoice.periodEnd = unix('2027-05-18T00:00:00Z');
+      expect((await confirm(expired, nextTerm)).ok).toBe(false);
+      expect((await handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, { ...adminDeps(policy), now: nextTerm.getTime() })).status).toBe(200);
+      offer = (await me()).fees.toConfirm;
+      expect(offer.id).not.toBe(expired);
+      expect((await confirm(expired)).status).toBe(409);
+      expect((await confirm(offer.id, nextTerm)).status).toBe(402);
       w.invoice.decline = false;
+      expect((await confirm(offer.id, nextTerm)).status).toBe(409);
+      offer = (await me()).fees.toConfirm;
+
+      const send = w.f;
+      const keys: (string | null)[] = [];
+      let allowPayment!: () => void;
+      const bothConfirmed = new Promise<void>((resolve) => {
+        allowPayment = resolve;
+      });
+      w.f = async (url, init) => {
+        if (new URL(String(url)).pathname !== '/v1/subscriptions/sub_acme' || init?.method !== 'POST') return send(url, init);
+        keys.push(new Headers(init.headers).get('idempotency-key'));
+        if (keys.length === 1) throw new TypeError('fixture connection lost before delivery');
+        if (keys.length === 2) await bothConfirmed;
+        allowPayment();
+        await send(url, init);
+        throw new TypeError('fixture connection lost after payment');
+      };
+      expect((await confirm(offer.id, nextTerm)).status).toBe(502);
+      const busy = await suggest(policy);
+      expect(busy.status).toBe(409);
+      expect(await busy.json()).toMatchObject({ error: expect.stringContaining('confirming') });
+      const concurrent = await Promise.all([confirm(offer.id, nextTerm), confirm(offer.id, nextTerm)]);
+      expect(concurrent.map((r) => r.status)).toEqual([502, 502]);
+      expect(keys).toEqual([expect.any(String), keys[0], keys[0]]);
+      expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+      w.f = send;
+      expect((await suggest(policy)).status).toBe(409);
     }
-    expect((await confirm(offer.id)).status).toBe(200);
+    const reconcileAt = operation === 'upgrade' ? new Date((w.invoice.periodEnd + 1) * 1000) : NOW;
+    if (operation === 'upgrade') {
+      w.invoice.periodStart = w.invoice.periodEnd;
+      w.invoice.periodEnd = unix('2027-08-18T00:00:00Z');
+    }
+    expect((await confirm(offer.id, reconcileAt)).status).toBe(200);
     expect((await confirm(offer.id)).status).toBe(200);
     expect(stripe.requests.some((r) => r.idempotencyKey?.includes(offer.id))).toBe(true);
     if (operation === 'upgrade') {
       const upgrades = w.calls.filter((c) => c.params.get('proration_behavior') === 'always_invoice');
-      expect(upgrades).toHaveLength(2);
+      expect(upgrades).toHaveLength(3);
       for (const request of upgrades) expect(request.params.get('payment_behavior')).toBe('error_if_incomplete');
       expect((await fees.acceptedQuote(s.id))?.id).toBe(offer.id);
     } else {

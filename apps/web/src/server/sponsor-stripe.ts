@@ -510,6 +510,7 @@ interface StripeSubscription {
       quantity?: number;
       price?: { id: string; product?: string; unit_amount?: number; currency?: string; lookup_key?: string | null; metadata?: Record<string, string> };
       metadata?: Record<string, string>;
+      current_period_start?: number;
       current_period_end?: number;
     }[];
   };
@@ -607,18 +608,14 @@ export async function releaseSchedule(id: string, deps: StripeDeps) {
 }
 
 /** A higher tier on the same cycle, now: Stripe charges the prorated difference at once. */
-export async function upgradeNow(change: CardPlan, deps: StripeDeps): Promise<CardPlan['pending']> {
-  const { id: subscriptionId, itemId, price, current, schedule } = change;
-  if (current === price) return null;
-  if (schedule) await releaseSchedule(schedule, deps);
+export async function upgradeNow(change: CardPlan, key: string, deps: StripeDeps) {
   await api(
     deps,
     'POST',
-    `subscriptions/${encodeURIComponent(subscriptionId)}`,
-    stripeForm({ items: [{ id: itemId, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
-    `sponsor-upgrade:${subscriptionId}:${price}`,
-  );
-  return change.pending;
+    `subscriptions/${encodeURIComponent(change.id)}`,
+    stripeForm({ items: [{ id: change.itemId, price: change.price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
+    key,
+  ).catch(classifyUpgradeError);
 }
 
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */
@@ -823,19 +820,45 @@ export async function previewFeePlan(
   return { ...terms, charge: { timing, at, dueMinor, policy: policy! } };
 }
 
+export class UpgradeDeclined extends Error {}
+export class UnappliedPlanExpired extends Error {}
+
+function classifyUpgradeError(cause: unknown): never {
+  if (cause instanceof StripeRequestError && cause.status === 402) throw new UpgradeDeclined();
+  throw cause;
+}
+
+/** A claimed immediate upgrade that never applied: the subscription renewed on the previous plan and fee. */
+function renewedUnapplied(sub: StripeSubscription, items: ReturnType<typeof planFeeItems>, quote: Quote, terms: FeePlanChange) {
+  const { current_period_start: start, current_period_end: end } = items.base;
+  return (
+    !!quote.applyingBy &&
+    terms.charge.timing === 'now' &&
+    start !== undefined &&
+    end !== undefined &&
+    start >= terms.periodEnd &&
+    end > start &&
+    items.basePrice === terms.previousBasePrice &&
+    items.feePrice === terms.previousFeePrice &&
+    items.surcharge.price?.metadata?.quoteId === terms.previousQuote &&
+    sub.metadata?.feePlanQuote !== quote.id
+  );
+}
+
+export async function claimedPlanExpired(quote: Quote, terms: FeePlanChange, deps: StripeDeps): Promise<boolean> {
+  const sub = await getSub(terms.subscription, deps);
+  return renewedUnapplied(sub, planFeeItems(sub), quote, terms);
+}
+
 export async function applyFeePlan(quote: Quote, terms: FeePlanChange, deps: StripeDeps, claim: () => Promise<void>): Promise<{ schedule: string } | { item: string }> {
   const sub = await getSub(terms.subscription, deps);
   const items = planFeeItems(sub);
   if (quote.applyingBy && items.basePrice === terms.basePrice && items.surcharge.price?.metadata?.quoteId === quote.id) return { item: items.surcharge.id };
-  if (
-    items.basePrice !== terms.previousBasePrice ||
-    items.feePrice !== terms.previousFeePrice ||
-    items.base.current_period_end !== terms.periodEnd ||
-    nowUnix(deps) >= terms.periodEnd
-  ) {
-    throw new StripeUnavailable('The subscription changed. Ask the board for a fresh offer.');
-  }
   const charge = terms.charge;
+  const end = items.base.current_period_end;
+  const originalPrices = items.basePrice === terms.previousBasePrice && items.feePrice === terms.previousFeePrice;
+  if (renewedUnapplied(sub, items, quote, terms)) throw new UnappliedPlanExpired();
+  if (!originalPrices || end !== terms.periodEnd || nowUnix(deps) >= terms.periodEnd) throw new StripeUnavailable('The subscription changed. Ask the board for a fresh offer.');
   if (charge.timing === 'now' && (sub.schedule || deps.env.SPONSOR_FEE_PRORATION_MODE !== 'stripe_items' || deps.env.SPONSOR_FEE_PRORATION_POLICY_VERSION !== charge.policy))
     throw new StripeUnavailable('The renewal or the approved proration policy changed. Review a new offer.');
   if (terms.charge.timing === 'renewal' && quote.stripeRef) {
@@ -881,8 +904,8 @@ export async function applyFeePlan(quote: Quote, terms: FeePlanChange, deps: Str
       'POST',
       'subscriptions/' + encodeURIComponent(terms.subscription),
       stripeForm({ metadata: { feePlanQuote: quote.id }, items: target, proration_behavior: 'always_invoice', proration_date: charge.at, payment_behavior: 'error_if_incomplete' }),
-      'sponsor-plan:' + quote.id,
-    );
+      'sponsor-plan:' + (quote.confirmationAttempt ?? quote.id),
+    ).catch(classifyUpgradeError);
     const saved = planFeeItems(await getSub(terms.subscription, deps));
     if (saved.basePrice !== terms.basePrice || saved.surcharge.price?.id !== price || saved.surcharge.price.metadata?.quoteId !== quote.id)
       throw new StripeUnavailable('Stripe has not confirmed the quoted plan and fee yet.');

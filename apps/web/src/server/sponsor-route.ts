@@ -11,7 +11,7 @@
  * another account is never taken over.
  */
 import type { Contact, FeeStore, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
-import { TransitionError } from '@zurichjs/sponsorship';
+import { QuoteBusy, TransitionError } from '@zurichjs/sponsorship';
 import { RaffleNotFound, RaffleRuleError, type RaffleStore } from '@zurichjs/raffle';
 import { FeeGateClosed } from '@zurichjs/sponsorship';
 import { sameOrigin } from './admin-auth.ts';
@@ -79,6 +79,7 @@ export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, dep
 /** Errors every sponsorship route answers the same way. Returns null for anything unexpected. */
 export function knownFailure(cause: unknown): Response | null {
   if (cause instanceof SponsorshipError) return fail(cause.status, cause.message, cause.field ? { field: cause.field } : {});
+  if (cause instanceof QuoteBusy) return fail(409, cause.message);
   if (cause instanceof UnreadableSchedule) return fail(409, 'Reload the page to check the scheduled plan before confirming.');
   if (cause instanceof AlreadySubscribed) return fail(409, 'Payment is already set up. Reload the page in a moment to see it.');
   if (cause instanceof PaymentLinkPending) return fail(409, cause.message);

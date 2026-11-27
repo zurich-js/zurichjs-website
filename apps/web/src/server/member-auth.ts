@@ -17,7 +17,5 @@ export type { AuthUser };
 export async function memberFor(user: AuthUser, store: MemberStore): Promise<Member | null> {
   const linked = await store.byUser(user.id);
   if (linked) return linked;
-  const byEmail = await store.byEmail(user.email);
-  if (!byEmail || byEmail.userId) return null;
-  return store.update(byEmail.id, { userId: user.id }, { kind: 'member', id: user.id });
+  return store.linkVerifiedUser(user.id, user.email);
 }

@@ -12,7 +12,7 @@
  * Environment: STRIPE_SECRET_KEY, STRIPE_MEMBER_PORTAL_CONFIG,
  * STRIPE_MEMBERSHIP_WEBHOOK_SECRET (webhook.ts).
  */
-import { priceLookupKey, type CheckoutAttempt, type Cycle, type Level, type Member, type MemberStore } from '@zurichjs/membership';
+import { isLevel, isCycle, priceLookupKey, type CheckoutAttempt, type Cycle, type Level, type Member, type MemberStore } from '@zurichjs/membership';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 
@@ -43,8 +43,8 @@ export async function priceFor(level: Level, cycle: Cycle, deps: StripeDeps): Pr
 
 /** "member_supporter_yearly" → { level, cycle }, or null for any other price. */
 export function fromLookupKey(key: string | null | undefined): { level: Level; cycle: Cycle } | null {
-  const m = /^member_(basic|supporter)_(quarterly|yearly)$/.exec(key ?? '');
-  return m ? { level: m[1] as Level, cycle: m[2] as Cycle } : null;
+  const [prefix, level, cycle, ...extra] = (key ?? '').split('_');
+  return prefix === 'member' && !extra.length && isLevel(level) && isCycle(cycle) ? { level, cycle } : null;
 }
 
 /** The member's Stripe customer, created once (idempotent on the member id) and linked. */

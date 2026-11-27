@@ -2,6 +2,7 @@ import { sendMemberEmail } from '@zurichjs/integrations';
 import type { MemberStore } from '@zurichjs/membership';
 import { sendCertificate, type IssueDeps } from './membership-certificate.ts';
 import { cancelAtPeriodEnd, resumeSubscription } from './membership-stripe.ts';
+import { stripeApi, stripeForm } from './stripe.ts';
 import { membershipSlack, type MembershipSlack } from './membership-slack.ts';
 
 type DeliveryDeps = Omit<IssueDeps, 'actor' | 'template'> & { slack?: MembershipSlack };
@@ -15,10 +16,24 @@ export async function deliverMembershipNotices(operation: string, deps: Delivery
         if (verify) await verify(tx);
         const member = await tx.get(memberId);
         if (!member) throw new Error('Membership for pending delivery missing.');
-        const row = (await tx.pendingDeliveries(operation)).find((item) => item.key === key);
+        const outstanding = await tx.pendingDeliveries(operation);
+        const row = outstanding.find((item) => item.key === key);
         if (!row) return;
         const { payload } = row;
         switch (payload.kind) {
+          case 'billing-email': {
+            if (outstanding.find((item) => item.payload.kind === 'billing-email')?.key !== key) throw new Error('The previous billing email change is still pending.');
+            if (member.stripeCustomerId)
+              await stripeApi(
+                deps.env,
+                deps.fetch ?? fetch,
+                'POST',
+                `customers/${encodeURIComponent(member.stripeCustomerId)}`,
+                stripeForm({ email: payload.email }),
+                `member-email:${member.id}:${payload.version}`,
+              );
+            break;
+          }
           case 'renewal':
             if (member.stripeSubscriptionId === payload.subscription) {
               if (member.status === 'ended' || member.status === 'resigning')

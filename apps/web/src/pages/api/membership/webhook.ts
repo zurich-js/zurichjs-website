@@ -187,6 +187,12 @@ export async function processMembershipEvent(event: StripeEvent, deps: WebhookDe
   }
 }
 
+async function confirmAttempt(store: MemberStore, memberId: string, ref: string | undefined, outcome: 'paid' | 'automatic') {
+  if (!ref) return;
+  const attempt = await store.checkoutAttempt(memberId);
+  if (attempt?.id === ref && !attempt.confirmation && (outcome === 'paid' || attempt.trialEnd)) await store.saveCheckoutAttempt(memberId, { ...attempt, confirmation: outcome });
+}
+
 async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, env: Env, origin: string, log: (s: string) => void, deps: WebhookDeps) {
   const say = (m: Member, text: string, key = event.id) => store.enqueue(m.id, event.id, `board:${key}`, { kind: 'board', text });
   const mail = (m: Member, key: string, email: ReturnType<typeof renderEmail>) => store.enqueue(m.id, event.id, key, { kind: 'email', to: m.email, ...email });
@@ -247,6 +253,7 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
       const paidUntil = m.paidUntil && m.paidUntil > day(period.end) ? m.paidUntil : day(period.end);
       m = await store.update(m.id, { paidUntil, paymentMode: 'automatic', ...(m.joinedAt ? {} : { joinedAt: day(period.start) }), ...switched }, { kind: 'stripe', id: event.id });
       if (m.status === 'pending' || m.status === 'past_due' || m.status === 'imported_manual') m = await moveTo(store, m, 'active', event.id, { payload: { invoice: inv.id } });
+      await confirmAttempt(store, m.id, sub.metadata.attempt, 'paid');
       const cert = await store.issueCertificate(m.id, { periodStart: day(period.start), periodEnd: day(period.end), stripeInvoiceId: inv.id }, { kind: 'stripe', id: event.id });
       await store.enqueue(m.id, event.id, `member-certificate:${cert.id}`, {
         kind: 'certificate',
@@ -263,23 +270,27 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
       let m = await memberOf(store, { memberId: meta.memberId });
       const subscriptionId = typeof o.subscription === 'string' ? o.subscription : undefined;
       if (!m || !subscriptionId || (await store.retiredSubscription(m.id, subscriptionId))) break;
+      const attempt = await store.checkoutAttempt(m.id);
+      if (meta.attempt && meta.attempt !== attempt?.id) break;
       if (m.stripeSubscriptionId !== subscriptionId) {
         if (m.stripeSubscriptionId || m.status === 'ended') break;
         m = await store.linkStripe(m.id, { subscriptionId }, { kind: 'stripe', id: event.id });
       }
-      if (m.status === 'imported_manual') {
-        // Switched to automatic payment; the first charge comes when the paid period ends.
-        m = await store.update(m.id, { paymentMode: 'automatic' }, { kind: 'stripe', id: event.id });
-        m = await moveTo(store, m, 'active', event.id, { payload: { switchedToAutomatic: true } });
-        await say(m, `:credit_card: ${who(m)} switched to automatic payment (first charge when the paid period ends).`);
-        if (m.paidUntil) {
-          const email = renderEmail('automatic-payment-set-up', {
-            ...membershipProps(m, origin),
-            paidThrough: longDate(lastDay(m.paidUntil)),
-            firstPayment: longDate(m.paidUntil),
-          });
-          await mail(m, `member-automatic:${m.id}:${subscriptionId}`, email);
-        }
+      if (m.status !== 'imported_manual') break;
+      const trial = meta.attempt ? Boolean(attempt?.trialEnd) : (await subscriptionSnapshot(subscriptionId, { env, fetch: deps.fetch })).status === 'trialing';
+      if (!trial) break;
+      await confirmAttempt(store, m.id, meta.attempt, 'automatic');
+      // Switched to automatic payment; the first charge comes when the paid period ends.
+      m = await store.update(m.id, { paymentMode: 'automatic' }, { kind: 'stripe', id: event.id });
+      m = await moveTo(store, m, 'active', event.id, { payload: { switchedToAutomatic: true } });
+      await say(m, `:credit_card: ${who(m)} switched to automatic payment (first charge when the paid period ends).`);
+      if (m.paidUntil) {
+        const email = renderEmail('automatic-payment-set-up', {
+          ...membershipProps(m, origin),
+          paidThrough: longDate(lastDay(m.paidUntil)),
+          firstPayment: longDate(m.paidUntil),
+        });
+        await mail(m, `member-automatic:${m.id}:${subscriptionId}`, email);
       }
       break;
     }

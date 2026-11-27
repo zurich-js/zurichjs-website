@@ -114,4 +114,7 @@ export interface Certificate {
   periodEnd: string;
   stripeInvoiceId: string | null;
   issuedAt: string;
+  /** Who it was issued to, kept as it was then (a later name change does not rewrite it). */
+  name: string;
+  organisationName: string | null;
 }

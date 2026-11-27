@@ -7,6 +7,7 @@ import { startPg } from '../../../packages/membership/test/pg.ts';
 import { processMembershipEvent } from '../src/pages/api/membership/webhook.ts';
 import { addManualMember, recordManualPayment } from '../src/server/membership-manual.ts';
 import { confirmResignation, withdrawResignation } from '../src/server/membership-resignation.ts';
+import { changeMemberEmail } from '../src/server/membership-email.ts';
 import { membershipDailyCheck } from '../src/server/membership-daily.ts';
 import { createCheckout, MEMBERSHIP_SOURCE } from '../src/server/membership-stripe.ts';
 import type { StripeEvent } from '../src/server/stripe-webhook.ts';
@@ -38,9 +39,9 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
         category: 'passive',
         status,
         source: 'self_serve',
-        paidUntil: null,
+        paidUntil: status === 'imported_manual' ? '2025-01-01' : null,
         joinedAt: null,
-        paymentMode: 'automatic',
+        paymentMode: status === 'imported_manual' ? 'manual' : 'automatic',
         notes: null,
       },
       { kind: 'board', id: 'fixture' },
@@ -58,7 +59,8 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
     const emails: string[] = [];
     const renewals: string[] = [];
     const sessions = new Map<string, { id: string; url: string }>();
-    const fail = { mail: false, board: false };
+    const fail = { mail: false, board: false, billing: false };
+    const billingEmails: string[] = [];
     const post = vi.fn(async () => {
       if (fail.board) throw new Error('Offline board fixture');
       return '1';
@@ -82,6 +84,11 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
       }
       if (path === 'subscriptions' || path === 'checkout/sessions') return Response.json({ data: [] });
       if (path === 'prices') return Response.json({ data: [{ id: 'price_fixture' }] });
+      if (path.startsWith('customers/') && init?.method === 'POST') {
+        if (fail.billing) return new Response('{"error":{"message":"fixture offline"}}', { status: 503 });
+        billingEmails.push(new URLSearchParams(String(init.body)).get('email')!);
+        return Response.json({ id: 'cus_fixture' });
+      }
       if (path === 'customers') return Response.json({ id: `cus_${crypto.randomUUID()}` });
       if (path.startsWith('subscriptions/') && init?.method === 'POST') renewals.push(new URLSearchParams(String(init.body)).get('cancel_at_period_end')!);
       if (path === 'invoices') return Response.json({ data: [] });
@@ -96,7 +103,7 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
       signature: async () => null,
     };
     const send = async (e: StripeEvent, dbStore = store) => (await processMembershipEvent(e, { ...deps, store: dbStore })).status;
-    return { emails, sessions, fail, post, deps, send, renewals };
+    return { emails, sessions, fail, post, deps, send, renewals, billingEmails };
   }
   it('uses one Checkout and classifies competing invoices under the member lock', async () => {
     const w = fixture(),
@@ -119,6 +126,27 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
       event('customer.subscription.updated', { id: sub, metadata: meta(m), status: 'past_due', items: { data: [{ price: { lookup_key: 'member_basic_quarterly' } }] } }),
     );
     expect(await store.get(m.id)).toMatchObject({ status: 'active', paidUntil: '2029-01-01', level: 'supporter', cycle: 'yearly' });
+  });
+  it('waits for the paid invoice before confirming an immediate manual-to-card switch', async () => {
+    const w = fixture(),
+      m = await member('imported_manual');
+    await createCheckout(m, store, 'https://fixture.invalid', w.deps);
+    const attempt = (await store.checkoutAttempt(m.id))!;
+    const metadata = { ...meta(m), attempt: attempt.id };
+    await w.send(event('checkout.session.completed', { metadata: { ...metadata, attempt: crypto.randomUUID() }, subscription: 'sub_obsolete' }));
+    expect((await store.get(m.id))?.stripeSubscriptionId).toBeNull();
+    await w.send(event('checkout.session.completed', { metadata: meta(m), subscription: 'sub_switch' }));
+    expect(await store.get(m.id)).toMatchObject({ status: 'imported_manual', paymentMode: 'manual' });
+    await w.send(event('checkout.session.completed', { metadata, subscription: 'sub_switch' }));
+    expect(await store.get(m.id)).toMatchObject({ status: 'imported_manual' });
+    expect((await store.checkoutAttempt(m.id))?.confirmation).toBeUndefined();
+    expect(w.emails).toEqual([]);
+    const paid = invoice(m, 'sub_switch');
+    await w.send(event('invoice.paid', { ...paid, parent: { subscription_details: { subscription: 'sub_switch', metadata } } }));
+    expect((await store.checkoutAttempt(m.id))?.confirmation).toBe('paid');
+    expect(await store.get(m.id)).toMatchObject({ status: 'active', paymentMode: 'automatic' });
+    expect(await store.certificates(m.id)).toHaveLength(1);
+    expect(w.emails).toHaveLength(1);
   });
   it('records both charges for a term, issues one certificate and preserves the invoice owner', async () => {
     const w = fixture();
@@ -318,6 +346,51 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
     expect((await Promise.all([undo(), undo()])).map((r) => r.result).sort()).toEqual(['not_resigning', 'withdrawn']);
     expect(w.renewals).toEqual(['false']);
     expect((await store.get(m.id))?.status).toBe('active');
+  });
+  it('resumes a committed transfer and delivers concurrent billing changes in register order', async () => {
+    const w = fixture(),
+      m = await member();
+    await store.linkStripe(m.id, { customerId: 'cus_change' }, { kind: 'board', id: 'fixture' });
+    const deps = { ...w.deps, origin: 'https://fixture.invalid' };
+    let drop = true;
+    const lost: MemberStore = {
+      ...store,
+      async transaction(work) {
+        const result = await store.transaction(work);
+        if (drop) {
+          drop = false;
+          throw new Error('Lost commit response');
+        }
+        return result;
+      },
+    };
+    await expect(changeMemberEmail(m.id, 'first@example.invalid', { ...deps, store: lost })).rejects.toThrow('Lost commit response');
+    w.fail.billing = true;
+    w.fail.mail = true;
+    expect(await changeMemberEmail(m.id, 'first@example.invalid', deps)).toMatchObject({ result: 'changed', stripeUpdated: false, notified: { previous: false, next: false } });
+    w.fail.billing = false;
+    w.fail.mail = false;
+    expect(await changeMemberEmail(m.id, 'first@example.invalid', deps)).toMatchObject({ stripeUpdated: true, notified: { previous: true, next: true } });
+    await Promise.all(['second@example.invalid', 'third@example.invalid'].map((address) => changeMemberEmail(m.id, address, deps)));
+    expect(w.billingEmails.at(-1)).toBe((await store.get(m.id))?.email);
+    expect(w.billingEmails).toHaveLength(3);
+    expect(w.emails).toHaveLength(6);
+    expect(await store.pendingDeliveries(`email-change:${m.id}`)).toEqual([]);
+  });
+  it('checks the verified address again after a concurrent transfer releases the member lock', async () => {
+    const m = await member(),
+      client = await pool.connect();
+    await client.query(`insert into "user"(id,name,email,"emailVerified") values($1,'Fixture',$2,true)`, ['fixture-old', m.email]);
+    try {
+      await client.query('begin');
+      await client.query("select member_change_email($1,'new-owner@example.invalid','board','fixture')", [m.id]);
+      const link = store.linkVerifiedUser('fixture-old', m.email);
+      await client.query('commit');
+      expect(await link).toBeNull();
+      expect(await store.get(m.id)).toMatchObject({ userId: null, email: 'new-owner@example.invalid' });
+    } finally {
+      client.release();
+    }
   });
   it('resumes both lapse notices after the client misses the committed result for ten seconds', async () => {
     const m = await member('active');

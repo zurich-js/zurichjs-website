@@ -95,9 +95,9 @@ d('membership database', () => {
       const next = await store.issueCertificate(m.id, { periodStart: '2027-11-10', periodEnd: '2028-11-10', stripeInvoiceId: 'in_2' }, stripe);
       expect(next.number).toBe('ZJS-2027-0002');
       expect((await store.certificates(m.id)).map((x) => x.number)).toEqual(['ZJS-2027-0002', 'ZJS-2026-0001']);
-      expect(pgdb.fails(`insert into certificates (member_id, number, level, period_start, period_end) values ('${m.id}', 'X', 'basic', '2026-01-02', '2026-01-01')`)).toMatch(
-        /check/,
-      );
+      expect(
+        pgdb.fails(`insert into certificates (member_id, number, level, period_start, period_end, name) values ('${m.id}', 'X', 'basic', '2026-01-02', '2026-01-01', 'Ada')`),
+      ).toMatch(/check/);
     });
 
     it('updates only the allowed fields', async () => {
@@ -161,6 +161,19 @@ d('membership database', () => {
       expect((await store.update(m.id, { source: 'invited' }, board)).source).toBe('invited');
     });
 
+    it('keeps the name a certificate was issued to, and changes an email only to a free address', async () => {
+      const m = (await store.byEmail('ada@example.com'))!;
+      const [cert] = await store.certificates(m.id);
+      await store.update(m.id, { name: 'Ada King' }, board);
+      expect((await store.certificates(m.id)).find((c) => c.id === cert!.id)).toMatchObject({ name: 'Ada Lovelace' });
+      await expect(store.changeEmail(m.id, 'GRACE@zeta.ch', board)).rejects.toBeInstanceOf(DuplicateEmail);
+      const moved = await store.changeEmail(m.id, ' Ada@New.example ', board);
+      expect(moved).toMatchObject({ email: 'ada@new.example', userId: null });
+      expect((await store.events(m.id)).at(-1)).toMatchObject({ type: 'email_changed', payload: {} });
+      await store.changeEmail(m.id, 'ada@example.com', board);
+      await store.update(m.id, { name: 'Ada Lovelace' }, board);
+    });
+
     it('keeps manual members dated', async () => {
       await expect(
         store.create({ ...person, email: 'd@example.com', status: 'imported_manual', source: 'imported', paymentMode: 'manual' }, { kind: 'script', id: 't' }),
@@ -215,7 +228,7 @@ d('membership database', () => {
       });
       expect(pgdb.sql(`select count(*) from "user" where id = 'u-gina'`)).toBe('0');
       expect(pgdb.sql(`select count(*) from session where "userId" = 'u-gina'`)).toBe('0');
-      expect(await store.certificates(id)).toHaveLength(1);
+      expect(await store.certificates(id)).toMatchObject([{ name: 'Anonymised', organisationName: null }]);
       expect((await store.events(id)).at(-1)?.type).toBe('anonymised');
     });
 

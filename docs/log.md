@@ -2,6 +2,8 @@
 
 ## 2026-11-25
 
+- [Member accounts](/domains/membership/frontend.md) retain the selected plan through sign-in and the Checkout confirmation through reload. Email transfers queue both notices and the billing address update.
+
 - Cash and bank payments and resignation changes retain their notice work across retries. [Membership](/domains/membership/overview.md)
 
 - Membership Checkout reuses a reserved session. Webhook retries resume queued member and board notices. [Membership payments](/domains/membership/api.md)
@@ -13,6 +15,7 @@
 
 ## 2026-11-24
 
+- **Update**: the board can change a member's email in the admin area; the old address stops opening the membership and the new one is linked when someone signs in with it, and both addresses are told. Certificates keep the name they were issued to (anonymisation clears it). The account page shows errors next to the action that failed, waits about a minute for Stripe after Checkout without showing the join form again, and keeps the level and cycle from the `/membership` link over an earlier unpaid try; the admin area moves the focus to the member it opens. Admin notices say when an email could not be sent ([Membership](/domains/membership/overview.md), [Membership frontend](/domains/membership/frontend.md)).
 - **Update**: members paying by cash or bank transfer: the board records each later term in the admin area (certificate issued, optionally emailed); adding someone whose online joining was never paid, or whose membership ended, records them again on the same record; an add that failed half-way is finished by adding again; inviting a former member opens their record as an invitation. A confirmed resignation of a manual member now runs to its paid-until day, when a new daily check ends it; before, confirming ended it at once although the email named the paid-until day. A manual term that runs out unpaid is never ended by the site (owner question) ([Membership](/domains/membership/overview.md), [Membership frontend](/domains/membership/frontend.md)).
 - **Update**: a resignation the board records is worded as such in the member's copy; when Stripe cannot be asked about open invoices, the board is told so instead of "none"; the admin totals count every member ([Membership frontend](/domains/membership/frontend.md)).
 - **Update**: the membership webhook claims each Stripe event before it runs, so two deliveries at once run it once; a retry after a failure decides from what is stored (the welcome still goes with the first payment, paid until never moves back); late or out-of-order events (a failure for a paid invoice, a stale "past due") no longer mark a paying member behind; a payment for an ended membership or a second subscription is reported to the board instead of renewing; starting Checkout closes the member's open Checkout pages ([Membership payments](/domains/membership/api.md), [Stripe](/systems/stripe.md)).

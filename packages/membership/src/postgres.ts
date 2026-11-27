@@ -49,6 +49,8 @@ interface CertificateRow {
   period_end: string | Date;
   stripe_invoice_id: string | null;
   issued_at: string | Date;
+  name: string;
+  organisation_name: string | null;
 }
 
 interface EventRow {
@@ -106,6 +108,8 @@ const certFromRow = (r: CertificateRow): Certificate => ({
   periodEnd: day(r.period_end)!,
   stripeInvoiceId: r.stripe_invoice_id,
   issuedAt: iso(r.issued_at),
+  name: r.name,
+  organisationName: r.organisation_name,
 });
 
 const PATCH_COLUMNS: Record<keyof MemberPatch, string> = {
@@ -184,6 +188,25 @@ export function postgresStore(db: Queryable, locked = false): MemberStore {
         client.release(destroy);
       }
     },
+    async lastEmailChange(id) {
+      return (
+        (await q<{ id: string }>("select id::text from member_events where member_id=$1 and type='email_changed' order by member_events.id desc limit 1", [id]))[0]?.id ?? null
+      );
+    },
+    async linkVerifiedUser(userId, email) {
+      const rows = await q<MemberRow>(
+        `with linked as (
+        update members set user_id=$1 where email=$2 and user_id is null and anonymised_at is null returning *
+      ), audit as (
+        insert into member_events(member_id,type,actor_kind,actor_id,payload)
+        select id,'updated','member',$1,'{"fields":["user_id"]}'::jsonb from linked
+      ) select * from linked`,
+        [userId, normaliseEmail(email)],
+      );
+      if (rows[0]) return fromRow(rows[0]);
+      const current = await one('user_id', userId);
+      return current?.email === normaliseEmail(email) ? current : null;
+    },
     async retireSubscription(id) {
       await q('select member_retire_subscription($1)', [id]);
     },
@@ -226,7 +249,7 @@ export function postgresStore(db: Queryable, locked = false): MemberStore {
     },
     async pendingDeliveries(operation) {
       return q<{ memberId: string; key: string; payload: MemberDelivery }>(
-        `select member_id as "memberId",key,payload from member_deliveries where operation=$1 and payload is not null order by key ${locked ? 'for update' : ''}`,
+        `select member_id as "memberId",key,payload from member_deliveries where operation=$1 and payload is not null order by sequence ${locked ? 'for update' : ''}`,
         [operation],
       );
     },
@@ -282,6 +305,7 @@ export function postgresStore(db: Queryable, locked = false): MemberStore {
         actor.id,
       ]),
     update: (id, patch, actor) => fn('member_update($1, $2::jsonb, $3, $4)', [id, JSON.stringify(toPatchRow(patch)), actor.kind, actor.id]),
+    changeEmail: (id, email, actor) => fn('member_change_email($1, $2, $3, $4)', [id, normaliseEmail(email), actor.kind, actor.id]),
     linkStripe: (id, ids, actor) => fn('member_link_stripe($1, $2, $3, $4, $5)', [id, ids.customerId ?? null, ids.subscriptionId ?? null, actor.kind, actor.id]),
     confirmResignation: (id, actor, payload = {}) => fn('member_confirm_resignation($1, $2, $3, $4::jsonb)', [id, actor.kind, actor.id, JSON.stringify(payload)]),
     async transition(id, input) {

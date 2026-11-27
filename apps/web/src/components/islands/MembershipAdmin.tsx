@@ -367,6 +367,11 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const loadedId = d?.member.id;
+  useEffect(() => {
+    if (loadedId) heading.current?.focus();
+  }, [loadedId]);
   const seq = useRef(0);
 
   const load = async () => {
@@ -417,7 +422,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   return (
     <section aria-labelledby="h-member" class={cardClass('filled', 'lg', 'gap-6')}>
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <h2 id="h-member" class="m-0 text-subsection font-bold">
+        <h2 id="h-member" ref={heading} tabIndex={-1} class="m-0 text-subsection font-bold">
           {m.organisationName ? `${m.organisationName}, ${m.name}` : m.name}
         </h2>
         <Button variant="plain" onClick={onClose}>
@@ -444,6 +449,18 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
         </p>
       )}
       {m.notes && <p class="m-0 text-compact bg-white rounded-(--radius-nested) p-card-sm">{m.notes}</p>}
+      {m.status !== 'ended' && (
+        <ChangeEmail
+          id={id}
+          m={m}
+          onDone={(text) => {
+            setNotice(text);
+            onChanged();
+            void load();
+          }}
+          onSignedOut={onSignedOut}
+        />
+      )}
 
       {m.status === 'imported_manual' && m.paymentMode === 'manual' && (
         <RecordPayment
@@ -727,7 +744,9 @@ function AddMember({ onAdded, onOpen, onSignedOut }: { onAdded: (id: string) => 
           setBusy(false);
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.member) return setError({ field: body.field, message: body.error ?? 'Could not add the member.', memberId: body.memberId });
-          setDone(`${body.member.name} added, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${body.member.email} to set up automatic payment.` : ''}`);
+          setDone(
+            `${body.member.name} added, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${body.member.email} to set up automatic payment.` : f.sendEmail ? ' The email was not sent: write to them by hand.' : ''}`,
+          );
           onAdded(body.member.id);
           setF((x) => ({ ...x, name: '', organisationName: '', email: '', notes: '' }));
         }}
@@ -809,6 +828,65 @@ function AddMember({ onAdded, onOpen, onSignedOut }: { onAdded: (id: string) => 
   );
 }
 
+function ChangeEmail({ id, m, onDone, onSignedOut }: { id: string; m: AdminMember; onDone: (notice: string) => void; onSignedOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  if (!open)
+    return (
+      <Button variant="secondary" class="self-start" onClick={() => setOpen(true)}>
+        Change email
+      </Button>
+    );
+  return (
+    <form
+      class="bg-white rounded-(--radius-nested) p-card-md flex flex-col gap-4"
+      noValidate
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (busy) return;
+        setBusy(true);
+        setError(null);
+        const { status, body } = await api<{ stripeUpdated?: boolean; notified?: { previous: boolean; next: boolean }; field?: string }>(
+          `/api/membership/admin/members/${id}/email`,
+          { method: 'POST', body: JSON.stringify({ email }) },
+        );
+        setBusy(false);
+        if (status === 401) return onSignedOut();
+        if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not change the email.' });
+        setOpen(false);
+        setEmail('');
+        const pending = [!body.notified?.previous && 'the previous address', !body.notified?.next && 'the new address'].filter(Boolean).join(' and ');
+        const told = pending ? ` Notification is pending for ${pending}.` : ' Both addresses were emailed.';
+        onDone(`Email changed. ${m.name} signs in with the new address from now on.${told}${body.stripeUpdated ? '' : ' The billing email update is pending.'}`);
+      }}
+    >
+      <p class="m-0 text-compact">
+        For when {m.name} asked the board to use another address. {m.email} stops opening the membership, and the new address is linked when they sign in with it. Both addresses
+        get an email about the change.
+      </p>
+      <TextField
+        label="New email"
+        name="email"
+        type="email"
+        value={email}
+        invalid={!!error?.field}
+        error={error?.field ? error.message : undefined}
+        onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+        class="max-w-form"
+      />
+      {error && !error.field && <Notice tone="danger" live title={error.message} />}
+      <div class="flex flex-wrap gap-3">
+        <SubmitButton busy={busy}>{busy ? 'Changing…' : 'Change email'}</SubmitButton>
+        <Button variant="secondary" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function RecordPayment({ id, m, onDone, onSignedOut }: { id: string; m: AdminMember; onDone: (notice: string) => void; onSignedOut: () => void }) {
   const [open, setOpen] = useState(false);
   const [startMonth, setStartMonth] = useState((m.paidUntil ?? new Date().toISOString()).slice(0, 7));
@@ -843,7 +921,9 @@ function RecordPayment({ id, m, onDone, onSignedOut }: { id: string; m: AdminMem
             if (status === 401) return onSignedOut();
             if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not record the payment.' });
             setOpen(false);
-            onDone(`Payment recorded, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${m.email}.` : ''}`);
+            onDone(
+              `Payment recorded, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${m.email}.` : sendEmail ? ' The email was not sent: write to them by hand.' : ''}`,
+            );
           }}
         >
           <p class="m-0 text-compact">

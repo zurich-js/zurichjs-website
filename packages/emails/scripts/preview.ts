@@ -68,6 +68,7 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
   ],
   'automatic-payment-set-up': [{ ...base, paidThrough: '30th September 2027', firstPayment: '1st October 2027' }],
   'payment-failed': [base],
+  'membership-lapsed': [base],
   'resignation-received': [
     { ...base, openDues: false },
     { ...base, openDues: true },

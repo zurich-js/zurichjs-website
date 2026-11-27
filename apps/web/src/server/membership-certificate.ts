@@ -71,8 +71,18 @@ export async function issueAndSendCertificate(
   first: boolean,
   deps: IssueDeps,
 ): Promise<Certificate> {
-  const log = deps.log ?? console.log;
   const cert = await deps.store.issueCertificate(m.id, term, deps.actor);
+  await sendCertificate(m, cert, deps.template ?? (first ? 'membership-welcome' : 'membership-renewed'), deps);
+  return cert;
+}
+
+export async function sendCertificate(
+  m: Member,
+  cert: Certificate,
+  template: 'membership-ported' | 'membership-renewed' | 'membership-welcome',
+  deps: Omit<IssueDeps, 'store' | 'actor'>,
+) {
+  const log = deps.log ?? console.log;
   const pdf = await certificatePdf(m, cert, await (deps.signature ?? (() => loadSignature(log)))());
   const props = {
     ...membershipProps(m, deps.origin),
@@ -80,11 +90,10 @@ export async function issueAndSendCertificate(
     certificateNumber: cert.number,
     nextPayment: longDate(cert.periodEnd),
   };
-  const email = renderEmail(deps.template ?? (first ? 'membership-welcome' : 'membership-renewed'), props);
-  await sendMemberEmail(
+  const email = renderEmail(template, props);
+  return sendMemberEmail(
     deps.env,
     { to: m.email, ...email, attachments: [{ filename: certificateFilename(cert), content: pdf }] },
     { idempotencyKey: `member-certificate:${cert.id}`, log, fetch: deps.fetch },
-  ).catch((e: Error) => log(`[membership] certificate email ${cert.number} failed: ${e.message}`));
-  return cert;
+  );
 }

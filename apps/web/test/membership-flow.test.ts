@@ -42,7 +42,7 @@ const unix = (iso: string) => Math.floor(Date.parse(iso) / 1000);
 function world(opts: { openInvoices?: number; existingSubscription?: boolean } = {}) {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   /** What the subscription bills now, and its schedule (a pending plan switch), as Stripe would keep them. */
-  const sub = { lookupKey: 'member_supporter_yearly', schedule: null as string | null, schedulePlan: null as string | null };
+  const sub = { lookupKey: 'member_supporter_yearly', status: 'active', schedule: null as string | null, schedulePlan: null as string | null };
   const emails: Record<string, unknown>[] = [];
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
@@ -56,6 +56,7 @@ function world(opts: { openInvoices?: number; existingSubscription?: boolean } =
     const ok = (b: unknown) => new Response(JSON.stringify(b));
     if (path === 'prices') return ok({ data: [{ id: `price_${params.get('lookup_keys[0]')}` }] });
     if (path === 'customers') return ok({ id: 'cus_ada' });
+    if (path === 'checkout/sessions' && init.method !== 'POST') return ok({ data: [] });
     if (path === 'checkout/sessions') return ok({ id: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1' });
     if (path === 'billing_portal/sessions') return ok({ url: 'https://billing.stripe.com/p/session/1' });
     if (path === 'invoices') return ok({ data: params.get('status') === 'open' ? Array.from({ length: opts.openInvoices ?? 0 }, (_, i) => ({ id: `in_open_${i}` })) : [] });
@@ -80,6 +81,7 @@ function world(opts: { openInvoices?: number; existingSubscription?: boolean } =
         return new Response(JSON.stringify({ error: { message: 'The subscription is managed by the subscription schedule `sub_sched_1`.' } }), { status: 400 });
       return ok({
         id,
+        status: sub.status,
         cancel_at: unix('2027-11-10T00:00:00Z'),
         metadata: { source: 'zurichjs.com/membership', memberId: 'm' },
         items: { data: [{ price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey }, current_period_end: unix('2027-11-10T00:00:00Z') }] },
@@ -176,7 +178,7 @@ describe('joining', () => {
     const m = (await store.byEmail('ada@example.com'))!;
     expect(m).toMatchObject({ status: 'pending', userId: 'user-ada', level: 'supporter', cycle: 'yearly', stripeCustomerId: 'cus_ada', source: 'self_serve' });
     expect(await store.acceptedTerms(m.id)).toBe(TERMS.version);
-    const checkout = w.calls.find((c) => c.path === 'checkout/sessions')!.params;
+    const checkout = w.calls.find((c) => c.path === 'checkout/sessions' && c.method === 'POST')!.params;
     expect(Object.fromEntries(checkout)).toMatchObject({
       mode: 'subscription',
       customer: 'cus_ada',
@@ -184,7 +186,7 @@ describe('joining', () => {
       'metadata[memberId]': m.id,
       'subscription_data[metadata][memberId]': m.id,
       'subscription_data[metadata][source]': 'zurichjs.com/membership',
-      success_url: 'https://zurichjs.com/membership/account?checkout=done',
+      success_url: `https://zurichjs.com/membership/account?checkout=done&attempt=${checkout.get('metadata[attempt]')}`,
     });
     expect(checkout.has('subscription_data[trial_end]')).toBe(false);
   });
@@ -319,6 +321,7 @@ describe('payments (Stripe webhook)', () => {
       metadata: { source: 'zurichjs.com/membership', memberId },
       items: { data: [{ price: { lookup_key: 'member_supporter_yearly' } }] },
     };
+    w.sub.status = 'past_due';
     await handleMembershipWebhook(stripeEvent('evt_u', 'customer.subscription.updated', sub), deps());
     expect((await store.get(memberId))!.status).toBe('past_due');
   });
@@ -333,6 +336,7 @@ describe('payments (Stripe webhook)', () => {
 
   it('follows a switch of level or cycle made in the billing portal', async () => {
     await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    w.sub.lookupKey = 'member_basic_quarterly';
     const sub = { id: 'sub_ada', metadata: { source: 'zurichjs.com/membership', memberId }, items: { data: [{ price: { lookup_key: 'member_basic_quarterly' } }] } };
     await handleMembershipWebhook(stripeEvent('evt_u', 'customer.subscription.updated', sub), deps());
     expect(await store.get(memberId)).toMatchObject({ level: 'basic', cycle: 'quarterly' });
@@ -415,11 +419,11 @@ describe('imported members', () => {
       now: () => new Date('2026-11-10T10:00:00Z'),
     });
     expect(res.status).toBe(200);
-    const params = w.calls.find((c) => c.path === 'checkout/sessions')!.params;
+    const params = w.calls.find((c) => c.path === 'checkout/sessions' && c.method === 'POST')!.params;
     expect(params.get('subscription_data[trial_end]')).toBe(String(unix('2027-05-22T00:00:00Z')));
     expect(params.get('line_items[0][price]')).toBe('price_member_supporter_yearly');
     // Back on the account page, it says when the first charge is (not that a certificate is coming).
-    expect(params.get('success_url')).toBe('https://zurichjs.com/membership/account?checkout=automatic');
+    expect(params.get('success_url')).toBe(`https://zurichjs.com/membership/account?checkout=automatic&attempt=${params.get('metadata[attempt]')}`);
 
     const m = (await store.byEmail('ada@example.com'))!;
     expect(await store.acceptedTerms(m.id)).toBe(TERMS.version);

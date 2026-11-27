@@ -12,7 +12,7 @@
  * Environment: STRIPE_SECRET_KEY, STRIPE_MEMBER_PORTAL_CONFIG,
  * STRIPE_MEMBERSHIP_WEBHOOK_SECRET (webhook.ts).
  */
-import { priceLookupKey, type Cycle, type Level, type Member, type MemberStore } from '@zurichjs/membership';
+import { priceLookupKey, type CheckoutAttempt, type Cycle, type Level, type Member, type MemberStore } from '@zurichjs/membership';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 
@@ -67,33 +67,45 @@ export async function ensureCustomer(member: Member, store: MemberStore, deps: S
   return c.id;
 }
 
-/**
- * Stripe Checkout for the membership subscription. For an imported member who
- * paid manually (cash/bank), the first charge waits until their paid period ends (trial_end;
- * Stripe needs it at least 48 hours ahead, so a period ending sooner is charged now).
- */
-/** Refused: the member already has a membership subscription in Stripe (a second Checkout would charge twice). */
 export class AlreadySubscribed extends Error {}
 
 export async function createCheckout(member: Member, store: MemberStore, origin: string, deps: StripeDeps): Promise<string> {
-  const customer = await ensureCustomer(member, store, deps);
-  // A Checkout finished moments ago may not have reached the webhook yet (or a second tab opened
-  // another): never start a second membership subscription for the same customer.
-  const open = await stripeApi<{ data: { status: string; metadata?: Record<string, string> }[] }>(
-    deps.env,
-    deps.fetch ?? fetch,
-    'GET',
-    'subscriptions',
-    stripeForm({ customer, status: 'all', limit: 20 }),
-  );
-  if (open.data.some((s) => s.metadata?.source === MEMBERSHIP_SOURCE && ['trialing', 'active', 'past_due', 'incomplete'].includes(s.status)))
-    throw new AlreadySubscribed('Automatic payment is already set up for this membership.');
-  const price = await priceFor(member.level, member.cycle, deps);
-  const now = (deps.now ?? (() => new Date()))().getTime();
-  const paidUntil = member.status === 'imported_manual' && member.paidUntil ? Date.parse(`${member.paidUntil}T00:00:00Z`) : 0;
-  const trialEnd = paidUntil > now + 49 * 3_600_000 ? Math.floor(paidUntil / 1000) : undefined;
-  const account = new URL('/membership/account', origin).toString();
-  const s = await stripeApi<{ id: string; url: string }>(
+  const clock = deps.now ?? (() => new Date());
+  const attempt = await store.transaction(async (tx) => {
+    const current = await tx.get(member.id);
+    if (!current || !['pending', 'imported_manual'].includes(current.status)) throw new AlreadySubscribed();
+    if (current.level !== member.level || current.cycle !== member.cycle) throw new Error('Membership choice changed. Reload and try again.');
+    const customer = await ensureCustomer(current, tx, deps);
+    const price = await priceFor(current.level, current.cycle, deps);
+    const prior = await tx.checkoutAttempt(current.id);
+    const now = Math.floor(clock().getTime() / 1000);
+    const paidUntil = current.status === 'imported_manual' && current.paidUntil ? Date.parse(`${current.paidUntil}T00:00:00Z`) / 1000 : 0;
+    const trialEnd = paidUntil > now + 49 * 3600 ? paidUntil : null;
+    if (prior && prior.customer === customer && prior.price === price && prior.trialEnd === trialEnd && prior.expiresAt > now) return prior;
+    await assertNoSubscription(customer, deps);
+    // A timed-out create can still be running at Stripe. Resolve that same attempt before replacing it.
+    if (prior && !prior.url && prior.expiresAt > now) await openSession(current.id, prior, deps);
+    await expireOpenCheckouts(customer, deps);
+    const next = { id: crypto.randomUUID(), customer, price, trialEnd, expiresAt: now + 2 * 3600, account: new URL('/membership/account', origin).toString(), url: null };
+    await tx.saveCheckoutAttempt(current.id, next);
+    return next;
+  });
+  return store.transaction(async (tx) => {
+    const current = await tx.get(member.id);
+    if (!current || !['pending', 'imported_manual'].includes(current.status)) throw new AlreadySubscribed();
+    const saved = await tx.checkoutAttempt(member.id);
+    if (!saved || saved.id !== attempt.id) throw new Error('Checkout changed. Try again.');
+    await assertNoSubscription(saved.customer, deps);
+    if (saved.url) return saved.url;
+    const s = await openSession(member.id, saved, deps);
+    await tx.saveCheckoutAttempt(member.id, { ...saved, url: s.url });
+    return s.url;
+  });
+}
+
+function openSession(memberId: string, saved: CheckoutAttempt, deps: StripeDeps) {
+  const { customer, price, trialEnd, account } = saved;
+  return stripeApi<{ id: string; url: string }>(
     deps.env,
     deps.fetch ?? fetch,
     'POST',
@@ -101,17 +113,51 @@ export async function createCheckout(member: Member, store: MemberStore, origin:
     stripeForm({
       mode: 'subscription',
       customer,
+      expires_at: saved.expiresAt,
       line_items: [{ price, quantity: 1 }],
-      // A member paying manually who switches is not charged now: the account page says so.
-      success_url: `${account}?checkout=${trialEnd ? 'automatic' : 'done'}`,
+      success_url: `${account}?checkout=${trialEnd ? 'automatic' : 'done'}&attempt=${saved.id}`,
       cancel_url: `${account}?checkout=cancelled`,
-      client_reference_id: member.id,
-      metadata: { source: MEMBERSHIP_SOURCE, memberId: member.id },
-      subscription_data: { metadata: { source: MEMBERSHIP_SOURCE, memberId: member.id }, ...(trialEnd ? { trial_end: trialEnd } : {}) },
+      client_reference_id: memberId,
+      metadata: { source: MEMBERSHIP_SOURCE, memberId: memberId, attempt: saved.id },
+      subscription_data: { metadata: { source: MEMBERSHIP_SOURCE, memberId: memberId, attempt: saved.id }, ...(trialEnd ? { trial_end: trialEnd } : {}) },
       locale: 'en',
     }),
+    `member-checkout:${saved.id}`,
   );
-  return s.url;
+}
+
+async function assertNoSubscription(customer: string, deps: StripeDeps) {
+  let after: string | undefined;
+  do {
+    const page = await stripeApi<{ data: { id: string; status: string; metadata?: Record<string, string> }[]; has_more?: boolean }>(
+      deps.env,
+      deps.fetch ?? fetch,
+      'GET',
+      'subscriptions',
+      stripeForm({ customer, status: 'all', limit: 100, starting_after: after }),
+    );
+    if (page.data.some((s) => s.metadata?.source === MEMBERSHIP_SOURCE && !['canceled', 'incomplete_expired'].includes(s.status))) throw new AlreadySubscribed();
+    after = page.has_more ? page.data.at(-1)?.id : undefined;
+  } while (after);
+}
+
+/** Expires the customer's membership Checkout sessions that are still open. */
+async function expireOpenCheckouts(customer: string, deps: StripeDeps): Promise<void> {
+  const f = deps.fetch ?? fetch;
+  let after: string | undefined;
+  const sessionIds: string[] = [];
+  do {
+    const page = await stripeApi<{ data: { id: string; metadata?: Record<string, string> | null }[]; has_more?: boolean }>(
+      deps.env,
+      f,
+      'GET',
+      'checkout/sessions',
+      stripeForm({ customer, status: 'open', limit: 100, starting_after: after }),
+    );
+    sessionIds.push(...page.data.filter((session) => session.metadata?.source === MEMBERSHIP_SOURCE).map((session) => session.id));
+    after = page.has_more ? page.data.at(-1)?.id : undefined;
+  } while (after);
+  for (const id of sessionIds) await stripeApi(deps.env, f, 'POST', `checkout/sessions/${encodeURIComponent(id)}/expire`);
 }
 
 /** A Stripe billing portal session (no cancellation; see the configuration script). */
@@ -192,6 +238,18 @@ interface StripeSchedule {
 }
 
 const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
+
+/** The subscription's status in Stripe now (an event's copy can be older than a later payment). */
+export async function subscriptionSnapshot(subscriptionId: string, deps: StripeDeps) {
+  const sub = await stripeApi<StripeSubscription & { status?: string }>(deps.env, deps.fetch ?? fetch, 'GET', `subscriptions/${encodeURIComponent(subscriptionId)}`);
+  return { status: sub.status, plan: fromLookupKey(sub.items?.data?.[0]?.price?.lookup_key) };
+}
+
+/** The Stripe customer a charge belongs to (a dispute names only its charge). */
+export async function chargeCustomer(chargeId: string, deps: StripeDeps): Promise<string | null> {
+  const c = await stripeApi<{ customer?: string | { id: string } | null }>(deps.env, deps.fetch ?? fetch, 'GET', `charges/${encodeURIComponent(chargeId)}`);
+  return typeof c.customer === 'string' ? c.customer : (c.customer?.id ?? null);
+}
 
 /** The level and cycle the subscription bills now (after a scheduled switch took effect). */
 export async function currentPlan(subscriptionId: string, deps: StripeDeps): Promise<{ level: Level; cycle: Cycle } | null> {

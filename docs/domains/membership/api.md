@@ -34,7 +34,7 @@ Admin writes must come from the site's own origin; every admin request is checke
 - **One product per level** ("ZurichJS membership: Basic Member" and "…: Supporter"). The billing portal allows one price per interval on a product, so one shared product could not offer the level switch.
 - **Four recurring CHF prices** with lookup keys `member_<basic|supporter>_<quarterly|yearly>`, amounts from `apps/web/src/lib/membership.ts`. A test keeps the Stripe amounts equal to that table.
 - **The billing portal configuration** without cancelling and without plan switching, which prints `STRIPE_MEMBER_PORTAL_CONFIG`. Run it again in each Stripe account after a change.
-- **With `--webhook-url https://zurichjs.com/api/stripe/webhook`,** the site's one webhook endpoint, for memberships, sponsorships and donations, with the six events below, on the API version the site pins. It prints the signing secret once: that is `STRIPE_WEBHOOK_SECRET` ([Stripe](/systems/stripe.md)).
+- **With `--webhook-url https://zurichjs.com/api/stripe/webhook`,** the site's one webhook endpoint, for memberships, sponsorships and donations, with the eight events below, on the API version the site pins. It prints the signing secret once: that is `STRIPE_WEBHOOK_SECRET` ([Stripe](/systems/stripe.md)).
 
 Test mode first. Running it with the live key is a production change for the owner. Test and live are separate endpoints with separate secrets: scope the live `STRIPE_SECRET_KEY`, `STRIPE_MEMBER_PORTAL_CONFIG` and `STRIPE_WEBHOOK_SECRET` to the production context in Netlify, and the test ones to deploy previews.
 
@@ -49,10 +49,15 @@ Membership events arrive on the site's one webhook, `/api/stripe/webhook`, which
 | `invoice.payment_failed`          | declined renewal: active → past due; email with Stripe's payment page and the next retry date (one per attempt); Slack note                                                                                  |
 | `invoice.payment_action_required` | the bank wants the member to confirm (3D Secure): the same, worded "confirm the payment"                                                                                                                     |
 | `customer.subscription.updated`   | a scheduled level or cycle switch took effect at the renewal (`invoice.paid` also reads it, so the certificate shows the new level); Stripe reporting `past_due` or `unpaid` marks an active member past due |
-| `customer.subscription.deleted`   | ended: resigned (the board confirmed) or lapsed (the retries ran out)                                                                                                                                        |
+| `customer.subscription.deleted`   | ended: resigned (the board confirmed it, or Stripe ended the renewal the resignation stopped) or lapsed (the retries ran out, resigning or not); a lapsed member is emailed that the membership ended        |
+| `charge.refunded`                 | a member's payment refunded (found by the Stripe customer): a row in the member's history and a Slack note; the membership is unchanged                                                                      |
+| `charge.dispute.created`          | a member disputed a payment with their bank: the same, with the dispute reason; answer the dispute in Stripe                                                                                                 |
 
-- **Receiving an event twice:** handled events are skipped, status changes are compare-and-set, there is one certificate per invoice, and emails have idempotency keys. An event is recorded only once every step worked, so a retry after a failure (answered 500; Stripe retries for up to three days) runs the steps again, and a step that already happened, such as a Slack note, can happen a second time.
-- People still in Checkout get no failed-payment email (Checkout shows the error). Disputes and refunds are not handled by the site; Stripe emails the account owner.
+- **Safe to receive twice:** an event is claimed before it runs (`stripe_events`), so a second delivery at the same moment answers 409 and Stripe sends it again later; handled events are skipped; status changes are compare-and-set; there is one certificate per paid term; emails have idempotency keys. A failure answers 500, gives the claim back, and Stripe retries for up to three days. A claim older than two minutes (a function that timed out) is taken over.
+- **A retry decides from what is stored,** not from what the failed try already changed: the welcome (not the renewal email) goes with the invoice that made the member active, paid until never moves back, and a payment failure for an invoice that is already paid is ignored.
+- **Out of order or doubled:** Stripe does not keep events in order. A `customer.subscription.updated` saying past due is checked against the subscription's status in Stripe now. A payment for an ended membership, or for a second membership subscription next to the running one, issues nothing and posts a Slack note to check and refund it in Stripe. Checkout creation is reserved per member and reuses its provider key. An uncertain session is reconciled before it is replaced.
+- People still in Checkout get no failed-payment email (Checkout shows the error).
+- **Refunds and disputes are recorded, not acted on:** whether a refunded or disputed payment ends the membership is not decided (see Open questions), so the site changes nothing and tells the board.
 - **Duration, deploy-preview testing and the move off the old endpoint:** [Stripe](/systems/stripe.md).
 
 ## Stripe dashboard settings
@@ -68,9 +73,21 @@ Billing › Revenue recovery, once per account: Smart Retries on; when all retri
 5. **Slack:** invite @ZurichJS Bot to the membership channel.
 6. **Environment variables:** the membership block in [Environment variables](/systems/operations/environment.md), including `BETTER_AUTH_SECRET` and `ADMIN_PASSWORD`.
 
+Adding `charge.refunded` and `charge.dispute.created` to an existing endpoint is a production change for the owner: add them in Stripe › Developers › Webhooks, or create the endpoint again with the setup script.
+
 ### Not verified
 
 Which of these steps are done on production could not be checked from the repository.
+
+## Open questions
+
+- **Refunds and disputes (owner):** whether a refunded or disputed membership payment ends the membership, and who decides. Until then the board gets the note and the history shows it.
+
+## Payment recovery
+
+Concurrent requests for the same choice reuse one Checkout attempt. Its Stripe session expires after two hours. Changed choices close existing sessions before creating a replacement. Each attempt uses its own provider idempotency key.
+
+The webhook locks the member while selecting the subscription, recording the invoice outcome, advancing coverage, issuing the certificate and queuing notices. A retry resumes outstanding notices under its own event lease. A failed delivery returns a retryable error. A provider that accepts a notice but loses the response can receive it again. Certificate emails use the certificate ID as the Resend idempotency key.
 
 ## Related concepts
 

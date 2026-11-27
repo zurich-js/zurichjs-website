@@ -8,7 +8,7 @@
  * a `pg.Pool` (apps/web/src/server/membership-db.ts) or a `pg.Client`.
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateEmail, MemberNotFound, normaliseEmail, type MemberStore } from './store.ts';
+import { CLAIM_TTL_MS, DuplicateEmail, MemberNotFound, normaliseEmail, type MemberStore, type MemberDelivery, type CheckoutAttempt } from './store.ts';
 import type { Actor, Certificate, Member, MemberEvent, MemberPatch, Status } from './types.ts';
 
 export interface Queryable {
@@ -139,7 +139,15 @@ function mapError(err: unknown): Error {
   return err instanceof Error ? err : new Error(msg);
 }
 
-export function postgresStore(db: Queryable): MemberStore {
+interface MemberPool extends Queryable {
+  connect(): Promise<Queryable & { release(destroy?: boolean): void }>;
+}
+
+function isPool(db: Queryable): db is MemberPool {
+  return 'totalCount' in db && 'connect' in db;
+}
+
+export function postgresStore(db: Queryable, locked = false): MemberStore {
   const q = async <R>(text: string, params: unknown[] = []): Promise<R[]> => {
     try {
       return (await db.query<R>(text, params)).rows;
@@ -148,16 +156,78 @@ export function postgresStore(db: Queryable): MemberStore {
     }
   };
   const one = async (where: string, value: unknown): Promise<Member | null> => {
-    const rows = await q<MemberRow>(`select * from members where ${where} = $1 limit 1`, [value]);
+    const rows = await q<MemberRow>(`select * from members where ${where} = $1 limit 1 ${locked ? 'for update' : ''}`, [value]);
     return rows[0] ? fromRow(rows[0]) : null;
   };
   const fn = async (call: string, params: unknown[]) => fromRow((await q<MemberRow>(`select * from ${call}`, params))[0]!);
 
   return {
+    async transaction(work) {
+      if (locked) return work(this);
+      if (!isPool(db)) throw new Error('A connection pool is required for membership transactions.');
+      const client = await db.connect();
+      let destroy = false;
+      try {
+        await client.query('begin');
+        const result = await work(postgresStore(client, true));
+        await client.query('commit');
+        return result;
+      } catch (error) {
+        try {
+          await client.query('rollback');
+        } catch {
+          destroy = true;
+        }
+        throw error;
+      } finally {
+        client.release(destroy);
+      }
+    },
+    async recordInvoice(id, invoice, sub, outcome) {
+      const historical = await q('select 1 from certificates where stripe_invoice_id=$1 and member_id<>$2', [invoice, id]);
+      if (historical.length) return 'conflict';
+      const changed = await q(
+        `insert into member_invoice_outcomes as prior(invoice,member_id,subscription_id,outcome) values ($1,$2,$3,$4)
+         on conflict(invoice) do update set outcome=excluded.outcome
+         where prior.member_id=excluded.member_id and prior.subscription_id=excluded.subscription_id and prior.outcome<>'paid'
+         returning invoice`,
+        [invoice, id, sub, outcome],
+      );
+      if (changed.length) return 'apply';
+      const settled = await q('select 1 from member_invoice_outcomes where invoice=$1 and member_id=$2 and subscription_id=$3', [invoice, id, sub]);
+      return settled.length ? 'settled' : 'conflict';
+    },
+    async checkoutAttempt(id) {
+      return (await q<{ attempt: CheckoutAttempt }>('select attempt from member_checkout_attempts where member_id=$1', [id]))[0]?.attempt ?? null;
+    },
+    async saveCheckoutAttempt(id, attempt) {
+      await q('insert into member_checkout_attempts values ($1,$2) on conflict(member_id) do update set attempt=excluded.attempt', [id, JSON.stringify(attempt)]);
+    },
+    async enqueue(id, operation, key, payload) {
+      await q('insert into member_deliveries (member_id,operation,key,payload) values ($1,$2,$3,$4) on conflict(key) do nothing', [id, operation, key, JSON.stringify(payload)]);
+    },
+    async pendingDeliveries(operation) {
+      return q<{ memberId: string; key: string; payload: MemberDelivery }>(
+        `select member_id as "memberId",key,payload from member_deliveries where operation=$1 and payload is not null order by key ${locked ? 'for update' : ''}`,
+        [operation],
+      );
+    },
+    async delivered(key) {
+      await q('update member_deliveries set payload=null where key=$1', [key]);
+    },
+    async stripePrepared(id, lease) {
+      const [row] = await q<{ prepared: boolean }>('select prepared from stripe_events where id=$1 and lease=$2 and processed_at is null for update', [id, lease]);
+      if (!row) throw new Error('Membership event lease expired.');
+      return row.prepared;
+    },
+    async prepareStripeEvent(id, lease) {
+      await q('update stripe_events set prepared=true where id=$1 and lease=$2', [id, lease]);
+    },
     get: (id) => one('id', id),
     byEmail: (email) => one('email', normaliseEmail(email)),
     byUser: (uid) => one('user_id', uid),
     byStripeSubscription: (sid) => one('stripe_subscription_id', sid),
+    byStripeCustomer: (cid) => one('stripe_customer_id', cid),
     search: async ({ q: text, status, limit = 200 }) => {
       const needle = text?.trim() ? `%${text.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
       const rows = await q<MemberRow>(
@@ -224,11 +294,33 @@ export function postgresStore(db: Queryable): MemberStore {
     async certificates(id) {
       return (await q<CertificateRow>('select * from certificates where member_id = $1 order by period_start desc', [id])).map(certFromRow);
     },
-    async stripeEventSeen(eventId) {
-      return (await q('select 1 from stripe_events where id = $1', [eventId])).length > 0;
+    async claimStripeEvent(eventId, type) {
+      const claimed = await q<{ lease: string }>(
+        `insert into stripe_events (id, type, claimed_at, lease) values ($1, $2, now(), gen_random_uuid())
+         on conflict (id) do update set claimed_at = now(), lease=excluded.lease
+         where stripe_events.processed_at is null and (stripe_events.claimed_at is null or stripe_events.claimed_at < now() - make_interval(secs => $3))
+         returning lease`,
+        [eventId, type, CLAIM_TTL_MS / 1000],
+      );
+      if (claimed[0]) return claimed[0];
+      const rows = await q<{ done: boolean }>('select processed_at is not null as done from stripe_events where id = $1', [eventId]);
+      return rows[0]?.done ? 'done' : 'busy';
     },
-    async markStripeEvent(eventId, type) {
-      await q('insert into stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [eventId, type]);
+    async markStripeEvent(id, lease) {
+      const rows = await q('update stripe_events set processed_at=now(),lease=null,claimed_at=null where id=$1 and lease=$2 returning id', [id, lease]);
+      if (!rows.length) throw new Error('Membership event lease expired.');
+    },
+    async releaseStripeEvent(id, lease) {
+      await q("update stripe_events set claimed_at='-infinity',lease=null where id=$1 and lease=$2 and processed_at is null", [id, lease]);
+    },
+    async logEvent(id, type, actor, payload) {
+      await q('insert into member_events (member_id, type, actor_kind, actor_id, payload) values ($1, $2, $3, $4, $5::jsonb)', [
+        id,
+        type,
+        actor.kind,
+        actor.id,
+        JSON.stringify(payload),
+      ]);
     },
     async events(id) {
       const rows = await q<EventRow>('select * from member_events where member_id = $1 order by at asc, id asc', [id]);

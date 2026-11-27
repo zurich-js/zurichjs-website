@@ -30,6 +30,7 @@ interface Props {
 
 interface Me {
   email: string;
+  attemptState?: 'waiting' | 'paid' | 'automatic' | 'superseded';
   member: MemberView | null;
   certificates: CertificateView[];
   canJoin: boolean;
@@ -50,10 +51,12 @@ type View =
   | { kind: 'unavailable' }
   | { kind: 'signed-out'; notice?: string }
   | { kind: 'sent'; email: string }
-  | { kind: 'ready'; me: Me }
+  | { kind: 'ready'; me: Me; waiting?: 'yes' | 'gave-up' | 'no' }
   | { kind: 'error'; message: string };
 
 const CYCLE_LABEL = { quarterly: 'Quarterly', yearly: 'Yearly' } as const;
+
+const WAIT_MS = [2000, 2000, 3000, 3000, 5000, 5000, 10_000, 10_000, 10_000, 10_000];
 
 /** paid_until is the first unpaid day: show the day before. */
 const lastPaidDay = (iso: string) => longDate(lastDay(iso));
@@ -63,8 +66,15 @@ function urlNotice() {
   const q = new URLSearchParams(location.search);
   const link = q.get('link') || q.get('error');
   const checkout = q.get('checkout');
-  if (link || checkout) history.replaceState(history.state, '', location.pathname);
+  if (link) {
+    q.delete('link');
+    q.delete('error');
+    history.replaceState(history.state, '', location.pathname + (q.size ? '?' + q : ''));
+  }
+  const attempt = q.get('attempt');
+
   return {
+    attempt: attempt && /^[0-9a-f-]{36}$/.test(attempt) ? attempt : undefined,
     link: link ? 'That sign-in link has expired or was already used. Ask for a new one below.' : undefined,
     checkout: checkout === 'done' || checkout === 'automatic' || checkout === 'cancelled' ? checkout : undefined,
   };
@@ -73,7 +83,7 @@ function urlNotice() {
 export default function MemberAccount({ contactEmail }: Props) {
   const [view, setView] = useState<View>({ kind: 'loading' });
   // Read from the URL in the browser only (the page is prerendered).
-  const [notice, setNotice] = useState<ReturnType<typeof urlNotice>>({ link: undefined, checkout: undefined });
+  const [notice, setNotice] = useState<ReturnType<typeof urlNotice>>({ link: undefined, checkout: undefined, attempt: undefined });
   const [email, setEmail] = useState('');
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -81,7 +91,10 @@ export default function MemberAccount({ contactEmail }: Props) {
   const sentRef = useFocusWhen<HTMLDivElement>(view.kind === 'sent');
 
   const load = async (n: ReturnType<typeof urlNotice>, attempt = 0): Promise<void> => {
-    const res = await fetch('/api/membership/me', { credentials: 'same-origin', signal: timeoutSignal(READ_DEADLINE_MS) }).catch(() => null);
+    const res = await fetch(n.attempt ? `/api/membership/me?attempt=${encodeURIComponent(n.attempt)}` : '/api/membership/me', {
+      credentials: 'same-origin',
+      signal: timeoutSignal(READ_DEADLINE_MS),
+    }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
     if (res.status === 401) {
       setSignedIn(false);
@@ -92,14 +105,21 @@ export default function MemberAccount({ contactEmail }: Props) {
     if (!res.ok || !body.ok) return setView({ kind: 'error', message: body.error ?? `We couldn’t load your membership. Try again, or write to ${contactEmail}.` });
     const me = body as Me;
     setSignedIn(true);
-    // Back from Stripe: the payment (or the switch to automatic payment) is confirmed by Stripe's webhook a few seconds later.
-    const waiting = (n.checkout === 'done' && me.member?.status === 'pending') || (n.checkout === 'automatic' && me.member?.status === 'imported_manual');
-    if (waiting && attempt < 5) {
-      setView({ kind: 'ready', me });
-      await new Promise((r) => setTimeout(r, 2000));
+    const returning = n.checkout === 'done' || n.checkout === 'automatic';
+    const confirmed = n.attempt ? me.attemptState === 'paid' || me.attemptState === 'automatic' : me.member?.status === 'active' && me.member.paymentMode === 'automatic';
+    const waiting = returning && !confirmed && me.attemptState !== 'superseded';
+    if (returning && !waiting) {
+      const url = new URL(location.href);
+      url.searchParams.delete('checkout');
+      url.searchParams.delete('attempt');
+      history.replaceState(history.state, '', url.pathname + url.search);
+    }
+    if (waiting && attempt < WAIT_MS.length) {
+      setView({ kind: 'ready', me, waiting: 'yes' });
+      await new Promise((r) => setTimeout(r, WAIT_MS[attempt]));
       return load(n, attempt + 1);
     }
-    setView({ kind: 'ready', me });
+    setView({ kind: 'ready', me, waiting: waiting ? 'gave-up' : 'no' });
   };
 
   useEffect(() => {
@@ -120,10 +140,17 @@ export default function MemberAccount({ contactEmail }: Props) {
     setBusy(true);
     setFormError('');
     const address = email.trim().toLowerCase();
+    const choice = readChoice();
+    const params = new URLSearchParams();
+    if (choice.fromLink.level) params.set('level', choice.level);
+    if (choice.fromLink.cycle) params.set('cycle', choice.cycle);
+    if (notice.checkout) params.set('checkout', notice.checkout);
+    if (notice.attempt) params.set('attempt', notice.attempt);
+    const callbackURL = '/membership/account' + (params.size ? '?' + params : '');
     const res = await fetch('/api/auth/sign-in/magic-link', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: address, callbackURL: '/membership/account', errorCallbackURL: '/membership/account?link=invalid' }),
+      body: JSON.stringify({ email: address, callbackURL, errorCallbackURL: '/membership/account?link=invalid' }),
     }).catch(() => null);
     setBusy(false);
     if (res?.ok) return setView({ kind: 'sent', email: address });
@@ -211,6 +238,7 @@ export default function MemberAccount({ contactEmail }: Props) {
 
   const { me } = view;
   const m = me.member;
+  const waiting = view.waiting === 'yes' || view.waiting === 'gave-up';
   return (
     <div class="flex flex-col gap-8 max-w-wide">
       <div class="flex flex-wrap items-center justify-between gap-4">
@@ -221,30 +249,37 @@ export default function MemberAccount({ contactEmail }: Props) {
           Sign out
         </Button>
       </div>
-      {notice.checkout === 'done' && m && m.status !== 'pending' && (
+      {notice.checkout === 'done' && !waiting && m?.status === 'active' && m.paymentMode === 'automatic' && (!notice.attempt || me.attemptState === 'paid') && (
         <Notice tone="success" live title="Payment received, thank you.">
           <p class="m-0">Your certificate is on its way by email.</p>
         </Notice>
       )}
-      {notice.checkout === 'done' && m?.status === 'pending' && (
-        <p role="status" class={noticeClass('note', 'm-0 text-body')}>
-          Stripe is confirming your payment. This page updates in a moment, and your certificate follows by email.
-        </p>
+      {waiting && (
+        <div role="status" class={noticeClass('note', 'flex-col')}>
+          <p class="m-0 text-body">
+            {view.waiting === 'yes'
+              ? notice.checkout === 'automatic'
+                ? 'Stripe is confirming your automatic payment. This takes a few seconds.'
+                : 'Stripe is confirming your payment. This takes a few seconds, and your certificate follows by email.'
+              : 'Stripe has not confirmed it yet. Reload this page in a minute. You do not need to pay again.'}
+          </p>
+          {view.waiting === 'gave-up' && (
+            <Button variant="secondary" class="self-start" onClick={() => location.reload()}>
+              Reload
+            </Button>
+          )}
+        </div>
       )}
-      {notice.checkout === 'automatic' && m && m.status !== 'imported_manual' && (
+      {notice.checkout === 'automatic' && !waiting && m?.status === 'active' && m.paymentMode === 'automatic' && (!notice.attempt || me.attemptState === 'automatic') && (
         <Notice tone="success" live title="Automatic payment is set up.">
           <p class="m-0">
-            Nothing is charged now: your next payment{m.paidUntil ? ` is on ${longDate(m.paidUntil)},` : ' comes when your paid period ends,'} {m.feeLabel}.
+            Nothing is charged now.{' '}
+            {m.paidUntil ? `Your first payment of ${m.feeLabel} is on ${longDate(m.paidUntil)}.` : `Your first payment of ${m.feeLabel} comes when your paid period ends.`}
           </p>
         </Notice>
       )}
-      {notice.checkout === 'automatic' && m?.status === 'imported_manual' && (
-        <p role="status" class={noticeClass('note', 'm-0 text-body')}>
-          Stripe is confirming your automatic payment. This page updates in a moment.
-        </p>
-      )}
       {notice.checkout === 'cancelled' && <p class={noticeClass('note', 'm-0 text-body')}>The payment was not finished, so nothing was charged.</p>}
-      {me.canJoin || m?.status === 'pending' ? (
+      {waiting ? null : me.canJoin || m?.status === 'pending' ? (
         <MemberJoin previous={m} contactEmail={contactEmail} onSignedOut={() => setView({ kind: 'signed-out' })} />
       ) : (
         m && (
@@ -301,7 +336,8 @@ function MemberPortal({
   onSignedOut: () => void;
 }) {
   const [busy, setBusy] = useState<'' | 'portal' | 'resign' | 'undo' | 'switch' | 'plan'>('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ at: 'switch' | 'card' | 'leaving'; message: string } | null>(null);
+  const errorAt = (at: 'switch' | 'card' | 'leaving') => error?.at === at && <Notice tone="danger" live title={error.message} />;
   const [confirmResign, setConfirmResign] = useState(false);
   const [accepted, setAccepted] = useState(acceptedCurrentTerms);
   const [triedSwitch, setTriedSwitch] = useState(false);
@@ -312,12 +348,13 @@ function MemberPortal({
 
   const post = async (path: string, what: typeof busy, payload: object = {}) => {
     setBusy(what);
-    setError('');
+    setError(null);
     const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => null);
     const body = (await res?.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string } | undefined;
     setBusy('');
     if (res?.status === 401) return onSignedOut();
-    if (!res?.ok || !body?.ok) return setError(body?.error ?? `That did not work. Try again, or write to ${contactEmail}.`);
+    if (!res?.ok || !body?.ok)
+      return setError({ at: what === 'resign' ? 'leaving' : 'card', message: body?.error ?? `That did not work. Try again, or write to ${contactEmail}.` });
     return body;
   };
 
@@ -374,7 +411,7 @@ function MemberPortal({
                 setBusy('switch');
                 const r = await startCheckout({}, onSignedOut, contactEmail).catch(() => ({ error: 'We couldn’t start the payment. Check your connection and try again.' }));
                 if (r?.error) {
-                  setError(r.error);
+                  setError({ at: 'switch', message: r.error });
                   setBusy('');
                 }
               }}
@@ -382,6 +419,7 @@ function MemberPortal({
               {busy === 'switch' ? 'Opening Stripe…' : 'Set up automatic payment'}
             </Button>
           </div>
+          {errorAt('switch')}
         </section>
       )}
       <section aria-labelledby="h-membership" class={cardClass('filled', 'lg')}>
@@ -432,11 +470,12 @@ function MemberPortal({
                 aria-expanded={changingPlan}
                 aria-controls="change-plan"
               >
-                Update subscription type
+                Change level or billing
               </Button>
             )}
           </div>
         )}
+        {errorAt('card')}
         {canChangePlan && changingPlan && (
           <ChangePlan
             m={m}
@@ -483,8 +522,6 @@ function MemberPortal({
         )}
       </section>
 
-      {error && <Notice tone="danger" live title={error} />}
-
       {['active', 'past_due', 'imported_manual'].includes(m.status) && (
         <section aria-labelledby="h-resign" class="flex flex-col gap-3 max-w-reading">
           <h2 id="h-resign" class="m-0 text-card-title font-bold">
@@ -494,6 +531,7 @@ function MemberPortal({
             You can resign at any time (bylaws Art. 5). Your request goes to the board, which typically gets back to you within 72 hours. You stay a member until the end of the
             period you already paid for, and you can resubscribe until then. After that, you will not be charged again. Nothing is refunded.
           </p>
+          {errorAt('leaving')}
           {confirmResign ? (
             <ResignForm
               busy={busy === 'resign'}
@@ -609,7 +647,7 @@ function ChangePlan({
   return (
     <section id="change-plan" aria-labelledby="h-plan" class="bg-white rounded-(--radius-nested) p-card-md flex flex-col gap-4">
       <h3 id="h-plan" class="m-0 text-card-title font-bold">
-        Update subscription type
+        Change level or billing
       </h3>
       {pending && (
         <div role="status" class="bg-grey rounded-(--radius-nested) p-card-sm flex flex-wrap items-center justify-between gap-3">
@@ -627,9 +665,7 @@ function ChangePlan({
         <Button variant="primary" class="self-start" disabled={disabled || unchanged} onClick={() => onChange({ level, cycle })}>
           {busy ? 'Confirming…' : 'Confirm'}
         </Button>
-        <p class="m-0 text-meta text-grey-text">
-          The change applies from your next billing cycle{renewal ? `, on ${renewal}` : ''}. Until then nothing changes, and nothing is charged now.
-        </p>
+        <p class="m-0 text-meta text-grey-text">The change starts at your renewal{renewal ? ` on ${renewal}` : ''}. Nothing is charged now.</p>
       </div>
     </section>
   );

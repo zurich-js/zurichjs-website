@@ -17,7 +17,7 @@
  */
 import { DuplicateEmail, TERMS, canJoin, canStartAutomaticPayment, isCycle, isLevel, type Cycle, type Level, type Member, type MemberKind } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../server/http.ts';
+import { CONTACT_EMAIL, fail, json, methodNotAllowed, readJsonObject, text } from '../../../server/http.ts';
 import { AlreadySubscribed, createCheckout } from '../../../server/membership-stripe.ts';
 import { signedIn, type RouteDeps } from '../../../server/membership-route.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
@@ -48,6 +48,7 @@ export function parseChoice(body: Record<string, unknown>): Parsed<Choice> {
   const kind = body.kind === undefined || body.kind === 'person' ? 'person' : body.kind === 'organisation' ? 'organisation' : null;
   if (!kind) return { ok: false, error: 'Choose a person or an organisation.', field: 'kind' };
   const name = text(body.name, 200);
+  if (name === false) return { ok: false, error: 'Use up to 200 characters for your name, without < or >.', field: 'name' };
   if (!name) return { ok: false, error: kind === 'organisation' ? 'Add the name of the person who joins for the organisation.' : 'Add your full name.', field: 'name' };
   const org = text(body.organisationName, 200);
   if (org === false) return { ok: false, error: 'Keep the organisation name under 200 characters, without HTML.', field: 'organisationName' };
@@ -120,7 +121,8 @@ export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
           );
         }
       } catch (cause) {
-        if (cause instanceof DuplicateEmail) return fail(409, 'A membership with your email already exists. Sign in again to see it.');
+        if (cause instanceof DuplicateEmail)
+          return fail(409, `A membership with this email is linked to another sign-in. Write to ${CONTACT_EMAIL} to have it linked to this one.`);
         throw cause;
       }
       await store.acceptTerms(m.id, TERMS.version, actor);

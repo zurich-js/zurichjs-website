@@ -18,7 +18,7 @@ export const handleCertificate = (request: Request, id: string, deps: RouteDeps 
     async ({ member, store }) => {
       const cert = member ? (await store.certificates(member.id)).find((c) => c.id === id) : undefined;
       if (!member || !cert) return fail(404, 'There is no such certificate on your membership.');
-      const pdf = await certificatePdf(member, cert, await (deps.signature ?? (() => loadSignature(deps.log)))());
+      const pdf = await certificatePdf(cert, await (deps.signature ?? (() => loadSignature(deps.log)))());
       return new Response(pdf as BodyInit, {
         status: 200,
         headers: { 'content-type': 'application/pdf', 'content-disposition': `attachment; filename="${certificateFilename(cert)}"`, 'cache-control': 'private, no-store' },

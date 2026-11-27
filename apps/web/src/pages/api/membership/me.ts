@@ -21,6 +21,8 @@ export const handleMe = (request: Request, deps: RouteDeps = {}) =>
     request,
     deps,
     async ({ user, member, store, env }) => {
+      const ref = new URL(request.url).searchParams.get('attempt');
+      const attempt = ref && member ? await store.checkoutAttempt(member.id) : null;
       const [certificates, acceptedTerms, pendingPlan] = await Promise.all([
         member ? store.certificates(member.id) : [],
         member ? store.acceptedTerms(member.id) : null,
@@ -30,6 +32,7 @@ export const handleMe = (request: Request, deps: RouteDeps = {}) =>
           : null,
       ]);
       return json(200, {
+        ...(ref ? { attemptState: attempt?.id === ref ? (attempt.confirmation ?? 'waiting') : 'superseded' } : {}),
         ok: true,
         email: user.email,
         member: member ? memberView(member) : null,

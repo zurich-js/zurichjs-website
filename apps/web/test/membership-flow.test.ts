@@ -161,7 +161,7 @@ describe('joining', () => {
     [{ ...join, level: 'advocate' }, 'level', 'Choose Basic Member or Supporter.'],
     [{ ...join, cycle: 'monthly' }, 'cycle', 'Choose quarterly or yearly.'],
     [{ ...join, kind: 'organisation' }, 'organisationName', 'Add the organisation’s name.'],
-    [{ ...join, name: '<b>Ada</b>' }, 'name', 'Add your full name.'],
+    [{ ...join, name: '<b>Ada</b>' }, 'name', 'Use up to 200 characters for your name, without < or >.'],
   ])('refuses %j', async (body, field, error) => {
     const store = memoryStore();
     const res = await handleCheckout(req('/api/membership/checkout', body), { env, store, session: async () => ada, fetch: world().f });
@@ -430,7 +430,10 @@ describe('imported members', () => {
     // Checkout finished: automatic from now on, no charge yet (the trial invoice is CHF 0 and issues no certificate).
     const d = { env, store, fetch: w.f, slack: w.slack, log: () => {}, signature: async () => null };
     await handleMembershipWebhook(
-      stripeEvent('evt_c', 'checkout.session.completed', { metadata: { source: 'zurichjs.com/membership', memberId: m.id }, subscription: 'sub_ada' }),
+      stripeEvent('evt_c', 'checkout.session.completed', {
+        metadata: { source: 'zurichjs.com/membership', memberId: m.id, attempt: params.get('metadata[attempt]') },
+        subscription: 'sub_ada',
+      }),
       d,
     );
     await handleMembershipWebhook(stripeEvent('evt_0', 'invoice.paid', paidInvoice('in_0', m.id, '2026-11-10', '2027-05-22', 0)), d);
@@ -578,7 +581,7 @@ describe('resigning (bylaws Art. 5)', () => {
     expect(await store.get(id)).toMatchObject({ status: 'active', resignedAt: null, resignationConfirmedAt: null });
     expect(w.calls.filter((c) => c.path === 'subscriptions/sub_ada' && c.method === 'POST').map((c) => c.params.get('cancel_at_period_end'))).toEqual(['true', 'false']);
     expect(w.emails.some((e) => e.subject === 'Ada Lovelace resubscribed' && JSON.stringify(e.to) === '["hello@zurichjs.com"]')).toBe(true);
-    expect(w.emails.at(-1)).toMatchObject({ subject: 'Welcome back: you are resubscribed', to: ['ada@example.com'] });
+    expect(w.emails.at(-1)).toMatchObject({ subject: 'You are resubscribed to ZurichJS', to: ['ada@example.com'] });
     expect(w.slackPosts.at(-1)!.text).toContain('Resignation undone by the member');
     expect((await undo(store, w)).status).toBe(409);
   });

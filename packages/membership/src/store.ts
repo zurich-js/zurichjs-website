@@ -20,6 +20,7 @@ export interface TransitionInput {
  * `transition`, which writes the new status and the audit row together.
  */
 export type MemberDelivery =
+  | { kind: 'billing-email'; version: string; email: string }
   | { kind: 'renewal'; subscription: string; reference: string }
   | { kind: 'board'; text: string }
   | { kind: 'email'; to: string; subject: string; html: string; text: string }
@@ -27,6 +28,7 @@ export type MemberDelivery =
 
 export interface CheckoutAttempt {
   id: string;
+  confirmation?: 'paid' | 'automatic';
   customer: string;
   price: string;
   trialEnd: number | null;
@@ -36,6 +38,8 @@ export interface CheckoutAttempt {
 }
 
 export interface MemberStore {
+  lastEmailChange(id: string): Promise<string | null>;
+  linkVerifiedUser(userId: string, email: string): Promise<Member | null>;
   retireSubscription(id: string): Promise<void>;
   retiredSubscription(id: string, sub: string): Promise<boolean>;
   dueResignations(today: string): Promise<Member[]>;
@@ -63,6 +67,7 @@ export interface MemberStore {
   /** Fails with `DuplicateEmail` if the email exists. */
   create(m: NewMember, actor: Actor): Promise<Member>;
   update(id: string, patch: MemberPatch, actor: Actor): Promise<Member>;
+  changeEmail(id: string, email: string, actor: Actor): Promise<Member>;
   /** Links Stripe ids. Kept apart from `update` so ordinary edits cannot overwrite them. */
   linkStripe(id: string, ids: { customerId?: string; subscriptionId?: string }, actor: Actor): Promise<Member>;
   transition(id: string, input: TransitionInput): Promise<Member>;
@@ -184,6 +189,15 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       );
       return result;
     },
+    async lastEmailChange(id) {
+      return log.filter((e) => e.memberId === id && e.type === 'email_changed').at(-1)?.id ?? null;
+    },
+    async linkVerifiedUser(userId, email) {
+      const m = [...members.values()].find((m) => m.email === normaliseEmail(email) && (m.userId === null || m.userId === userId));
+      if (!m) return null;
+      if (!m.userId) record(m.id, 'updated', { kind: 'member', id: userId }, { payload: { fields: ['user_id'] } });
+      return save({ ...m, userId });
+    },
     async retireSubscription(id) {
       const m = must(id);
       if (m.stripeSubscriptionId) retired.add(m.stripeSubscriptionId);
@@ -280,6 +294,13 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       record(id, 'updated', actor, { payload: { fields: Object.keys(patch) } });
       return save({ ...m, ...patch });
     },
+    async changeEmail(id, input, actor) {
+      const m = must(id);
+      const email = normaliseEmail(input);
+      if ([...members.values()].some((x) => x.email === email && x.id !== id)) throw new DuplicateEmail(email);
+      record(id, 'email_changed', actor);
+      return save({ ...m, email, userId: null });
+    },
     async linkStripe(id, ids, actor) {
       const m = must(id);
       record(id, 'stripe_linked', actor, { payload: { ...ids } });
@@ -321,6 +342,8 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
         periodEnd: term.periodEnd,
         stripeInvoiceId: term.stripeInvoiceId,
         issuedAt: now().toISOString(),
+        name: m.name,
+        organisationName: m.organisationName,
       };
       certs.push(c);
       record(id, 'certificate_issued', actor, { payload: { number: c.number, ...(c.stripeInvoiceId ? { invoice: c.stripeInvoiceId } : {}) } });

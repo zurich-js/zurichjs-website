@@ -109,7 +109,7 @@ function membershipWelcome(p: TermProps): EmailContent {
       },
       {
         kind: 'small',
-        text: 'On your account page you can change your payment method or switch between quarterly and yearly. To leave, resign there: the board confirms it and your membership ends with the paid period.',
+        text: 'On your account page you can change your payment method, or your level or billing. To leave, resign there. The board confirms it, and your membership ends when the paid period ends.',
       },
     ],
   };
@@ -218,7 +218,7 @@ function automaticPaymentSetUp(p: AutomaticPaymentProps): EmailContent {
       { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
       {
         kind: 'small',
-        text: 'Before that first payment you can still change your subscription type on your account page. You get a new certificate of membership with every payment.',
+        text: 'Before that first payment you can still change your level or billing on your account page. You get a new certificate of membership with every payment.',
       },
     ],
   };
@@ -259,6 +259,30 @@ function membershipManualPayment(p: TermProps): EmailContent {
   };
 }
 
+export interface EmailChangedProps extends MembershipProps {
+  previousEmail: string;
+  newEmail: string;
+  /** Which address this copy goes to. */
+  to: 'previous' | 'next';
+}
+
+function membershipEmailChanged(p: EmailChangedProps): EmailContent {
+  return {
+    subject: 'The email of your ZurichJS membership changed',
+    preheader: `Your membership now uses ${p.newEmail}.`,
+    heading: `Hi ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'p', text: `The board changed the email of your membership from ${p.previousEmail} to ${p.newEmail}.` },
+      summary(p),
+      p.to === 'next'
+        ? { kind: 'p', text: 'Sign in with this address on your account page to see your membership and certificates.' }
+        : { kind: 'p', text: 'This address no longer opens your membership. Sign in with the new one.' },
+      ...(p.to === 'next' ? [{ kind: 'button', label: 'Open your account page', url: p.accountUrl } satisfies Block] : []),
+      { kind: 'small', text: 'Did not ask for this? Reply to this email and the board will look into it.' },
+    ],
+  };
+}
+
 export interface PaymentFailedProps extends MembershipProps {
   /** Stripe's page for this invoice, where the member can pay it or confirm the payment with their bank. */
   payUrl?: string | null;
@@ -280,7 +304,7 @@ function paymentFailed(p: PaymentFailedProps): EmailContent {
         : { kind: 'error', text: 'Your last membership payment did not go through.' },
       summary(p),
       p.needsConfirmation
-        ? { kind: 'p', text: 'Open the payment page and confirm it with your bank. It takes a minute.' }
+        ? { kind: 'p', text: 'Open the payment page and confirm the payment with your bank.' }
         : { kind: 'p', text: `${retry} To keep your membership, pay the open invoice now or update your payment method on your account page.` },
       ...((p.payUrl
         ? [
@@ -339,12 +363,12 @@ function resignationReceived(p: ResignationProps): EmailContent {
 
 function resignationWithdrawn(p: MembershipProps): EmailContent {
   return {
-    subject: 'Welcome back: you are resubscribed',
-    preheader: 'You are resubscribed. Your membership continues as before.',
+    subject: 'You are resubscribed to ZurichJS',
+    preheader: 'Your resignation is withdrawn. Your membership continues as before.',
     heading: `Welcome back, ${firstName(p.name)}`,
     blocks: [
       { kind: 'badge', text: 'You are resubscribed' },
-      { kind: 'p', text: 'Good to have you back. You are resubscribed, and your membership continues as before. Nothing else changes.' },
+      { kind: 'p', text: 'Your resignation is withdrawn. Your membership continues and renews as before.' },
       summary(p),
       { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
       { kind: 'small', text: 'Did not do this? Reply to this email and the board will look into it.' },
@@ -495,6 +519,7 @@ const TEMPLATES = {
   'membership-renewed': membershipRenewed,
   'membership-ported': membershipPorted,
   'membership-manual-payment': membershipManualPayment,
+  'membership-email-changed': membershipEmailChanged,
   'membership-invite': membershipInvite,
   'automatic-payment-set-up': automaticPaymentSetUp,
   'payment-failed': paymentFailed,

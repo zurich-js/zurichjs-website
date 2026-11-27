@@ -30,12 +30,13 @@ export async function loadSignature(log: Log = console.log, env: Env = process.e
   }
 }
 
-export async function certificatePdf(m: Member, c: Certificate, signature: Uint8Array | null): Promise<Uint8Array> {
+/** The certificate as issued: the name on it is the one kept with it, not the member's name today. */
+export async function certificatePdf(c: Certificate, signature: Uint8Array | null): Promise<Uint8Array> {
   return renderCertificate(
     {
       number: c.number,
-      name: m.name,
-      organisationName: m.organisationName,
+      name: c.name,
+      organisationName: c.organisationName,
       levelName: levelInfo(c.level).name,
       periodStart: c.periodStart,
       periodEnd: c.periodEnd,
@@ -67,7 +68,7 @@ export async function sendCertificate(
   deps: Omit<IssueDeps, 'store' | 'actor'>,
 ) {
   const log = deps.log ?? console.log;
-  const pdf = await certificatePdf(m, cert, await (deps.signature ?? (() => loadSignature(log)))());
+  const pdf = await certificatePdf(cert, await (deps.signature ?? (() => loadSignature(log)))());
   const props = {
     ...membershipProps(m, deps.origin),
     term: termLabel(cert.periodStart, cert.periodEnd),

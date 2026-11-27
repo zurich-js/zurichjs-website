@@ -3,6 +3,7 @@
 ## 2026-11-27
 
 - **Update**: CI has a `CI ok` job that fails unless every other job succeeded. With `dependency-review`, it is the required status check on `main`, so a pull request cannot merge while a check fails or is still running. Runs on `main` no longer cancel each other ([CI](/systems/operations/ci.md)).
+- **Update**: CI can be started by hand on any branch (`gh workflow run ci.yml --ref <branch>`), Lighthouse included, and the Lighthouse reports are now saved in `reports-site` ([CI](/systems/operations/ci.md)).
 
 ## 2026-11-25
 

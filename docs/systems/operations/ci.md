@@ -26,13 +26,13 @@ timestamp: '2026-11-27T00:00:00Z'
 - **site** (Build, SEO parity, Lighthouse on main):
   - the same build
   - the SEO and LLM parity gate ([SEO](/systems/seo.md))
-  - Lighthouse on mobile (`lighthouserc.json`), only on pushes to `main`, never on a pull request (owner, 25th November 2026): performance ≥ 0.9 as the median of 3 runs, accessibility and SEO = 1, best practices ≥ 0.95. Shared runners vary in speed; local runs score 99–100.
+  - Lighthouse on mobile (`lighthouserc.json`), only on pushes to `main` and in runs started by hand, never on a pull request (owner, 25th November 2026): performance ≥ 0.9 as the median of 3 runs, accessibility and SEO = 1, best practices ≥ 0.95. Shared runners vary in speed; local runs score 99–100.
 
 - **CI ok**: runs after the others and fails unless every one of them succeeded (a failed, cancelled or skipped job counts as a failure). It is the required status check on `main`, with `dependency-review`, so a pull request cannot merge while a check is failing or still running, and renaming a job does not change what is required.
 
 A new push to a pull request cancels its older run. On `main` every push has a run of its own, so a later merge never cancels the run of the one before it.
 
-The jobs run in parallel and each builds the site itself, so a pull request's run takes as long as its slowest job, the e2e suite (about 3 minutes), instead of the 8 the single site job took. A Lighthouse failure therefore shows on `main` after the merge, not before it. Reports are uploaded for 14 days as `reports-e2e-mobile`, `reports-e2e-desktop` and `reports-site`. CI runs on `ubuntu-latest` with Playwright's own Chromium, the same build the visual baselines were made with.
+The jobs run in parallel and each builds the site itself, so a pull request's run takes as long as its slowest job, the e2e suite (about 3 minutes), instead of the 8 the single site job took. A Lighthouse failure therefore shows on `main` after the merge, not before it. To try a change to the Lighthouse step before it merges, start CI by hand on its branch: `gh workflow run ci.yml --ref <branch>`. Reports are uploaded for 14 days as `reports-e2e-mobile`, `reports-e2e-desktop` and `reports-site`. CI runs on `ubuntu-latest` with Playwright's own Chromium, the same build the visual baselines were made with.
 
 **No CI job calls an AI model** (owner). There is no AI review workflow; CodeRabbit and the CI checks review PRs.
 

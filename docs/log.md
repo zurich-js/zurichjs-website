@@ -6,6 +6,7 @@
 - **Update**: CI can be started by hand on any branch (`gh workflow run ci.yml --ref <branch>`), Lighthouse included, and the Lighthouse reports are now saved in `reports-site` ([CI](/systems/operations/ci.md)).
 - **Update**: CI installs only Chromium's headless shell, and the font packages it needs come from the Actions cache instead of the Ubuntu mirror, which had stalled the install for up to 15 minutes. The browser install takes about 8 s instead of 18 ([CI](/systems/operations/ci.md)).
 - **Update**: The Playwright suite runs with 4 workers in CI instead of 2. Each e2e job is about 20 s shorter ([CI](/systems/operations/ci.md)).
+- **Update**: `tools/ci/metrics.mjs --split <sha>` compares CI timings before and after a commit, so a CI change is measured rather than estimated ([CI](/systems/operations/ci.md)).
 
 ## 2026-11-25
 

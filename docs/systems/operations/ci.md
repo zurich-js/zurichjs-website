@@ -21,7 +21,7 @@ timestamp: '2026-11-27T00:00:00Z'
 - **studio** (Studio build and generated types): the Studio's ESLint, `sanity build`, and a check that `packages/content/src/sanity.types.ts` and `apps/studio/schema.json` match what `pnpm --filter @zurichjs/studio typegen` generates.
 - **e2e** (Build, e2e, visual), once per Playwright project (`mobile` at 390 px, `desktop` at 1440 px), side by side:
   - the build, with sample content and a fixed clock
-  - Playwright end-to-end, accessibility and visual regression for that project, every spec with reduced motion, and `e2e/motion.spec.ts` with motion on ([Testing](/systems/testing.md))
+  - Playwright end-to-end, accessibility and visual regression for that project, with 4 workers (one per vCPU; the default 2 left the runner half idle), every spec with reduced motion, and `e2e/motion.spec.ts` with motion on ([Testing](/systems/testing.md))
   - a "Visual diff summary" step that shows where each screenshot differs
 - **site** (Build, SEO parity, Lighthouse on main):
   - the same build

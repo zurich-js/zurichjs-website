@@ -12,6 +12,9 @@ export default defineConfig({
   snapshotPathTemplate: process.env.VISUAL_SNAPSHOT_DIR ? `${process.env.VISUAL_SNAPSHOT_DIR}/{projectName}/{arg}{ext}` : '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
   timeout: 30_000,
   fullyParallel: true,
+  // GitHub's runners have 4 vCPUs; Playwright's default (half the cores) left two idle. Measured on 15 runs
+  // each: the desktop job 183 -> 162 s, mobile 173 -> 154 s (docs/systems/operations/ci.md).
+  workers: process.env.CI ? 4 : undefined,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
   use: {

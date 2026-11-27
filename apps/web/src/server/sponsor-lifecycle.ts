@@ -46,6 +46,7 @@ import {
   type SponsorStore,
   type Tier,
   type FeeStore,
+  type Quote,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
 import { MembershipUnavailable } from './membership-db.ts';
@@ -70,6 +71,7 @@ import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
 import {
   cancelAtPeriodEnd,
   cancelNow,
+  claimedPlanExpired,
   prepareCardPlan,
   readPlanSubscription,
   releaseSchedule,
@@ -105,6 +107,15 @@ const feesOf = (deps: LifecycleDeps): FeeStore | null => {
     throw cause;
   }
 };
+
+/**
+ * A sponsor's confirmation holds the open offer. Stripe shows it never applied and the term renewed
+ * on the old plan: void it under the same fence the sponsor's retry uses. Anything else stays busy.
+ */
+async function releaseExpiredClaim(q: Quote, fees: FeeStore, stripe: StripeDeps) {
+  const expired = q.planChange && (await claimedPlanExpired(q, q.planChange, stripe));
+  if (!expired || !(await fees.voidExpiredPlan(q.id, q.applyingBy!, q.confirmationAttempt ?? null))) throw new QuoteBusy();
+}
 
 /** The board's open offer no longer stands: void its quote and switch its link off. */
 async function endOffer(s: Sponsor, deps: LifecycleDeps) {
@@ -559,7 +570,8 @@ export async function suggestChange(
   const prior = c.kind === 'plan' ? await fees?.acceptedQuote(s.id) : null;
   if (fees && prior?.feeChoice === 'pass_through' && c.kind === 'plan') {
     if (!s.stripeSubscriptionId || !isRecurring(c.cycle) || !applies || applies.timing === 'none') throw new SponsorshipError('Choose a different recurring plan.');
-    if ((await fees.openQuote(s.id, 'sponsorship', null))?.applyingBy) throw new QuoteBusy();
+    const claimed = await fees.openQuote(s.id, 'sponsorship', null);
+    if (claimed?.applyingBy) await releaseExpiredClaim(claimed, fees, deps.stripe);
     const figures = quoteFigures(fee(c.tier, c.cycle) * 100, prior.feeChoice, await currentGate(fees, deps.env));
     const plan = await previewFeePlan(s.stripeSubscriptionId, prior.id, { tier: c.tier, cycle: c.cycle }, figures.baseMinor, figures.surchargeMinor, applies.timing, deps.stripe);
     const purpose = planLabel(c) + ', ' + chfMinor(figures.totalMinor) + ' per payment';

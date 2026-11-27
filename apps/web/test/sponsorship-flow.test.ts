@@ -919,6 +919,50 @@ describe('sponsorship flow', () => {
     expect((await fees.acceptedQuote(s.id))?.id).toBe(replacement.id);
   });
 
+  it.each(['cached 500', 'lost before delivery'])('lets the board replace a claimed offer the sponsor abandoned after a %s and an unchanged renewal', async (fault) => {
+    const { policy, s, prior } = await sponsorWithFee();
+    const target = { tier: 'builder', cycle: 'quarterly' };
+    const suggest = (now = NOW) => handleSuggest(asAdmin('/x', { kind: 'plan', ...target }), s.id, { ...adminDeps(policy), now: now.getTime() });
+    expect((await suggest()).status).toBe(200);
+    const offer = (await me()).fees.toConfirm;
+    const confirm = (id: string, now = NOW) => handlePlan(post('/x', { ...full, ...target, quoteId: id, acceptFee: true }), { ...user(), now: () => now, env: policy });
+    const send = w.f;
+    let posts = 0;
+    w.invoice.failUpdate = fault === 'cached 500';
+    w.f = async (url, init) => {
+      if (new URL(String(url)).pathname === '/v1/subscriptions/sub_acme' && init?.method === 'POST') {
+        posts++;
+        if (fault === 'lost before delivery') throw new TypeError('fixture: connection lost before delivery');
+      }
+      return send(url, init);
+    };
+    expect((await confirm(offer.id)).status).toBe(502);
+    w.invoice.failUpdate = false;
+    // Before the renewal Stripe's answer is still unknown: the board waits.
+    const waiting = await suggest();
+    expect(waiting.status).toBe(409);
+    expect(await waiting.json()).toMatchObject({ error: expect.stringContaining('Stripe has not answered yet') });
+    const boundary = w.invoice.periodEnd;
+    const nextTerm = new Date(boundary * 1000);
+    w.invoice.periodStart = boundary;
+    w.invoice.periodEnd = unix('2027-05-18T00:00:00Z');
+    // Renewed, but Stripe marks the attempted offer: it may have applied, so it stays held.
+    w.sub.feePlanQuote = offer.id;
+    expect((await suggest(nextTerm)).status).toBe(409);
+    w.sub.feePlanQuote = null;
+    expect((await suggest(nextTerm)).status).toBe(200);
+    expect(await fees.quote(offer.id)).toMatchObject({ status: 'void', applyingBy: null });
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(prior);
+    expect(await store.get(s.id)).toMatchObject({ tier: 'friend', cycle: 'quarterly' });
+    const replacement = (await me()).fees.toConfirm;
+    expect(replacement.id).not.toBe(offer.id);
+    expect((await confirm(offer.id, nextTerm)).status).toBe(409);
+    expect(posts).toBe(1);
+    w.f = send;
+    expect((await confirm(replacement.id, nextTerm)).status).toBe(200);
+    expect((await fees.acceptedQuote(s.id))?.id).toBe(replacement.id);
+  });
+
   it.each(['upgrade', 'renewal', 'cancel'] as const)('requires a frozen plan quote and reconciles the %s', async (operation) => {
     const fixture = w.f;
     const stripe = await startMockStripe(0, fixture);

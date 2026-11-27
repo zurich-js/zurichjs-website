@@ -828,23 +828,36 @@ function classifyUpgradeError(cause: unknown): never {
   throw cause;
 }
 
+/** A claimed immediate upgrade that never applied: the subscription renewed on the previous plan and fee. */
+function renewedUnapplied(sub: StripeSubscription, items: ReturnType<typeof planFeeItems>, quote: Quote, terms: FeePlanChange) {
+  const { current_period_start: start, current_period_end: end } = items.base;
+  return (
+    !!quote.applyingBy &&
+    terms.charge.timing === 'now' &&
+    start !== undefined &&
+    end !== undefined &&
+    start >= terms.periodEnd &&
+    end > start &&
+    items.basePrice === terms.previousBasePrice &&
+    items.feePrice === terms.previousFeePrice &&
+    items.surcharge.price?.metadata?.quoteId === terms.previousQuote &&
+    sub.metadata?.feePlanQuote !== quote.id
+  );
+}
+
+export async function claimedPlanExpired(quote: Quote, terms: FeePlanChange, deps: StripeDeps): Promise<boolean> {
+  const sub = await getSub(terms.subscription, deps);
+  return renewedUnapplied(sub, planFeeItems(sub), quote, terms);
+}
+
 export async function applyFeePlan(quote: Quote, terms: FeePlanChange, deps: StripeDeps, claim: () => Promise<void>): Promise<{ schedule: string } | { item: string }> {
   const sub = await getSub(terms.subscription, deps);
   const items = planFeeItems(sub);
   if (quote.applyingBy && items.basePrice === terms.basePrice && items.surcharge.price?.metadata?.quoteId === quote.id) return { item: items.surcharge.id };
   const charge = terms.charge;
-  const { current_period_start: start, current_period_end: end } = items.base;
+  const end = items.base.current_period_end;
   const originalPrices = items.basePrice === terms.previousBasePrice && items.feePrice === terms.previousFeePrice;
-  const renewed = start !== undefined && end !== undefined && start >= terms.periodEnd && end > start;
-  if (
-    quote.applyingBy &&
-    charge.timing === 'now' &&
-    renewed &&
-    originalPrices &&
-    items.surcharge.price?.metadata?.quoteId === terms.previousQuote &&
-    sub.metadata?.feePlanQuote !== quote.id
-  )
-    throw new UnappliedPlanExpired();
+  if (renewedUnapplied(sub, items, quote, terms)) throw new UnappliedPlanExpired();
   if (!originalPrices || end !== terms.periodEnd || nowUnix(deps) >= terms.periodEnd) throw new StripeUnavailable('The subscription changed. Ask the board for a fresh offer.');
   if (charge.timing === 'now' && (sub.schedule || deps.env.SPONSOR_FEE_PRORATION_MODE !== 'stripe_items' || deps.env.SPONSOR_FEE_PRORATION_POLICY_VERSION !== charge.policy))
     throw new StripeUnavailable('The renewal or the approved proration policy changed. Review a new offer.');

@@ -108,7 +108,7 @@ export class DuplicateTariff extends Error {
 
 export class QuoteBusy extends Error {
   constructor() {
-    super('The sponsor is confirming this offer. Retry after confirmation.');
+    super('The sponsor is confirming this offer and Stripe has not answered yet. Try again later.');
   }
 }
 

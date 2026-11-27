@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-27
+
+- **Update**: CI has a `CI ok` job that fails unless every other job succeeded. With `dependency-review`, it is the required status check on `main`, so a pull request cannot merge while a check fails or is still running. Runs on `main` no longer cancel each other ([CI](/systems/operations/ci.md)).
+
 ## 2026-11-25
 
 - Sponsors can review the current plan, recurring total and amount due today, and check a replacement offer after an unconfirmed change. [Sponsorship frontend](/domains/sponsorship/frontend.md)

@@ -9,7 +9,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # A pull request's new push cancels its older run. On main each commit has its own group, so a later
+  # merge never cancels the run of the one before it.
+  group: ci-${{ github.event_name == 'push' && github.sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -137,3 +139,24 @@ jobs:
             .lighthouseci
           retention-days: 14
           if-no-files-found: ignore
+
+  # The one required status check (ruleset "Main"), so the required set stays the same when jobs are
+  # renamed or split. It fails unless every job above succeeded: a failed, cancelled or skipped job blocks
+  # the merge, and so does a run that has not finished.
+  ci-ok:
+    name: CI ok
+    needs: [checks, studio, e2e, site]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != success ]; then
+              echo "::error::A CI job did not succeed ($result)."
+              exit 1
+            fi
+          done

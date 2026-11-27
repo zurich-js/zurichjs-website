@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Run every check by hand on any branch, Lighthouse included (gh workflow run ci.yml --ref <branch>),
+  # to try a change to the main-only steps before it merges.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -125,10 +128,10 @@ jobs:
           node tools/serve-dist.mjs 4321 &
           npx --yes wait-on@8.0.3 --timeout 30000 http://localhost:4321
           node tools/seo/compare.mjs --base http://localhost:4321 --report seo-report.json
-      # Only once a change is on main (owner, 25th November 2026): it is the slowest step and its score
-      # varies between runners, so it does not hold up a pull request.
+      # Only once a change is on main, or in a run started by hand (owner, 25th November 2026): it is the
+      # slowest step and its score varies between runners, so it does not hold up a pull request.
       - name: Lighthouse (mobile)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.json
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -137,6 +140,8 @@ jobs:
           path: |
             seo-report.json
             .lighthouseci
+          # .lighthouseci is a hidden folder, which upload-artifact leaves out unless told otherwise.
+          include-hidden-files: true
           retention-days: 14
           if-no-files-found: ignore
 

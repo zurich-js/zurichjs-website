@@ -34,6 +34,8 @@ A new push to a pull request cancels its older run. On `main` every push has a r
 
 The jobs run in parallel and each builds the site itself, so a pull request's run takes as long as its slowest job, the e2e suite (about 3 minutes), instead of the 8 the single site job took. A Lighthouse failure therefore shows on `main` after the merge, not before it. To try a change to the Lighthouse step before it merges, start CI by hand on its branch: `gh workflow run ci.yml --ref <branch>`. Reports are uploaded for 14 days as `reports-e2e-mobile`, `reports-e2e-desktop` and `reports-site`. CI runs on `ubuntu-latest` with Playwright's own Chromium headless shell, the same build the visual baselines were made with. `.github/actions/playwright-chromium` installs it. The system packages it needs (nine font packages) come from the Actions cache, keyed on the runner image and the Playwright version, because the Ubuntu mirror has stalled that install for up to 15 minutes; a new image or Playwright version installs them from apt once and saves a new entry.
 
+**Measuring a CI change:** `node tools/ci/metrics.mjs --split <sha>` compares the runs without and with commit `<sha>` (wall time, each job and the slowest steps, as p50 and p95), for pull requests by default or `--event push` for `main`. Add `--flaky` to count tests that passed only on retry, which the run still reports as a success. Compare at least 10 runs on each side. Measured with it: #118 took successful pull request runs from p50 450 s to 197 s.
+
 **No CI job calls an AI model** (owner). There is no AI review workflow; CodeRabbit and the CI checks review PRs.
 
 ## Dependency audit

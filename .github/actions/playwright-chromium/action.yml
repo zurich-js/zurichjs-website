@@ -1,0 +1,50 @@
+name: Playwright Chromium
+description: >-
+  Installs Playwright's Chromium headless shell, which the e2e suite and the SEO gate use. The system
+  packages it needs come from actions/cache instead of apt, whose mirror has stalled this step for up to
+  15 minutes. The cache key holds the runner image and Playwright versions, so a new image or a Playwright
+  bump installs from apt once and saves a new entry.
+
+runs:
+  using: composite
+  steps:
+    - name: Cache key
+      id: key
+      shell: bash
+      run: echo "key=playwright-debs-${ImageOS}-${ImageVersion}-$(node -p "require('./node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+    - name: Restore system packages
+      id: restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/playwright-debs
+        key: ${{ steps.key.outputs.key }}
+    - name: Install from the cache
+      if: steps.restore.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if compgen -G "$HOME/playwright-debs/*.deb" > /dev/null; then sudo dpkg -i "$HOME"/playwright-debs/*.deb; fi
+        pnpm exec playwright install --only-shell chromium
+    - name: Install with apt
+      if: steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        dpkg-query -W -f '${Package}\n' | sort -u > "$RUNNER_TEMP/packages-before"
+        pnpm exec playwright install --with-deps --only-shell chromium
+        dpkg-query -W -f '${Package}\n' | sort -u > "$RUNNER_TEMP/packages-after"
+        mkdir -p "$HOME/playwright-debs"
+        comm -13 "$RUNNER_TEMP/packages-before" "$RUNNER_TEMP/packages-after" | while read -r package; do
+          if compgen -G "/var/cache/apt/archives/${package}_*.deb" > /dev/null; then
+            cp /var/cache/apt/archives/"${package}"_*.deb "$HOME/playwright-debs/"
+          else
+            (cd "$HOME/playwright-debs" && apt-get download "$package")
+          fi
+        done
+        ls -la "$HOME/playwright-debs"
+    - name: Save system packages
+      if: steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/playwright-debs
+        key: ${{ steps.key.outputs.key }}

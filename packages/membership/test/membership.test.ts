@@ -67,7 +67,7 @@ describe('status machine', () => {
   });
 
   it('has no approval step: only a Stripe payment makes someone active', () => {
-    expect(Object.keys(TRANSITIONS.pending)).toEqual(['active']);
+    expect(TRANSITIONS.pending).toEqual({ active: ['stripe'], imported_manual: ['board'] });
     expect(code(() => checkTransition({ status: 'pending' }, 'active', 'board'))).toBe('wrong_actor');
     expect(code(() => checkTransition({ status: 'pending' }, 'active', 'member'))).toBe('wrong_actor');
     expect(code(() => checkTransition({ status: 'imported_manual' }, 'active', 'member'))).toBe('wrong_actor');
@@ -115,8 +115,23 @@ describe('status machine', () => {
     expect(canStartAutomaticPayment({ status: 'active', paymentMode: 'automatic' }, true)).toBe(false);
   });
 
-  it('never lets the import script change a status (it only creates)', () => {
-    for (const edges of Object.values(TRANSITIONS)) for (const actors of Object.values(edges)) expect(actors).not.toContain('script');
+  it('lets a script change a status only to end a resignation (the daily check), never the import', () => {
+    const byScript = Object.entries(TRANSITIONS).flatMap(([from, edges]) =>
+      Object.entries(edges)
+        .filter(([, actors]) => actors.includes('script'))
+        .map(([to]) => `${from}→${to}`),
+    );
+    expect(byScript).toEqual(['resigning→ended']);
+    expect(code(() => checkTransition({ status: 'resigning' }, 'ended', 'script', 'resigned'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'resigning' }, 'ended', 'script', 'lapsed'))).toBe('reason_not_allowed');
+  });
+
+  it('lets the board record cash or bank payers, end an unpaid manual term and invite a former member again', () => {
+    expect(code(() => checkTransition({ status: 'ended' }, 'imported_manual', 'board'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'pending' }, 'imported_manual', 'board'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'imported_manual' }, 'ended', 'board', 'lapsed'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'ended' }, 'pending', 'board'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'ended' }, 'imported_manual', 'member'))).toBe('wrong_actor');
   });
 });
 

@@ -9,7 +9,6 @@
  *      "Finish joining" with everything filled in (MemberJoin.tsx). The first payment makes
  *      them a member (Stripe webhook), as for anyone who joins online.
  *   2. Inviting again (someone still pending, or whose membership ended) updates the choice
- *      and sends the email again. Someone who is a member already is refused.
  *   3. The board gets a Slack note.
  */
 import { DuplicateEmail, canJoin, levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
@@ -46,7 +45,13 @@ export async function inviteMember(input: MemberDetails, deps: InviteDeps): Prom
   let result: 'invited' | 'reinvited' = 'reinvited';
   if (member && member.status !== 'pending' && !canJoin(member.status)) return { result: 'member', member };
   if (member) {
-    member = await store.update(member.id, { ...details, paymentMode: 'automatic', ...(input.notes ? { notes: input.notes } : {}) }, actor);
+    const ended = member.status === 'ended';
+    member = await store.update(
+      member.id,
+      { ...details, paymentMode: 'automatic', ...(ended ? { source: 'invited' } : {}), ...(input.notes ? { notes: input.notes } : {}) },
+      actor,
+    );
+    if (ended) member = await store.transition(member.id, { from: 'ended', to: 'pending', actor, payload: { invited: true } });
   } else {
     try {
       member = await store.create(

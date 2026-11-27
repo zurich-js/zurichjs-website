@@ -20,13 +20,13 @@ import type { ActorKind, EndedReason, Member, Status } from './types.ts';
  * board can also end a membership (expulsion, death, dissolution).
  */
 export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonly ActorKind[]>>>> = {
-  pending: { active: ['stripe'] },
+  pending: { active: ['stripe'], imported_manual: ['board'] },
   active: { past_due: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   past_due: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   imported_manual: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board'] },
   // Undo: back to the status the member had before resigning, by the member or the board.
-  resigning: { ended: ['board', 'stripe'], active: ['member', 'board'], past_due: ['member', 'board'], imported_manual: ['member', 'board'] },
-  ended: { pending: ['member'] },
+  resigning: { ended: ['board', 'stripe', 'script'], active: ['member', 'board'], past_due: ['member', 'board'], imported_manual: ['member', 'board'] },
+  ended: { pending: ['member', 'board'], imported_manual: ['board'] },
 };
 
 /** Reasons the board may give itself; Stripe ending a subscription always means `resigned` or `lapsed`. */
@@ -34,7 +34,7 @@ const REASONS_BY_ACTOR: Record<ActorKind, readonly EndedReason[]> = {
   board: ['resigned', 'expelled', 'deceased', 'dissolved', 'lapsed'],
   stripe: ['resigned', 'lapsed'],
   member: [],
-  script: [],
+  script: ['resigned'],
 };
 
 type TransitionErrorCode = 'not_allowed' | 'wrong_actor' | 'reason_required' | 'reason_not_allowed' | 'conflict';
@@ -107,4 +107,4 @@ const LABELS: Record<Status, string> = {
 
 export const label = (s: Status) => LABELS[s];
 
-const actorLabel = (a: ActorKind) => ({ member: 'the member', board: 'an organiser', stripe: 'Stripe', script: 'the import' })[a];
+const actorLabel = (a: ActorKind) => ({ member: 'the member', board: 'an organiser', stripe: 'Stripe', script: 'a script' })[a];

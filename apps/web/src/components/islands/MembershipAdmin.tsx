@@ -207,6 +207,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
             void load();
             setSelected(id);
           }}
+          onOpen={setSelected}
           onSignedOut={onSignedOut}
         />
       )}
@@ -444,6 +445,18 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
       )}
       {m.notes && <p class="m-0 text-compact bg-white rounded-(--radius-nested) p-card-sm">{m.notes}</p>}
 
+      {m.status === 'imported_manual' && m.paymentMode === 'manual' && (
+        <RecordPayment
+          id={id}
+          m={m}
+          onDone={(text) => {
+            setNotice(text);
+            onChanged();
+            void load();
+          }}
+          onSignedOut={onSignedOut}
+        />
+      )}
       {['active', 'past_due', 'imported_manual'].includes(m.status) && (
         <RecordResignation
           id={id}
@@ -461,8 +474,8 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
         <div class="flex flex-col gap-3">
           <p class="m-0 text-body">
             {m.resignationConfirmedAt
-              ? `Resignation confirmed on ${dateTime(m.resignationConfirmedAt)}${m.resignedAt ? ` (requested ${dateTime(m.resignedAt)})` : ''}. The membership ends with the paid period.`
-              : `Resignation requested${m.resignedAt ? ` on ${dateTime(m.resignedAt)}` : ''}, waiting for the board. Confirming ends the membership with the paid period (bylaws Art. 5); open dues hold it.`}
+              ? `Resignation confirmed on ${dateTime(m.resignationConfirmedAt)}${m.resignedAt ? ` (requested ${dateTime(m.resignedAt)})` : ''}. The membership ends ${m.paidUntil ? `on ${paidThrough(m.paidUntil)}, ` : ''}when the paid period ends.`
+              : `Resignation requested${m.resignedAt ? ` on ${dateTime(m.resignedAt)}` : ''}, waiting for the board. Confirming ends the membership when the paid period ends (bylaws Art. 5). If invoices are open, it waits until they are paid.`}
           </p>
           <div class="flex flex-wrap gap-3">
             {!m.resignationConfirmedAt && (
@@ -667,7 +680,7 @@ function InviteMember({ onInvited, onSignedOut }: { onInvited: (id: string) => v
 }
 
 /** Adds a member who paid manually (cash/bank): recorded, certificate issued, optionally emailed to set up automatic payment. */
-function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; onSignedOut: () => void }) {
+function AddMember({ onAdded, onOpen, onSignedOut }: { onAdded: (id: string) => void; onOpen: (id: string) => void; onSignedOut: () => void }) {
   const thisMonth = new Date().toISOString().slice(0, 7);
   const [f, setF] = useState({
     kind: 'person' as 'person' | 'organisation',
@@ -681,7 +694,7 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
     sendEmail: true,
   });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  const [error, setError] = useState<{ field?: string; message: string; memberId?: string } | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const term = /^\d{4}-\d{2}$/.test(f.startMonth) ? manualTerm(f.startMonth, f.cycle) : null;
@@ -694,8 +707,8 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
           Add a member who paid manually (cash/bank)
         </h2>
         <p class="m-0 text-compact text-ink-2">
-          For someone who paid in cash or by bank transfer. They are recorded as paid manually until their term ends, get a certificate for it, and can set up automatic payment
-          with Stripe; nothing is charged before the term ends.
+          For someone who paid by cash or bank transfer, also someone whose online joining was never paid or whose membership ended. The site records them as paid until their term
+          ends and issues their certificate. They can set up automatic payment, and Stripe charges nothing before the term ends.
         </p>
       </div>
       <form
@@ -707,13 +720,13 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
           setBusy(true);
           setError(null);
           setDone(null);
-          const { status, body } = await api<{ member?: AdminMember; certificate?: { number: string }; emailed?: boolean; field?: string }>('/api/membership/admin/members', {
-            method: 'POST',
-            body: JSON.stringify(f),
-          });
+          const { status, body } = await api<{ member?: AdminMember; certificate?: { number: string }; emailed?: boolean; field?: string; memberId?: string }>(
+            '/api/membership/admin/members',
+            { method: 'POST', body: JSON.stringify(f) },
+          );
           setBusy(false);
           if (status === 401) return onSignedOut();
-          if (status !== 200 || !body.member) return setError({ field: body.field, message: body.error ?? 'Could not add the member.' });
+          if (status !== 200 || !body.member) return setError({ field: body.field, message: body.error ?? 'Could not add the member.', memberId: body.memberId });
           setDone(`${body.member.name} added, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${body.member.email} to set up automatic payment.` : ''}`);
           onAdded(body.member.id);
           setF((x) => ({ ...x, name: '', organisationName: '', email: '', notes: '' }));
@@ -783,11 +796,81 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
         />
         {error && !error.field && <Notice tone="danger" live title={error.message} />}
         {done && <Notice tone="success" live title={done} />}
-        <SubmitButton busy={busy} class="self-start">
-          {busy ? 'Adding…' : 'Add member'}
-        </SubmitButton>
+        <div class="flex flex-wrap gap-3">
+          <SubmitButton busy={busy}>{busy ? 'Adding…' : 'Add member'}</SubmitButton>
+          {error?.memberId && (
+            <Button variant="secondary" onClick={() => onOpen(error.memberId!)}>
+              Open their record
+            </Button>
+          )}
+        </div>
       </form>
     </section>
+  );
+}
+
+function RecordPayment({ id, m, onDone, onSignedOut }: { id: string; m: AdminMember; onDone: (notice: string) => void; onSignedOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [startMonth, setStartMonth] = useState((m.paidUntil ?? new Date().toISOString()).slice(0, 7));
+  const [sendEmail, setSendEmail] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  const term = /^\d{4}-\d{2}$/.test(startMonth) ? manualTerm(startMonth, m.cycle) : null;
+  const ran = m.paidUntil && m.paidUntil <= new Date().toISOString().slice(0, 10);
+  return (
+    <div class="flex flex-col gap-3">
+      {ran && (
+        <p class="m-0 text-body">The paid term ended on {paidThrough(m.paidUntil)}. Record the next payment when it comes. The site does not end the membership by itself.</p>
+      )}
+      {!open ? (
+        <Button variant={ran ? 'primary' : 'secondary'} class="self-start" onClick={() => setOpen(true)}>
+          Record a payment
+        </Button>
+      ) : (
+        <form
+          class="bg-white rounded-(--radius-nested) p-card-md flex flex-col gap-4"
+          noValidate
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (busy) return;
+            setBusy(true);
+            setError(null);
+            const { status, body } = await api<{ certificate?: { number: string }; emailed?: boolean; field?: string }>(`/api/membership/admin/members/${id}/manual-payment`, {
+              method: 'POST',
+              body: JSON.stringify({ startMonth, sendEmail }),
+            });
+            setBusy(false);
+            if (status === 401) return onSignedOut();
+            if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not record the payment.' });
+            setOpen(false);
+            onDone(`Payment recorded, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${m.email}.` : ''}`);
+          }}
+        >
+          <p class="m-0 text-compact">
+            For a payment {m.name} made by cash or bank transfer for the next term ({m.levelName}, {m.cycle}).
+          </p>
+          <TextField
+            label="Paid term starts"
+            hint={term ? `Paid until ${longDate(lastDay(term.end))}.` : 'The month the paid term begins.'}
+            name="startMonth"
+            type="month"
+            value={startMonth}
+            invalid={error?.field === 'startMonth'}
+            error={error?.field === 'startMonth' ? error.message : undefined}
+            onInput={(e) => setStartMonth((e.target as HTMLInputElement).value)}
+            class="max-w-sm"
+          />
+          <Checkbox label="Email them the certificate" checked={sendEmail} onChange={(e) => setSendEmail((e.target as HTMLInputElement).checked)} />
+          {error && !error.field && <Notice tone="danger" live title={error.message} />}
+          <div class="flex flex-wrap gap-3">
+            <SubmitButton busy={busy}>{busy ? 'Recording…' : 'Record payment'}</SubmitButton>
+            <Button variant="secondary" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -849,7 +932,7 @@ function RecordResignation({
             if (status === 401) return onSignedOut();
             if (status !== 200) return onError(body.error ?? 'Could not record the resignation.');
             setOpen(false);
-            onDone(`Resignation recorded. Renewal is stopped and ${name} was emailed a copy; confirm it below when the board agrees.`);
+            onDone(`Resignation recorded. ${name} was emailed a copy. Confirm it below.`);
           }}
         >
           {busy ? 'Recording…' : 'Record resignation'}

@@ -4,9 +4,9 @@
  *                       match; `counts` per status over every member, unfiltered lists only)
  *   POST { kind, name, organisationName?, email, level, cycle, startMonth: 'YYYY-MM', category?, notes?, sendEmail? }
  *     adds a member who paid manually, cash/bank (server/membership-manual.ts) → 200 { ok, member, certificate, emailed }
- *     · 400 { error, field } · 409 already a member
+ *     · 400 { error, field } · 409 there is a record for that email (not one to record again)
  */
-import { isMember, type Status } from '@zurichjs/membership';
+import { isMember, label, type Status } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { adminRoute, type AdminDeps } from '../../../../../server/admin-route.ts';
 import { adminMember, LIST_LIMIT } from '../../../../../server/admin-views.ts';
@@ -47,7 +47,11 @@ export const handleAddMember = (request: Request, deps: AdminDeps & Pick<ManualD
       const parsed = parseManualMember(body);
       if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
       const r = await addManualMember(parsed.value, { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, signature: deps.signature });
-      if (r.result === 'exists') return fail(409, `${r.member.email} is already a member (${r.member.name}).`, { field: 'email', memberId: r.member.id });
+      if (r.result === 'exists')
+        return fail(409, `There is already a record for ${r.member.email} (${r.member.name}, ${label(r.member.status)}). Open it to see or change it.`, {
+          field: 'email',
+          memberId: r.member.id,
+        });
       return json(200, { ok: true, member: adminMember(r.member), certificate: { number: r.certificate.number }, emailed: r.emailed });
     },
     'add the member',

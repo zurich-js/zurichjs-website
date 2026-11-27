@@ -182,7 +182,7 @@ describe('admin API', () => {
     expect((await handleAdminMember(asAdmin('/api/membership/admin/members/nope'), 'nope', { env, store })).status).toBe(404);
   });
 
-  it('confirms a resignation of a member who paid manually (ends now), and only for resigning members', async () => {
+  it('confirms a resignation of a member who paid manually (it ends with the paid term), and only for resigning members', async () => {
     expect(
       (
         await handleAdminConfirmResignation(asAdmin(`/api/membership/admin/members/${id}/confirm-resignation`, { method: 'POST', body: {} }), id, {
@@ -201,8 +201,8 @@ describe('admin API', () => {
       log: () => {},
     });
     expect(res.status).toBe(200);
-    expect(await store.get(id)).toMatchObject({ status: 'ended', endedReason: 'resigned' });
-    expect((await store.events(id)).at(-1)).toMatchObject({ actor: { kind: 'board', id: 'admin' } });
+    expect(await store.get(id)).toMatchObject({ status: 'resigning', resignationConfirmedAt: expect.any(String) });
+    expect((await store.events(id)).at(-1)).toMatchObject({ type: 'resignation_confirmed', actor: { kind: 'board', id: 'admin' } });
   });
 
   it('undoes a resignation for a member who asked the board, back to where they were', async () => {

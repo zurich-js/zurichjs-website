@@ -219,7 +219,7 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
         );
         break;
       }
-      if (isStale(m, sub.subscription)) {
+      if (isStale(m, sub.subscription) || (await store.retiredSubscription(m.id, sub.subscription))) {
         await say(
           m,
           `:rotating_light: ${who(m)} paid a second subscription for their membership (${sub.subscription}) next to the current one (${m.stripeSubscriptionId}). Nothing was issued for it. Cancel and refund one of them in Stripe.`,
@@ -262,7 +262,7 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
       if (meta?.source !== MEMBERSHIP_SOURCE) break;
       let m = await memberOf(store, { memberId: meta.memberId });
       const subscriptionId = typeof o.subscription === 'string' ? o.subscription : undefined;
-      if (!m || !subscriptionId) break;
+      if (!m || !subscriptionId || (await store.retiredSubscription(m.id, subscriptionId))) break;
       if (m.stripeSubscriptionId !== subscriptionId) {
         if (m.stripeSubscriptionId || m.status === 'ended') break;
         m = await store.linkStripe(m.id, { subscriptionId }, { kind: 'stripe', id: event.id });
@@ -320,7 +320,7 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
       const s = o as unknown as Subscription;
       if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
       let m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
-      if (!m || isStale(m, s.id)) break;
+      if (!m || isStale(m, s.id) || (await store.retiredSubscription(m.id, s.id))) break;
       // Catches a missed payment_failed event: Stripe says the subscription is behind. The event can be
       // older than the payment that settled it, so the status is read from Stripe now.
       const { status, plan } = await subscriptionSnapshot(s.id, { env, fetch: deps.fetch });
@@ -338,7 +338,7 @@ async function prepareMembershipEvent(event: StripeEvent, store: MemberStore, en
       if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
       const m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
       // A duplicate or replaced subscription ending says nothing about the membership.
-      if (!m || m.status === 'ended' || isStale(m, s.id)) break;
+      if (!m || m.status === 'ended' || isStale(m, s.id) || (await store.retiredSubscription(m.id, s.id))) break;
       const why = s.cancellation_details?.reason;
       const reason = m.status === 'resigning' && (m.resignationConfirmedAt || why === 'cancellation_requested') && why !== 'payment_failed' ? 'resigned' : 'lapsed';
       const ended = await moveTo(store, m, 'ended', event.id, { reason });

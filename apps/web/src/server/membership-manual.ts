@@ -15,8 +15,10 @@ import { DuplicateEmail, isCycle, isLevel, normaliseEmail, type Category, type C
 import { manualTerm } from '../lib/membership.ts';
 import { lastDay, longDate } from './dates.ts';
 import { isEmail, type Env } from './http.ts';
-import { issueAndSendCertificate } from './membership-certificate.ts';
-import { notify, who, type MembershipSlack } from './membership-slack.ts';
+import { tryMembershipNotices } from './membership-delivery.ts';
+import { expireOpenCheckouts } from './membership-stripe.ts';
+import { termLabel } from './membership.ts';
+import { who, type MembershipSlack } from './membership-slack.ts';
 
 export interface ManualMemberInput {
   kind: MemberKind;
@@ -58,12 +60,18 @@ export function parseMemberDetails(body: Record<string, unknown>): Parsed<Member
   return { ok: true, value: { kind, name, organisationName: kind === 'organisation' ? organisationName : null, email, level, cycle, notes: str('notes').slice(0, 2000) || null } };
 }
 
+/** The month a paid term started (YYYY-MM), or null. */
+export const parseStartMonth = (body: Record<string, unknown>): string | null => {
+  const v = typeof body.startMonth === 'string' ? body.startMonth.trim() : '';
+  return MONTH.test(v) ? v : null;
+};
+
 /** Checks the admin form. Errors name the field, in the words the form uses. */
 export function parseManualMember(body: Record<string, unknown>): Parsed<ManualMemberInput> {
   const details = parseMemberDetails(body);
   if (!details.ok) return details;
-  const startMonth = typeof body.startMonth === 'string' ? body.startMonth.trim() : '';
-  if (!MONTH.test(startMonth)) return { ok: false, field: 'startMonth', error: 'Choose the month their paid term started.' };
+  const startMonth = parseStartMonth(body);
+  if (!startMonth) return { ok: false, field: 'startMonth', error: 'Choose the month their paid term started.' };
   const category = body.category === 'active' ? 'active' : 'passive';
   return { ok: true, value: { ...details.value, startMonth, category, sendEmail: body.sendEmail !== false } };
 }
@@ -80,46 +88,100 @@ export interface ManualDeps {
 
 export type AddResult = { result: 'added'; member: Member; certificate: Certificate; emailed: boolean } | { result: 'exists'; member: Member };
 
+const BOARD = { kind: 'board', id: 'admin' } as const;
+
 export async function addManualMember(input: ManualMemberInput, deps: ManualDeps): Promise<AddResult> {
-  const { store } = deps;
-  const log = deps.log ?? console.log;
-  const existing = await store.byEmail(input.email);
-  if (existing) return { result: 'exists', member: existing };
-  const term = manualTerm(input.startMonth, input.cycle);
-  const actor = { kind: 'board', id: 'admin' } as const;
-  let member: Member;
+  const save = () => deps.store.transaction((tx) => addManualTerm(input, { ...deps, store: tx }));
+  let result: AddResult;
   try {
-    member = await store.create(
-      {
-        kind: input.kind,
-        name: input.name,
-        organisationName: input.organisationName,
-        email: input.email,
-        level: input.level,
-        cycle: input.cycle,
-        category: input.category,
-        status: 'imported_manual',
-        source: 'imported',
-        joinedAt: term.start,
-        paidUntil: term.end,
-        paymentMode: 'manual',
-        notes: input.notes,
-      },
-      actor,
-    );
-  } catch (cause) {
-    // Added at the same moment from another tab.
-    if (cause instanceof DuplicateEmail) return { result: 'exists', member: (await store.byEmail(input.email))! };
-    throw cause;
+    result = await save();
+  } catch (error) {
+    if (!(error instanceof DuplicateEmail)) throw error;
+    result = await save();
   }
+  const pending = await tryMembershipNotices(manualOperation(result.member.id, input.startMonth), deps);
+  if (result.result === 'added' && pending.some((d) => d.payload.kind === 'certificate')) return { ...result, emailed: false };
+  return result;
+}
 
-  const certDeps = { env: deps.env, store, origin: deps.origin, actor, fetch: deps.fetch, log, signature: deps.signature, template: 'membership-ported' as const };
-  const termOf = { periodStart: term.start, periodEnd: term.end, stripeInvoiceId: null };
-  const certificate = input.sendEmail ? await issueAndSendCertificate(member, termOf, true, certDeps) : await store.issueCertificate(member.id, termOf, actor);
+const manualOperation = (id: string, month: string) => `manual:${id}:${month}`;
 
-  await notify(
-    `:inbox_tray: Added, paid manually (cash/bank): ${who(member)}, paid until ${longDate(lastDay(term.end))} (certificate ${certificate.number}). ${input.sendEmail ? 'Emailed to set up automatic payment.' : 'Not emailed.'}`,
-    { env: deps.env, slack: deps.slack, fetch: deps.fetch, log },
-  );
+async function addManualTerm(input: ManualMemberInput, deps: ManualDeps): Promise<AddResult> {
+  const { store } = deps;
+  const term = manualTerm(input.startMonth, input.cycle);
+  const details = { kind: input.kind, name: input.name, organisationName: input.organisationName, level: input.level, cycle: input.cycle, category: input.category };
+  const existing = await store.byEmail(input.email);
+  if (existing && (await existingTerm(store, existing, term, input.startMonth))) return { result: 'exists', member: existing };
+  let member: Member;
+  if (!existing) {
+    member = await store.create(
+      { ...details, email: input.email, status: 'imported_manual', source: 'imported', joinedAt: term.start, paidUntil: term.end, paymentMode: 'manual', notes: input.notes },
+      BOARD,
+    );
+  } else if (existing.status === 'imported_manual' && existing.paidUntil === term.end) {
+    member = existing;
+  } else if (existing.status === 'pending' || existing.status === 'ended') {
+    if (existing.status === 'pending' && existing.stripeCustomerId) await expireOpenCheckouts(existing.stripeCustomerId, { env: deps.env, fetch: deps.fetch });
+    await store.retireSubscription(existing.id);
+    await store.update(
+      existing.id,
+      { ...details, paidUntil: term.end, paymentMode: 'manual', source: 'imported', joinedAt: existing.joinedAt ?? term.start, ...(input.notes ? { notes: input.notes } : {}) },
+      BOARD,
+    );
+    member = await store.transition(existing.id, { from: existing.status, to: 'imported_manual', actor: BOARD, payload: { paidFrom: term.start } });
+  } else return { result: 'exists', member: existing };
+
+  const operation = manualOperation(member.id, input.startMonth);
+  const certificate = await store.issueCertificate(member.id, { periodStart: term.start, periodEnd: term.end, stripeInvoiceId: null }, BOARD);
+  if (input.sendEmail)
+    await store.enqueue(member.id, operation, `member-certificate:${certificate.id}`, { kind: 'certificate', certificateId: certificate.id, template: 'membership-ported' });
+  await store.enqueue(member.id, operation, `board:${operation}`, {
+    kind: 'board',
+    text: `:inbox_tray: ${existing && existing.status !== 'imported_manual' ? 'Recorded again' : 'Added'}, paid manually (cash/bank): ${who(member)}, paid until ${longDate(lastDay(term.end))} (certificate ${certificate.number}).`,
+  });
   return { result: 'added', member, certificate, emailed: input.sendEmail };
+}
+
+async function existingTerm(store: MemberStore, m: Member, term: ReturnType<typeof manualTerm>, startMonth: string) {
+  const certs = await store.certificates(m.id);
+  const issued = certs.find((c) => c.periodStart === term.start && c.periodEnd === term.end);
+  if (issued?.stripeInvoiceId) {
+    const observed = (await store.events(m.id)).some((e) => e.type === 'manual_payment_overlap' && e.payload.invoice === issued.stripeInvoiceId);
+    if (!observed) await store.logEvent(m.id, 'manual_payment_overlap', BOARD, { invoice: issued.stripeInvoiceId, periodStart: term.start, periodEnd: term.end });
+    await store.enqueue(m.id, manualOperation(m.id, startMonth), `board:overlap:${issued.id}`, {
+      kind: 'board',
+      text: `:warning: A cash or bank payment was reported for ${who(m)} for a term already paid on invoice ${issued.stripeInvoiceId}. Reconcile both payments.`,
+    });
+  }
+  return issued;
+}
+
+export type PaymentResult =
+  | { result: 'recorded'; member: Member; certificate: Certificate; emailed: boolean }
+  | { result: 'exists'; member: Member; certificate: Certificate }
+  | { result: 'not_found' }
+  | { result: 'not_manual'; member: Member };
+
+export async function recordManualPayment(memberId: string, input: { startMonth: string; sendEmail: boolean }, deps: ManualDeps): Promise<PaymentResult> {
+  const operation = manualOperation(memberId, input.startMonth);
+  const result = await deps.store.transaction(async (store): Promise<PaymentResult> => {
+    const m = await store.get(memberId);
+    if (!m) return { result: 'not_found' };
+    const term = manualTerm(input.startMonth, m.cycle);
+    const issued = await existingTerm(store, m, term, input.startMonth);
+    if (issued) return { result: 'exists', member: m, certificate: issued };
+    if (m.status !== 'imported_manual' || m.paymentMode !== 'manual') return { result: 'not_manual', member: m };
+    const member = await store.update(m.id, { paidUntil: m.paidUntil && m.paidUntil > term.end ? m.paidUntil : term.end }, BOARD);
+    const certificate = await store.issueCertificate(m.id, { periodStart: term.start, periodEnd: term.end, stripeInvoiceId: null }, BOARD);
+    if (input.sendEmail)
+      await store.enqueue(m.id, operation, `member-certificate:${certificate.id}`, { kind: 'certificate', certificateId: certificate.id, template: 'membership-manual-payment' });
+    await store.enqueue(m.id, operation, `board:${operation}`, {
+      kind: 'board',
+      text: `:moneybag: Payment recorded (cash/bank): ${who(member)}, ${termLabel(term.start, term.end)}, paid until ${longDate(lastDay(member.paidUntil!))} (certificate ${certificate.number}).`,
+    });
+    return { result: 'recorded', member, certificate, emailed: input.sendEmail };
+  });
+  const pending = await tryMembershipNotices(operation, deps);
+  if (result.result === 'recorded' && pending.some((d) => d.payload.kind === 'certificate')) return { ...result, emailed: false };
+  return result;
 }

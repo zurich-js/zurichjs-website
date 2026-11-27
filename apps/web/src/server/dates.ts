@@ -32,3 +32,9 @@ export const shortDateTime = (iso: string) => {
 
 /** The last day the term covers: the day before periodEnd. */
 export const lastDay = (periodEnd: string) => new Date(Date.parse(`${periodEnd}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+
+/** Today in Zurich (YYYY-MM-DD): the calendar the board, members and sponsors live in. */
+export const zurichDay = (d: Date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(d);
+
+/** A Stripe timestamp as a Zurich calendar day. */
+export const zurichDayOf = (unix: number) => zurichDay(new Date(unix * 1000));

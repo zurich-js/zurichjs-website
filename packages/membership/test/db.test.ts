@@ -154,6 +154,13 @@ d('membership database', () => {
       expect((await store.get(m.id))!.status).toBe(m.status);
     });
 
+    it('counts members by status, and lets the board record where a returning record came from', async () => {
+      const counts = await store.statusCounts();
+      expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe((await store.search({})).length);
+      const m = (await store.byEmail('grace@zeta.ch'))!;
+      expect((await store.update(m.id, { source: 'invited' }, board)).source).toBe('invited');
+    });
+
     it('keeps manual members dated', async () => {
       await expect(
         store.create({ ...person, email: 'd@example.com', status: 'imported_manual', source: 'imported', paymentMode: 'manual' }, { kind: 'script', id: 't' }),

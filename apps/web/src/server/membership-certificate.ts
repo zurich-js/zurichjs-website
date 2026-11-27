@@ -56,30 +56,14 @@ export interface IssueDeps {
   log?: Log;
   /** Injected in tests; defaults to the Blobs store. */
   signature?: () => Promise<Uint8Array | null>;
-  /** The email to send instead of welcome or renewal (a member who paid manually, cash/bank, added by the board). */
-  template?: 'membership-ported';
-}
-
-/**
- * Issues the certificate for a paid term and emails it (welcome on the first
- * term, renewal after). Idempotent on the invoice: a retried webhook neither
- * issues nor sends twice (Resend idempotency key on the certificate).
- */
-export async function issueAndSendCertificate(
-  m: Member,
-  term: { periodStart: string; periodEnd: string; stripeInvoiceId: string | null },
-  first: boolean,
-  deps: IssueDeps,
-): Promise<Certificate> {
-  const cert = await deps.store.issueCertificate(m.id, term, deps.actor);
-  await sendCertificate(m, cert, deps.template ?? (first ? 'membership-welcome' : 'membership-renewed'), deps);
-  return cert;
+  /** The email to send instead of welcome or renewal: a member who paid by cash or bank transfer, added by the board, or a payment the board recorded. */
+  template?: 'membership-ported' | 'membership-manual-payment';
 }
 
 export async function sendCertificate(
   m: Member,
   cert: Certificate,
-  template: 'membership-ported' | 'membership-renewed' | 'membership-welcome',
+  template: 'membership-manual-payment' | 'membership-ported' | 'membership-renewed' | 'membership-welcome',
   deps: Omit<IssueDeps, 'store' | 'actor'>,
 ) {
   const log = deps.log ?? console.log;

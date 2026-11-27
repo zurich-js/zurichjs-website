@@ -5,6 +5,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { postgresStore, type Member, type MemberStore, type Queryable } from '@zurichjs/membership';
 import { startPg } from '../../../packages/membership/test/pg.ts';
 import { processMembershipEvent } from '../src/pages/api/membership/webhook.ts';
+import { addManualMember, recordManualPayment } from '../src/server/membership-manual.ts';
+import { confirmResignation, withdrawResignation } from '../src/server/membership-resignation.ts';
+import { membershipDailyCheck } from '../src/server/membership-daily.ts';
 import { createCheckout, MEMBERSHIP_SOURCE } from '../src/server/membership-stripe.ts';
 import type { StripeEvent } from '../src/server/stripe-webhook.ts';
 
@@ -53,6 +56,7 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
   });
   function fixture() {
     const emails: string[] = [];
+    const renewals: string[] = [];
     const sessions = new Map<string, { id: string; url: string }>();
     const fail = { mail: false, board: false };
     const post = vi.fn(async () => {
@@ -79,6 +83,8 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
       if (path === 'subscriptions' || path === 'checkout/sessions') return Response.json({ data: [] });
       if (path === 'prices') return Response.json({ data: [{ id: 'price_fixture' }] });
       if (path === 'customers') return Response.json({ id: `cus_${crypto.randomUUID()}` });
+      if (path.startsWith('subscriptions/') && init?.method === 'POST') renewals.push(new URLSearchParams(String(init.body)).get('cancel_at_period_end')!);
+      if (path === 'invoices') return Response.json({ data: [] });
       if (path.startsWith('subscriptions/')) return Response.json({ status: 'active', items: { data: [{ price: { lookup_key: 'member_supporter_yearly' } }] } });
       throw new Error(`Unexpected fixture path ${path}`);
     };
@@ -90,7 +96,7 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
       signature: async () => null,
     };
     const send = async (e: StripeEvent, dbStore = store) => (await processMembershipEvent(e, { ...deps, store: dbStore })).status;
-    return { emails, sessions, fail, post, deps, send };
+    return { emails, sessions, fail, post, deps, send, renewals };
   }
   it('uses one Checkout and classifies competing invoices under the member lock', async () => {
     const w = fixture(),
@@ -184,6 +190,134 @@ describe.skipIf(!db)('membership payments on Postgres', () => {
     expect(await w.send(refund)).toBe(200);
     expect((await store.events(m.id)).filter((e) => e.type === 'payment_refunded')).toHaveLength(1);
     expect(w.post).toHaveReturnedTimes(3);
+  });
+  it('records a manual term once and finishes undelivered notices on retry', async () => {
+    const w = fixture();
+    const deps = { ...w.deps, origin: 'https://fixture.invalid' };
+    const paid = await addManualMember(
+      {
+        kind: 'person',
+        name: 'Manual fixture',
+        email: 'manual@example.invalid',
+        organisationName: null,
+        level: 'basic',
+        cycle: 'yearly',
+        category: 'passive',
+        notes: null,
+        startMonth: '2026-01',
+        sendEmail: false,
+      },
+      deps,
+    );
+    const m = paid.member;
+    w.fail.mail = true;
+    const record = () => recordManualPayment(m.id, { startMonth: '2027-01', sendEmail: true }, deps);
+    expect((await Promise.all([record(), record()])).map((r) => r.result).sort()).toEqual(['exists', 'recorded']);
+    w.fail.mail = false;
+    await record();
+    expect(await store.certificates(m.id)).toHaveLength(2);
+    expect(w.emails).toHaveLength(1);
+    expect(w.post).toHaveBeenCalledTimes(2);
+    await w.send(event('invoice.paid', invoice(m, 'sub_mixed', 2027)));
+    expect(await store.certificates(m.id)).toHaveLength(2);
+    expect((await store.events(m.id)).filter((r) => r.type === 'manual_payment_overlap')).toHaveLength(1);
+    expect(w.post).toHaveBeenCalledWith(expect.stringContaining('Reconcile both payments'));
+  });
+  it('keeps a former member ended when the board re-enters a term already paid by card', async () => {
+    const w = fixture();
+    const m = await member();
+    const paid = invoice(m, 'sub_readmission', 2027);
+    expect(await w.send(event('invoice.paid', paid))).toBe(200);
+    await store.transition(m.id, { from: 'active', to: 'ended', reason: 'resigned', actor: { kind: 'board', id: 'fixture' } });
+    const enter = () => addManualMember({ ...m, startMonth: '2027-01', sendEmail: true }, { ...w.deps, origin: 'https://fixture.invalid' });
+    const results = await Promise.all([enter(), enter()]);
+    expect(results.map((r) => r.result)).toEqual(['exists', 'exists']);
+    expect(await store.get(m.id)).toMatchObject({ status: 'ended', paidUntil: '2028-01-01' });
+    expect(await store.certificates(m.id)).toHaveLength(1);
+    expect((await store.events(m.id)).filter((e) => e.type === 'manual_payment_overlap')).toHaveLength(1);
+    expect(w.post).toHaveBeenCalledTimes(2);
+    expect(w.emails).toHaveLength(1);
+  });
+  it('retires a former subscription and ends confirmed manual resignations outside the list limit', async () => {
+    const w = fixture(),
+      original = await member('active'),
+      actor = { kind: 'board', id: 'fixture' } as const;
+    const deps = { ...w.deps, origin: 'https://fixture.invalid' };
+    await store.linkStripe(original.id, { subscriptionId: 'sub_retired' }, actor);
+    await store.transition(original.id, { from: 'active', to: 'ended', reason: 'lapsed', actor });
+    const added = await addManualMember({ ...original, startMonth: '2027-01', sendEmail: false }, deps);
+    expect(added.member.stripeSubscriptionId).toBeNull();
+    await w.send(event('invoice.paid', invoice(original, 'sub_retired', 2029)));
+    expect(await store.get(original.id)).toMatchObject({ status: 'imported_manual', paidUntil: '2028-01-01' });
+    await store.transition(original.id, { from: 'imported_manual', to: 'resigning', actor });
+    await confirmResignation(original.id, 'fixture', { ...deps, reference: 'fixture', now: () => new Date('2027-03-01') });
+    await pool.query(`insert into members(email,name,level,cycle,category,status,source,payment_mode,created_at)
+       select 'future-'||g||'@example.invalid','Fixture','basic','yearly','passive','resigning','imported','manual',now()-interval '1 year' from generate_series(1,501) g`);
+    expect((await store.byStatus('resigning')).some((m) => m.id === original.id)).toBe(false);
+    expect(await membershipDailyCheck({ ...deps, now: () => new Date('2028-01-01T12:00:00Z') })).toEqual({ ended: 1 });
+    expect(await store.get(original.id)).toMatchObject({ status: 'ended', endedReason: 'resigned' });
+  });
+  it('finishes add, confirmation, withdrawal and daily notices after their committed responses are lost', async () => {
+    const w = fixture(),
+      deps = { ...w.deps, origin: 'https://fixture.invalid' },
+      actor = { kind: 'board', id: 'fixture' } as const;
+    function loseFirstCommit(): MemberStore {
+      let lose = true;
+      return {
+        ...store,
+        async transaction(work) {
+          const result = await store.transaction(work);
+          if (lose) {
+            lose = false;
+            throw new Error('Lost committed response');
+          }
+          return result;
+        },
+      };
+    }
+    const input = {
+      kind: 'person',
+      name: 'Recovery fixture',
+      email: 'recover@example.invalid',
+      organisationName: null,
+      level: 'basic',
+      cycle: 'yearly',
+      category: 'passive',
+      notes: null,
+      startMonth: '2030-01',
+      sendEmail: true,
+    } as const;
+    await expect(addManualMember(input, { ...deps, store: loseFirstCommit() })).rejects.toThrow('Lost committed response');
+    const { member: m } = await addManualMember(input, deps);
+    expect(await store.certificates(m.id)).toHaveLength(1);
+    expect(w.emails).toHaveLength(1);
+    await store.transition(m.id, { from: 'imported_manual', to: 'resigning', actor });
+    const confirm = { ...deps, reference: 'fixture', now: () => new Date('2030-06-01') };
+    await expect(confirmResignation(m.id, 'admin', { ...confirm, store: loseFirstCommit() })).rejects.toThrow('Lost committed response');
+    await confirmResignation(m.id, 'admin', confirm);
+    expect(w.emails).toHaveLength(2);
+    await expect(withdrawResignation(m.id, actor, { ...deps, store: loseFirstCommit() })).rejects.toThrow('Lost committed response');
+    await withdrawResignation(m.id, actor, deps);
+    expect(w.emails).toHaveLength(4);
+    await store.transition(m.id, { from: 'imported_manual', to: 'resigning', actor });
+    await confirmResignation(m.id, 'admin', confirm);
+    const before = w.post.mock.calls.length,
+      daily = { ...deps, now: () => new Date('2032-01-01') };
+    await expect(membershipDailyCheck({ ...daily, store: loseFirstCommit() })).rejects.toThrow('Lost committed response');
+    expect((await store.get(m.id))?.status).toBe('ended');
+    await membershipDailyCheck(daily);
+    expect(w.post.mock.calls.length).toBe(before + 1);
+  });
+  it('concurrent withdrawals leave billing renewed', async () => {
+    const w = fixture(),
+      m = await member('active'),
+      actor = { kind: 'board', id: 'fixture' } as const;
+    await store.linkStripe(m.id, { subscriptionId: 'sub_undo' }, actor);
+    await store.transition(m.id, { from: 'active', to: 'resigning', actor });
+    const undo = () => withdrawResignation(m.id, actor, { ...w.deps, origin: 'https://fixture.invalid' });
+    expect((await Promise.all([undo(), undo()])).map((r) => r.result).sort()).toEqual(['not_resigning', 'withdrawn']);
+    expect(w.renewals).toEqual(['false']);
+    expect((await store.get(m.id))?.status).toBe('active');
   });
   it('resumes both lapse notices after the client misses the committed result for ten seconds', async () => {
     const m = await member('active');

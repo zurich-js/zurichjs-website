@@ -290,8 +290,4 @@ export const adminUrl = (origin: string, sponsorId: string) => `${new URL('/admi
 /** "18th November 2026 to 17th February 2027" */
 export const termLabel = (start: string, end: string) => `${longDate(start)} to ${longDate(lastDay(end))}`;
 
-/** Today in Zurich (YYYY-MM-DD): the calendar the board and sponsors live in. */
-export const zurichDay = (d: Date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(d);
-
-/** A Stripe timestamp as a Zurich calendar day. */
-export const zurichDayOf = (unix: number) => zurichDay(new Date(unix * 1000));
+export { zurichDay, zurichDayOf } from './dates.ts';

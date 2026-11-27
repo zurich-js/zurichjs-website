@@ -5,9 +5,10 @@
  *
  *   resign    Renewal stops at once (cancel at period end, owner, 11th November 2026), so
  *             nothing is charged after a resignation even while it waits for the board.
- *   confirm   The board cannot refuse; it only waits while dues are open. With a Stripe
- *             subscription the membership ends with the paid period (the webhook then
- *             marks it ended; the cancel is repeated, idempotently); paid manually (cash/bank), it ends now.
+ *   confirm   The board cannot refuse; it only waits while dues are open. The membership ends
+ *             with the paid period: with a Stripe subscription the webhook then marks it ended
+ *             (the cancel is repeated, idempotently); paid manually (cash/bank), the daily check
+ *             ends it on its paid-until day (membership-daily.ts), or now if that day has passed.
  *   undo      Back to the status the member had before resigning; the subscription
  *             renews again (the scheduled end is taken back).
  *
@@ -18,8 +19,9 @@ import { renderEmail, type BoardNoticeProps } from '@zurichjs/emails';
 import { sendEmail, sendMemberEmail } from '@zurichjs/integrations';
 import { levelInfo, TransitionError, UNDO_TARGETS, type Actor, type Member, type MemberStore, type Status } from '@zurichjs/membership';
 import { resignReasonLabels, type ResignReason } from '../lib/membership.ts';
-import { lastDay, longDate } from './dates.ts';
+import { lastDay, longDate, zurichDay } from './dates.ts';
 import type { Env } from './http.ts';
+import { tryMembershipNotices } from './membership-delivery.ts';
 import { membershipProps } from './membership.ts';
 import { membershipSlack, notify, resignationCard, who, type MembershipSlack } from './membership-slack.ts';
 import { cancelAtPeriodEnd, openInvoices, resumeSubscription, type StripeDeps } from './membership-stripe.ts';
@@ -40,8 +42,10 @@ export interface ConfirmDeps {
   stripe?: StripeDeps;
   fetch?: typeof fetch;
   log?: Log;
+  slack?: MembershipSlack;
   /** Makes the email idempotent per confirmation (e.g. the Slack message ts). */
   reference: string;
+  now?: () => Date;
 }
 
 /** Names one resignation (for Stripe idempotency keys): a new resignation after an undo gets a new one. */
@@ -52,8 +56,15 @@ const lastPaidDayOf = (end: string | null) => (end ? longDate(lastDay(end)) : nu
 
 /** `by`: who confirmed (a Slack user id, or "admin" for the admin area). */
 export async function confirmResignation(memberId: string, by: string, deps: ConfirmDeps): Promise<ConfirmResult> {
+  const result = await deps.store.transaction((store) => confirmLocked(memberId, by, { ...deps, store }));
+  const operation = `confirm:${memberId}`;
+  const pending = await tryMembershipNotices(operation, deps);
+  if (result.result === 'confirmed') return { ...result, emailFailed: pending.some((d) => d.payload.kind === 'email') };
+  return result;
+}
+
+async function confirmLocked(memberId: string, by: string, deps: ConfirmDeps): Promise<ConfirmResult> {
   const { env, store } = deps;
-  const log = deps.log ?? console.log;
   const member = await store.get(memberId);
   if (!member) return { result: 'not_found' };
   if (member.status !== 'resigning') return { result: 'not_resigning', member };
@@ -73,8 +84,7 @@ export async function confirmResignation(memberId: string, by: string, deps: Con
     if (member.stripeSubscriptionId) await resumeSubscription(member.stripeSubscriptionId, resignationRef(member), stripe);
     return { result: 'not_resigning', member: (await store.get(member.id)) ?? member };
   }
-  if (!confirmed.stripeSubscriptionId) {
-    // Paid manually (cash/bank): no subscription to stop; the membership ends now.
+  if (!confirmed.stripeSubscriptionId && (!confirmed.paidUntil || confirmed.paidUntil <= zurichDay(deps.now?.()))) {
     try {
       await store.transition(member.id, { from: 'resigning', to: 'ended', actor, reason: 'resigned', payload: { reference: deps.reference } });
     } catch (cause) {
@@ -83,14 +93,15 @@ export async function confirmResignation(memberId: string, by: string, deps: Con
   }
   const lastPaidDay = lastPaidDayOf(end);
   const email = renderEmail('resignation-confirmed', { ...membershipProps(member, deps.origin), lastDay: lastPaidDay });
-  let emailFailed = false;
-  await sendMemberEmail(env, { to: member.email, ...email }, { idempotencyKey: `member-resignation-confirmed:${member.id}:${deps.reference}`, log, fetch: deps.fetch }).catch(
-    (e: Error) => {
-      log(`[membership] resignation email to ${member.id} failed: ${e.message}`);
-      emailFailed = true;
-    },
-  );
-  return { result: 'confirmed', member: confirmed, lastPaidDay, emailFailed };
+  const operation = `confirm:${memberId}`;
+  const generation = resignationRef(member);
+  await store.enqueue(member.id, operation, `confirmed:${member.id}:${generation}`, { kind: 'email', to: member.email, ...email });
+  if (by === 'admin')
+    await store.enqueue(member.id, operation, `board:confirmed:${member.id}:${generation}`, {
+      kind: 'board',
+      text: `:white_check_mark: Resignation confirmed in the admin area: ${who(member)}.${lastPaidDay ? ` Ends ${lastPaidDay}.` : ''}`,
+    });
+  return { result: 'confirmed', member: confirmed, lastPaidDay, emailFailed: false };
 }
 
 export type WithdrawResult = { result: 'withdrawn'; member: Member; emailFailed: boolean } | { result: 'not_found' } | { result: 'not_resigning'; member: Member };
@@ -110,8 +121,15 @@ export interface WithdrawDeps {
  * status they had before resigning (behind on payment only if dues are still open).
  */
 export async function withdrawResignation(memberId: string, actor: Actor, deps: WithdrawDeps): Promise<WithdrawResult> {
+  const result = await deps.store.transaction((store) => withdrawLocked(memberId, actor, { ...deps, store }));
+  const pending = await tryMembershipNotices(`withdraw:${memberId}`, deps);
+  if (pending.some((d) => d.payload.kind === 'renewal')) throw new Error('Subscription renewal update is pending.');
+  if (result.result === 'withdrawn') return { ...result, emailFailed: pending.some((d) => d.payload.kind === 'email') };
+  return result;
+}
+
+async function withdrawLocked(memberId: string, actor: Actor, deps: WithdrawDeps): Promise<WithdrawResult> {
   const { env, store } = deps;
-  const log = deps.log ?? console.log;
   const member = await store.get(memberId);
   if (!member) return { result: 'not_found' };
   if (member.status !== 'resigning') return { result: 'not_resigning', member };
@@ -121,48 +139,43 @@ export async function withdrawResignation(memberId: string, actor: Actor, deps: 
   let to: Status = before && (UNDO_TARGETS as readonly Status[]).includes(before) ? before : 'active';
   if (to === 'past_due' && (await openInvoices(member, stripe)) === 0) to = 'active';
 
-  // Stripe first: resigning stopped the renewal (resign.ts), so it renews again.
-  if (member.stripeSubscriptionId) await resumeSubscription(member.stripeSubscriptionId, resignationRef(member), stripe);
   let restored: Member;
   try {
     restored = await store.transition(member.id, { from: 'resigning', to, actor, payload: { undo: true, wasConfirmed: !!member.resignationConfirmedAt } });
-  } catch (cause) {
-    if (!(cause instanceof TransitionError)) throw cause;
+  } catch (error) {
+    if (!(error instanceof TransitionError)) throw error;
     return { result: 'not_resigning', member: (await store.get(member.id)) ?? member };
   }
-
+  const operation = `withdraw:${member.id}`;
+  const generation = resignationRef(member);
+  if (member.stripeSubscriptionId)
+    await store.enqueue(member.id, operation, `0-renew:${member.id}:${generation}`, { kind: 'renewal', subscription: member.stripeSubscriptionId, reference: generation });
   const byBoard = actor.kind === 'board';
-  await notify(`:leftwards_arrow_with_hook: Resignation undone${byBoard ? ' by the board' : ' by the member'}: ${who(restored)}. The membership continues.`, {
-    env,
-    slack: deps.slack,
-    fetch: deps.fetch,
-    log,
+  await store.enqueue(member.id, operation, `board:${operation}:${generation}`, {
+    kind: 'board',
+    text: `:leftwards_arrow_with_hook: Resignation undone${byBoard ? ' by the board' : ' by the member'}: ${who(restored)}. The membership continues.`,
   });
-  await emailBoard(restored, { kind: 'withdrawn', byBoard }, deps);
-  const email = renderEmail('resignation-withdrawn', membershipProps(restored, deps.origin));
-  let emailFailed = false;
-  await sendMemberEmail(
-    env,
-    { to: restored.email, ...email },
-    { idempotencyKey: `member-resignation-withdrawn:${restored.id}:${resignationRef(member)}`, log, fetch: deps.fetch },
-  ).catch((e: Error) => {
-    log(`[membership] undo email to ${restored.id} failed: ${e.message}`);
-    emailFailed = true;
+  const boardNotice = boardMessage(restored, { kind: 'withdrawn', byBoard }, deps.origin);
+  await store.enqueue(member.id, operation, `board-email:${operation}:${generation}`, {
+    kind: 'email',
+    to: env.FORMS_TO ?? 'hello@zurichjs.com',
+    ...renderEmail('board-notice', boardNotice.notice),
   });
-  return { result: 'withdrawn', member: restored, emailFailed };
+  await store.enqueue(member.id, operation, `member:${operation}:${generation}`, {
+    kind: 'email',
+    to: member.email,
+    ...renderEmail('resignation-withdrawn', membershipProps(restored, deps.origin)),
+  });
+  return { result: 'withdrawn', member: restored, emailFailed: false };
 }
 
 /**
  * The organisers' email about a resignation or an undo (to hello@zurichjs.com, as
  * FORMS_TO), next to the Slack note. Replies go to the member. Never throws.
  */
-export async function emailBoard(
-  m: Member,
-  what: { kind: 'resigned'; dues: number; byBoard?: boolean; reasons?: readonly ResignReason[]; note?: string } | { kind: 'withdrawn'; byBoard: boolean },
-  deps: { env: Env; origin: string; fetch?: typeof fetch; log?: Log },
-): Promise<void> {
-  const log = deps.log ?? console.log;
-  const admin = new URL('/admin/memberships', deps.origin).toString();
+type BoardChange = { kind: 'resigned'; dues: number | null; byBoard?: boolean; reasons?: readonly ResignReason[]; note?: string } | { kind: 'withdrawn'; byBoard: boolean };
+function boardMessage(m: Member, what: BoardChange, origin: string) {
+  const admin = new URL('/admin/memberships', origin).toString();
   const subject = what.kind === 'resigned' ? `Resignation from ${m.name}` : `${m.name} resubscribed`;
   const lines = [
     what.kind === 'resigned'
@@ -176,9 +189,11 @@ export async function emailBoard(
     ...(m.paidUntil ? [`Paid until: ${lastPaidDayOf(m.paidUntil)}`] : []),
     ...(what.kind === 'resigned'
       ? [
-          what.dues > 0
-            ? `Open invoices: ${what.dues}. Under the bylaws the resignation takes effect once they are paid.`
-            : 'Open invoices: none. Confirming ends the membership with the paid period.',
+          what.dues === null
+            ? 'Open invoices: could not check Stripe. Confirming checks again.'
+            : what.dues > 0
+              ? `Open invoices: ${what.dues}. Under the bylaws the resignation takes effect once they are paid.`
+              : 'Open invoices: none. Confirming ends the membership with the paid period.',
           '',
           `Confirm it with the button in Slack, or in the admin area: ${admin}`,
         ]
@@ -195,7 +210,7 @@ export async function emailBoard(
       ['Email', m.email],
       ['Membership', `${levelInfo(m.level).name}, ${m.cycle}`],
       ...(m.paidUntil ? ([['Paid until', lastPaidDayOf(m.paidUntil)!]] as [string, string][]) : []),
-      ...(resigned ? ([['Open invoices', what.dues > 0 ? String(what.dues) : 'None']] as [string, string][]) : []),
+      ...(resigned ? ([['Open invoices', what.dues === null ? 'Could not check Stripe' : what.dues > 0 ? String(what.dues) : 'None']] as [string, string][]) : []),
       ...(resigned
         ? ([['Why', what.reasons?.length ? resignReasonLabels(what.reasons).join('; ') : what.note ? 'See their words below' : 'No reason given']] as [string, string][])
         : []),
@@ -203,10 +218,16 @@ export async function emailBoard(
     ...(resigned && what.note ? { message: { label: 'In their words', text: what.note } } : {}),
     button: { label: resigned ? 'Confirm in the admin area' : 'Open the admin area', url: admin },
     note: resigned
-      ? `${what.dues > 0 ? 'Under the bylaws the resignation takes effect once the open invoices are paid. ' : 'Confirming ends the membership with the paid period. '}You can also confirm with the button in Slack.`
+      ? `${what.dues ? 'Under the bylaws the resignation takes effect once the open invoices are paid. ' : 'Confirming ends the membership with the paid period. '}You can also confirm with the button in Slack.`
       : undefined,
     replyTo: m.name,
   };
+  return { subject, lines, notice };
+}
+
+export async function emailBoard(m: Member, what: BoardChange, deps: { env: Env; origin: string; fetch?: typeof fetch; log?: Log }) {
+  const log = deps.log ?? console.log;
+  const { subject, lines, notice } = boardMessage(m, what, deps.origin);
   await sendEmail(deps.env, subject, lines.join('\n'), m.email, log, {
     fetch: deps.fetch,
     idempotencyKey: `board-${what.kind}:${m.id}:${resignationRef(m)}`,
@@ -245,15 +266,21 @@ export async function startResignation(
   // Renewal stops now, not when the board confirms (owner, 11th November 2026): nothing more is
   // charged after a resignation. Resubscribing (or the board's undo) turns it back on.
   if (updated.stripeSubscriptionId) {
-    await cancelAtPeriodEnd(updated.stripeSubscriptionId, resignationRef(updated), { env, fetch: deps.fetch }).catch(async (e: Error) => {
-      log(`[membership] renewal for ${updated.id} not stopped: ${e.message}`);
-      await notify(
-        `:warning: The renewal of ${updated.name}'s subscription could not be stopped after their resignation (${e.message}). Confirm the resignation before their paid period ends, or cancel the renewal in Stripe.`,
-        { env, slack: deps.slack, fetch: deps.fetch, log },
-      );
-    });
+    await store
+      .transaction(async (tx) => {
+        const current = await tx.get(updated.id);
+        if (current?.status === 'resigning' && current.resignedAt === updated.resignedAt && current.stripeSubscriptionId)
+          await cancelAtPeriodEnd(current.stripeSubscriptionId, resignationRef(current), { env, fetch: deps.fetch });
+      })
+      .catch(async (e: Error) => {
+        log(`[membership] renewal for ${updated.id} not stopped: ${e.message}`);
+        await notify(
+          `:warning: The renewal of ${updated.name}'s subscription could not be stopped after their resignation (${e.message}). Confirm the resignation before their paid period ends, or cancel the renewal in Stripe.`,
+          { env, slack: deps.slack, fetch: deps.fetch, log },
+        );
+      });
   }
-  const dues = await openInvoices(updated, { env, fetch: deps.fetch }).catch(() => 0);
+  const dues = await openInvoices(updated, { env, fetch: deps.fetch }).catch(() => null);
   const card = resignationCard(updated, dues, why);
   try {
     await (deps.slack ?? membershipSlack(env, deps.fetch)).post(card.text, card.blocks);
@@ -267,7 +294,7 @@ export async function startResignation(
     });
   }
   await emailBoard(updated, { kind: 'resigned', dues, byBoard: actor.kind === 'board', ...why }, { env, origin, fetch: deps.fetch, log });
-  const email = renderEmail('resignation-received', { ...membershipProps(updated, origin), openDues: dues > 0 });
+  const email = renderEmail('resignation-received', { ...membershipProps(updated, origin), openDues: !!dues, byBoard: actor.kind === 'board' });
   await sendMemberEmail(env, { to: updated.email, ...email }, { idempotencyKey: `member-resignation:${updated.id}:${updated.updatedAt}`, log, fetch: deps.fetch }).catch(
     (e: Error) => log(`[membership] resignation copy to ${updated.id} failed: ${e.message}`),
   );

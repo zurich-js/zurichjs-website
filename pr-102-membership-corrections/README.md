@@ -2,14 +2,25 @@
 
 All views and recordings use local fixtures and simulated payment, email and Slack responses. No production transactions are shown.
 
-- Tested source: `05362f98ab191577ef6df81e91bb912846db77ea`.
+- Original candidate for the earlier captures: `05362f98ab191577ef6df81e91bb912846db77ea`.
 - First published application: `35fa43222e0049ee5ef2d0d7b3f2870fe886212b`.
 - Original signed media source: `4ba698964d3d6c5b55c35ede11150aebee3cdb62`.
 - Worker verification: 689 repository tests and 28 selected membership browser checks passed. Lint, UI lint, format, Knip, typecheck, deterministic sample build and SEO parity passed.
 - Screenshots cover 320, 375, 390, 1280 and 1440 px. Recordings are provided as MP4 and GIF with MOCK labels.
-- Earlier full browser runs reported known About and Partners mobile visual differences. Independent final review is pending.
+- Earlier full browser runs reported known About and Partners mobile visual differences.
 
 The published merge preserves the colleague’s account merge. Compared with the tested source, it removes one redundant comment only. Five account tests and the full commit hooks passed after that merge.
+
+## Manual-to-card captures
+
+The independent review cleared the application code and found a fixture error in the earlier media. The fixture preserved the manual status label after confirmation. All `manual-immediate-*` and `manual-trial-*` files below now come from application `eedcc8207950fcb23326011a9738975082f2243b`. They supersede those files from the original candidate and both follow-up galleries.
+
+The loopback API passed each fixture member through the application's `memberView`. While waiting, the account shows the Stripe confirmation notice and hides the payment action. The immediate flow ends with “Payment received, thank you.” The trial ends with “Automatic payment is set up.” Both accounts show **Active** with yearly billing. The recordings carry a visible mock label.
+
+| Flow                 | 390 px                                                            | 1280 px                                                             |
+| -------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Immediate payment    | [MP4](manual-immediate-390.mp4) · [GIF](manual-immediate-390.gif) | [MP4](manual-immediate-1280.mp4) · [GIF](manual-immediate-1280.gif) |
+| Future first payment | [MP4](manual-trial-390.mp4) · [GIF](manual-trial-390.gif)         | [MP4](manual-trial-1280.mp4) · [GIF](manual-trial-1280.gif)         |
 
 ## Captures
 
@@ -114,10 +125,10 @@ The published merge preserves the colleague’s account merge. Compared with the
 
 The follow-up application `21f1aa9d4215f3a78b4d816d573f06a456d7ea7b` integrates main `7a0ad93809b7aa025d0860f566fee34cf08cdf27`. Its full repository suite passed 806 tests with disposable PostgreSQL. The top of the stack passed 32 selected browser checks and ten additional mocked flow replays. Merge commits ran signing, formatting, lint and repository typecheck hooks.
 
-[Fresh captures from the merged build](current-main/README.md). These supplement the original candidate captures above.
+[Current-main captures and source mapping](current-main/README.md).
 
 ## Request-budget main integration
 
-Application `eedcc8207950fcb23326011a9738975082f2243b` incorporates main `4d88284041cc13763f15c0021941f23707daeec9` after #96 landed. Its full repository suite passed 855 tests, including disposable PostgreSQL. The built stack passed 32 selected browser checks and ten mocked flow replays. All merge commits ran signing and commit hooks. Independent review remains open.
+Application `eedcc8207950fcb23326011a9738975082f2243b` incorporates main `4d88284041cc13763f15c0021941f23707daeec9` after #96 landed. Its full repository suite passed 855 tests, including disposable PostgreSQL. The built stack passed 32 selected browser checks and ten mocked flow replays. All merge commits ran signing and commit hooks.
 
 [Latest merged-build captures](deadline-main/README.md).

@@ -1,8 +1,10 @@
 # Request-budget main integration captures
 
-Application `eedcc8207950fcb23326011a9738975082f2243b`, including main `4d88284041cc13763f15c0021941f23707daeec9`.
+The Checkout reload, sign-in choice and board email screenshots come from `eedcc8207950fcb23326011a9738975082f2243b`.
 
-All responses are mocked. Five flows passed at 375 and 1280 px: Checkout reload, sign-in plan choice, immediate manual-to-card payment, future manual-to-card setup, and board email change. The served HTML matched this commit’s build; Figtree rendered and there was no horizontal overflow. Earlier captures and recordings retain their own source mappings.
+The eight manual-to-card screenshots below are copies of the corrected 375 and 1280 px captures from `eedcc8207950fcb23326011a9738975082f2243b`. They supersede the earlier mock responses, which left the manual status label on confirmed accounts. Both flows now show **Active** and **Yearly, CHF 175 a year** after confirmation.
+
+[All five widths and both recordings](../README.md#manual-to-card-captures)
 
 - [admin-focus-1280.png](admin-focus-1280.png)
 - [admin-focus-375.png](admin-focus-375.png)

@@ -25,35 +25,43 @@
   },
   {
     "file": "manual-immediate-confirmed-1280.png",
-    "sha256": "b0780e5b7985863be0367dde57f8730a94369d89721dab537cb55d48f486fbc5"
+    "sha256": "2511e77104149e1ca3febd06621cd391af095b6cb81fc73d66241863a7cecb0e",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-immediate-confirmed-375.png",
-    "sha256": "705611552db9660993a5a81d01b9d5d18ec88e5a6a512470c6bfc5f595f8d163"
+    "sha256": "34e25b435a6b3958219d0a57827c0fb0eecbd21276c6cb69ae28ec8cc4fb1cba",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-immediate-waiting-1280.png",
-    "sha256": "dac77670457a2ce9dfb91e5b51db04d648cbf0e2d3e1461cd7087053d264ab5c"
+    "sha256": "0d16db7a0c6c202bda9897149a4bcad68253467f8a3d9fb313890eec3e280519",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-immediate-waiting-375.png",
-    "sha256": "ce62df12d00c38f5a5adb4d0a7e0603c29760ccde089d2cccec6a9a9a6a9c115"
+    "sha256": "f7b2c99ce5397e8088e2c45c29167884b242721ee76ddd0d9beacea2b905385c",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-trial-confirmed-1280.png",
-    "sha256": "335ee266da2c8bf042daae2b2ae0abe2a539747c3b8492d01ca85e1011b0da6a"
+    "sha256": "cf7cd26dcd3454776333321f4736de95c99adb21d5f1d0a90bdd435796e4a356",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-trial-confirmed-375.png",
-    "sha256": "390a7c62a9def6d228a4619703832cd20cd5a59b2be4ff230cc826667d234bae"
+    "sha256": "bc3f3fd1e11ef22694444a7a597c9bcffc4ddd780ad58b3b81b861e99cf3ee08",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-trial-waiting-1280.png",
-    "sha256": "0591344107a90316fffd283133dc911aee709bc61e30daf33561a8ca1ffcf7b2"
+    "sha256": "33fd9ccfe45638162890ee0d43463d73a115944a6af5cd056f08d319b04f61a7",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "manual-trial-waiting-375.png",
-    "sha256": "cb345a612b16d89c03422db6af5d3b855d5c142758fd97e87887d522ae78dd5a"
+    "sha256": "7fa49963526bcd369e27ecafb6adb980e22b9def4d617f4b0ce3c5a8334f0b39",
+    "sourceCommit": "eedcc8207950fcb23326011a9738975082f2243b"
   },
   {
     "file": "pending-after-reload-1280.png",

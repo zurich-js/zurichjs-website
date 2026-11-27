@@ -165,3 +165,23 @@ jobs:
               exit 1
             fi
           done
+      # Lighthouse runs only on main, and Netlify deploys main without waiting for CI, so a failure there
+      # must reach a person. Repository secrets: SLACK_BOT_TOKEN and SLACK_DEFAULT_CHANNEL (the same
+      # names as the site's); without them the step only logs a notice.
+      - name: Tell Slack that main failed
+        if: failure() && github.event_name == 'push'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_DEFAULT_CHANNEL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SUBJECT: ${{ github.event.head_commit.message }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ] || [ -z "$SLACK_CHANNEL" ]; then
+            echo "::notice::SLACK_BOT_TOKEN or SLACK_DEFAULT_CHANNEL is not set, so Slack was not told."
+            exit 0
+          fi
+          text="CI failed on main after \"${SUBJECT%%$'\n'*}\": $RUN_URL"
+          jq -n --arg channel "$SLACK_CHANNEL" --arg text "$text" '{channel: $channel, text: $text}' |
+            curl -sS --fail-with-body -X POST https://slack.com/api/chat.postMessage \
+              -H "Authorization: Bearer $SLACK_BOT_TOKEN" -H 'Content-Type: application/json; charset=utf-8' \
+              --data @- | jq -e '.ok' > /dev/null

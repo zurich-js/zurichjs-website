@@ -28,7 +28,7 @@ timestamp: '2026-11-27T00:00:00Z'
   - the SEO and LLM parity gate ([SEO](/systems/seo.md))
   - Lighthouse on mobile (`lighthouserc.json`), only on pushes to `main` and in runs started by hand, never on a pull request (owner, 25th November 2026): performance ≥ 0.9 as the median of 3 runs, accessibility and SEO = 1, best practices ≥ 0.95. Shared runners vary in speed; local runs score 99–100.
 
-- **CI ok**: runs after the others and fails unless every one of them succeeded (a failed, cancelled or skipped job counts as a failure). It is the required status check on `main`, with `dependency-review`, so a pull request cannot merge while a check is failing or still running, and renaming a job does not change what is required.
+- **CI ok**: runs after the others and fails unless every one of them succeeded (a failed, cancelled or skipped job counts as a failure). When a run on `main` fails, it posts the commit and the run's link to Slack (repository secrets `SLACK_BOT_TOKEN` and `SLACK_DEFAULT_CHANNEL`; without them it logs a notice). It is the required status check on `main`, with `dependency-review`, so a pull request cannot merge while a check is failing or still running, and renaming a job does not change what is required.
 
 A new push to a pull request cancels its older run. On `main` every push has a run of its own, so a later merge never cancels the run of the one before it.
 

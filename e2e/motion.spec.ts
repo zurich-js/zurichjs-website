@@ -45,9 +45,17 @@ test('a disclosure card animates open', async ({ page }) => {
   await page.goto('/design');
   await settle(page, `${MOTION} details`);
   const card = page.locator(`${MOTION} details`);
+  // Record transitions as they start: asking afterwards misses one that already finished, which happens
+  // when the runner is busy.
+  await card.evaluate((el) => {
+    const started: string[] = [];
+    (window as unknown as { __started: string[] }).__started = started;
+    el.addEventListener('transitionrun', (e) => started.push(e.propertyName));
+    el.addEventListener('animationstart', (e) => started.push(e.animationName));
+  });
   await card.locator('summary').click();
   await expect(card).toHaveAttribute('open', '');
-  expect(await page.evaluate(running(MOTION + ' details'))).not.toEqual([]);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __started: string[] }).__started)).not.toEqual([]);
 });
 
 test('pages change with a cross-document view transition', async ({ page }) => {
